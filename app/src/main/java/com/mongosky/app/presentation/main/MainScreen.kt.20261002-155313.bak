@@ -1,0 +1,203 @@
+package com.mongosky.app.presentation.main
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+private enum class MainSection(val label: String) {
+    HOME("Home"),
+    REELS("Reels"),
+    CREATE("Create"),
+    FRIENDS("Friends"),
+    PROFILE("Profile")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(
+    userName: String,
+    signingOut: Boolean,
+    error: String?,
+    onSignOut: () -> Unit
+) {
+    var selectedName by rememberSaveable {
+        mutableStateOf(MainSection.HOME.name)
+    }
+
+    var showCreateMenu by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val selected = MainSection.valueOf(selectedName)
+
+    BackHandler(
+        enabled = showCreateMenu || selected != MainSection.HOME
+    ) {
+        if (showCreateMenu) {
+            showCreateMenu = false
+        } else {
+            selectedName = MainSection.HOME.name
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        if (selected == MainSection.HOME) {
+                            "Mongosky"
+                        } else {
+                            selected.label
+                        }
+                    )
+                }
+            )
+        },
+        bottomBar = {
+            NavigationBar {
+                MainSection.entries.forEach { section ->
+                    val image = when (section) {
+                        MainSection.HOME -> Icons.Default.Home
+                        MainSection.REELS -> Icons.Default.PlayArrow
+                        MainSection.CREATE -> Icons.Default.Add
+                        MainSection.FRIENDS -> Icons.Default.Person
+                        MainSection.PROFILE -> Icons.Default.AccountCircle
+                    }
+
+                    NavigationBarItem(
+                        selected = selected == section,
+                        onClick = {
+                            if (section == MainSection.CREATE) {
+                                showCreateMenu = true
+                            } else {
+                                selectedName = section.name
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = image,
+                                contentDescription = null
+                            )
+                        },
+                        label = {
+                            Text(section.label)
+                        }
+                    )
+                }
+            }
+        }
+    ) { contentPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            when (selected) {
+                MainSection.HOME -> {
+                    Text(
+                        text = "Welcome, $userName",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text("Your feed will appear here.")
+                }
+
+                MainSection.REELS -> {
+                    Text(
+                        text = "Reels",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text("Reels will appear here.")
+                }
+
+                MainSection.FRIENDS -> {
+                    Text(
+                        text = "Friends",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text("Your connections will appear here.")
+                }
+
+                MainSection.PROFILE -> {
+                    Text(
+                        text = userName,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    error?.let { message ->
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    Button(
+                        onClick = onSignOut,
+                        enabled = !signingOut
+                    ) {
+                        Text(
+                            if (signingOut) {
+                                "Signing out..."
+                            } else {
+                                "Sign out"
+                            }
+                        )
+                    }
+                }
+
+                MainSection.CREATE -> Unit
+            }
+        }
+    }
+
+    if (showCreateMenu) {
+        AlertDialog(
+            onDismissRequest = {
+                showCreateMenu = false
+            },
+            title = {
+                Text("Create")
+            },
+            text = {
+                Text("Post and reel creation will be added here.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCreateMenu = false
+                    }
+                ) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+}

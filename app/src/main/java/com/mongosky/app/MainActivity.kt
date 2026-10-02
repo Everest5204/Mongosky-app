@@ -1,0 +1,76 @@
+package com.mongosky.app
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.mongosky.app.data.local.TokenStore
+import com.mongosky.app.presentation.LoginViewModel
+import com.mongosky.app.presentation.auth.AuthEntryScreen
+import com.mongosky.app.presentation.main.MainScreen
+import com.mongosky.app.presentation.passwordreset.PasswordResetViewModel
+import com.mongosky.app.presentation.signup.SignupViewModel
+import com.mongosky.app.ui.theme.MongoskyTheme
+
+class MainActivity : ComponentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val tokenStore = TokenStore(applicationContext)
+
+        val factory = object : ViewModelProvider.Factory {
+
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return when {
+                    modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
+                        LoginViewModel(tokenStore) as T
+                    }
+
+                    modelClass.isAssignableFrom(SignupViewModel::class.java) -> {
+                        SignupViewModel() as T
+                    }
+
+                    modelClass.isAssignableFrom(PasswordResetViewModel::class.java) -> {
+                        PasswordResetViewModel() as T
+                    }
+
+                    else -> {
+                        throw IllegalArgumentException(
+                            "Unknown ViewModel: ${modelClass.name}"
+                        )
+                    }
+                }
+            }
+        }
+
+        val provider = ViewModelProvider(this, factory)
+        val loginViewModel = provider[LoginViewModel::class.java]
+        val signupViewModel = provider[SignupViewModel::class.java]
+        val passwordResetViewModel = provider[PasswordResetViewModel::class.java]
+
+        setContent {
+            MongoskyTheme {
+                val state = loginViewModel.uiState
+                val userName = state.signedInName
+
+                if (userName != null) {
+                    MainScreen(
+                        userName = userName,
+                        signingOut = state.loading,
+                        error = state.error,
+                        onSignOut = { loginViewModel.signOut() }
+                    )
+                } else {
+                    AuthEntryScreen(
+                        loginViewModel = loginViewModel,
+                        signupViewModel = signupViewModel,
+                        passwordResetViewModel = passwordResetViewModel
+                    )
+                }
+            }
+        }
+    }
+}
