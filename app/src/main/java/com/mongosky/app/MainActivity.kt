@@ -5,13 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.mongosky.app.data.local.TokenStore
-import com.mongosky.app.presentation.LoginViewModel
-import com.mongosky.app.presentation.auth.AuthEntryScreen
-import com.mongosky.app.presentation.main.MainScreen
-import com.mongosky.app.presentation.passwordreset.PasswordResetViewModel
-import com.mongosky.app.presentation.signup.SignupViewModel
-import com.mongosky.app.ui.theme.MongoskyTheme
+import com.mongosky.app.auth.AuthEntryScreen
+import com.mongosky.app.auth.LoginViewModel
+import com.mongosky.app.auth.TokenStore
+import com.mongosky.app.navigation.MainScreen
+import com.mongosky.app.passwordreset.PasswordResetViewModel
+import com.mongosky.app.signup.SignupViewModel
+import com.mongosky.app.theme.MongoskyTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -61,7 +61,10 @@ class MainActivity : ComponentActivity() {
                         userName = userName,
                         signingOut = state.loading,
                         error = state.error,
-                        onSignOut = { loginViewModel.signOut() }
+                        onSignOut = { loginViewModel.signOut() },
+                        userId = state.signedInUserId,
+                        profileImageUrl = state.signedInProfileImageUrl,
+                        onRefreshProfile = loginViewModel::refreshProfile
                     )
                 } else {
                     AuthEntryScreen(
