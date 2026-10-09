@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -59,13 +61,16 @@ private val SignupPill = RoundedCornerShape(percent = 50)
 fun SignupScreen(
     viewModel: SignupViewModel,
     onBack: () -> Unit,
-    onSignIn: () -> Unit
+    onSignIn: () -> Unit,
+    showBackButton: Boolean = false,
+    onCreatedBack: () -> Unit = onSignIn,
+    signedInAs: String? = null
 ) {
     AuthTheme {
         val name = viewModel.uiState.createdName
         if (name != null) {
-            BackHandler(onBack = onSignIn)
-            SignupWhitePage(subtitle = "Account created") {
+            BackHandler(onBack = onCreatedBack)
+            SignupWhitePage(subtitle = "Account created", onBack = if (showBackButton) onCreatedBack else null) {
                 Text(
                     text = "Welcome, $name",
                     modifier = Modifier.fillMaxWidth(),
@@ -74,10 +79,11 @@ fun SignupScreen(
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Spacer(Modifier.height(24.dp))
+                signedInAs?.let { SignupAccountNotice(it) }
                 SignupActionButton(label = "Sign in", onClick = onSignIn)
             }
         } else {
-            SignupForm(viewModel, onBack, onSignIn)
+            SignupForm(viewModel, onBack, onSignIn, showBackButton, signedInAs)
         }
     }
 }
@@ -86,7 +92,9 @@ fun SignupScreen(
 private fun SignupForm(
     viewModel: SignupViewModel,
     onBack: () -> Unit,
-    onSignIn: () -> Unit
+    onSignIn: () -> Unit,
+    showBackButton: Boolean,
+    signedInAs: String?
 ) {
     val state = viewModel.uiState
     val context = LocalContext.current
@@ -100,7 +108,7 @@ private fun SignupForm(
     var gender by rememberSaveable { mutableStateOf("") }
     var birthdayEpoch by rememberSaveable { mutableStateOf<Long?>(null) }
     var accepted by rememberSaveable { mutableStateOf(false) }
-    var password by remember { mutableStateOf("") }
+    val password = viewModel.passwordDraft
     var showPassword by remember { mutableStateOf(false) }
     var localError by remember { mutableStateOf<String?>(null) }
     var genderMenu by remember { mutableStateOf(false) }
@@ -110,13 +118,14 @@ private fun SignupForm(
         if (step == 2 && password.isEmpty() && !state.loading) step = 1
     }
 
-    BackHandler {
+    val goBack: () -> Unit = {
         if (!state.loading) {
             localError = null
             viewModel.clearError()
             if (step == 2) step = 1 else onBack()
         }
     }
+    BackHandler(onBack = goBack)
 
     fun clearError() {
         localError = null
@@ -144,7 +153,7 @@ private fun SignupForm(
         }
     }
 
-    SignupWhitePage(subtitle = "Create a new account") {
+    SignupWhitePage(subtitle = "Create a new account", onBack = if (showBackButton) goBack else null, backEnabled = !state.loading) {
         if (step == 1) {
             // Enable this button when native Google authentication is connected.
             OutlinedButton(
@@ -157,7 +166,7 @@ private fun SignupForm(
                     containerColor = Color.White,
                     contentColor = SignupInk,
                     disabledContainerColor = Color.White,
-                    disabledContentColor = SignupInk
+                    disabledContentColor = SignupMuted
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
             ) {
@@ -169,7 +178,7 @@ private fun SignupForm(
                     Image(
                         imageVector = SignupGoogleLogo,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp).alpha(0.55f)
                     )
                     Spacer(Modifier.width(14.dp))
                     Text(
@@ -198,7 +207,7 @@ private fun SignupForm(
             Spacer(Modifier.height(14.dp))
             SignupInput(
                 value = password,
-                onValueChange = { password = it; clearError() },
+                onValueChange = { viewModel.updatePassword(it); clearError() },
                 placeholder = "Password",
                 leadingIcon = SignupLock,
                 enabled = !state.loading,
@@ -291,7 +300,7 @@ private fun SignupForm(
                 placeholder = "First name",
                 leadingIcon = SignupPerson,
                 enabled = !state.loading,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next)
             )
             Spacer(Modifier.height(16.dp))
             SignupInput(
@@ -300,7 +309,7 @@ private fun SignupForm(
                 placeholder = "Last name",
                 leadingIcon = SignupPerson,
                 enabled = !state.loading,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
             )
             Spacer(Modifier.height(16.dp))
@@ -372,7 +381,7 @@ private fun SignupForm(
 
         SignupActionButton(
             label = if (step == 1) "Continue" else if (state.loading) "Creating account..." else "Create account",
-            enabled = !state.loading,
+            enabled = !state.loading && (step == 1 || !state.outcomeUnknown),
             loading = state.loading,
             onClick = {
                 if (step == 1) {
@@ -397,6 +406,7 @@ private fun SignupForm(
         )
 
         Spacer(Modifier.height(24.dp))
+        signedInAs?.let { SignupAccountNotice(it) }
         Text(
             text = buildAnnotatedString {
                 append("Already have an account?  ")
@@ -424,48 +434,69 @@ private fun SignupForm(
 @Composable
 private fun SignupWhitePage(
     subtitle: String,
+    onBack: (() -> Unit)? = null,
+    backEnabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxSize().safeDrawingPadding().imePadding()
-        ) {
-            val pageHeight = maxHeight
-            Column(
-                modifier = Modifier.fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .heightIn(min = pageHeight)
-                    .padding(horizontal = 24.dp, vertical = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Column(modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth()) {
-                    Text(
-                        text = "Mongosky",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        color = Color.Black,
-                        fontSize = 32.sp,
-                        lineHeight = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.8).sp
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = subtitle,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        color = SignupMuted,
-                        fontSize = 18.sp,
-                        lineHeight = 26.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                    Spacer(Modifier.height(32.dp))
-                    content()
+        Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
+            if (onBack != null) SignupBackBar(onBack, backEnabled)
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                val pageHeight = maxHeight
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .heightIn(min = pageHeight)
+                        .padding(horizontal = 24.dp, vertical = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Column(modifier = Modifier.widthIn(max = 420.dp).fillMaxWidth()) {
+                        Text(
+                            text = "Mongosky",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = Color.Black,
+                            fontSize = 32.sp,
+                            lineHeight = 40.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.8).sp
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = subtitle,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = SignupMuted,
+                            fontSize = 18.sp,
+                            lineHeight = 26.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                        Spacer(Modifier.height(32.dp))
+                        content()
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+internal fun SignupBackBar(onBack: () -> Unit, enabled: Boolean = true) {
+    Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onBack, enabled = enabled, modifier = Modifier.size(48.dp)) {
+            Icon(SignupBack, "Back", tint = SignupInk, modifier = Modifier.size(26.dp))
+        }
+    }
+}
+
+@Composable
+private fun SignupAccountNotice(name: String) {
+    Text("Signed in as $name. Sign in to switch accounts.",
+        modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+        color = SignupMuted, fontSize = 13.sp, lineHeight = 19.sp)
+    Spacer(Modifier.height(12.dp))
 }
 
 @Composable
@@ -667,6 +698,7 @@ private val SignupCalendar = signupOutlineVector(
     "M6 5H18A2 2 0 0 1 20 7V19A2 2 0 0 1 18 21H6A2 2 0 0 1 4 19V7A2 2 0 0 1 6 5Z M8 3V7 M16 3V7 M4 11H20 M8 15H10 M14 15H16"
 )
 
+private val SignupBack = signupOutlineVector("SignupBack", "M15 18L9 12L15 6")
 private val SignupChevron = signupOutlineVector("SignupChevron", "M6 9L12 15L18 9")
 private val SignupCheck = signupOutlineVector("SignupCheck", "M5 12L10 17L19 7")
 

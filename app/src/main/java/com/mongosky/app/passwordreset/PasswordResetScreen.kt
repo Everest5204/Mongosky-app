@@ -46,7 +46,8 @@ private val ResetPill = RoundedCornerShape(percent = 50)
 @Composable
 fun PasswordResetScreen(
     viewModel: PasswordResetViewModel,
-    onSignIn: () -> Unit
+    onSignIn: () -> Unit,
+    onBack: (() -> Unit)? = null
 ) {
     val state = viewModel.uiState
     val focusManager = LocalFocusManager.current
@@ -113,7 +114,7 @@ fun PasswordResetScreen(
             confirmation = ""
             showPassword = false
             showConfirmation = false
-            if (!viewModel.goBack()) onSignIn()
+            if (onBack != null) onBack() else if (!viewModel.goBack()) onSignIn()
         }
     }
 

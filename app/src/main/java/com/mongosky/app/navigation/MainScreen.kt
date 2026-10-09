@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,12 +40,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,7 +54,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -75,6 +71,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -101,9 +98,15 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import com.mongosky.app.auth.TokenStore
+import com.mongosky.app.auth.LoginViewModel
+import com.mongosky.app.drawer.DrawerDestination
+import com.mongosky.app.drawer.DrawerEffects
+import com.mongosky.app.drawer.DrawerViewModel
+import com.mongosky.app.drawer.LeftDrawer
 import com.mongosky.app.home.HomeFeedScreen
 import com.mongosky.app.home.HomeFeedViewModel
 import com.mongosky.app.mediapost.CreateMediaPostScreen
@@ -123,6 +126,9 @@ import com.mongosky.app.friends.FriendsRoute
 import com.mongosky.app.friends.FriendsViewModel
 import com.mongosky.app.search.SearchRoute
 import com.mongosky.app.search.SearchViewModel
+import com.mongosky.app.signup.DrawerSignupRoute
+import com.mongosky.app.signup.DrawerSignupOpening
+import com.mongosky.app.signup.SignupViewModel
 import com.mongosky.app.textpost.CreateTextPostScreen
 import com.mongosky.app.textpost.TextPostPublication
 import com.mongosky.app.textpost.TextPostViewModel
@@ -141,6 +147,7 @@ fun MainScreen(
     signingOut: Boolean,
     error: String?,
     onSignOut: () -> Unit,
+    loginViewModel: LoginViewModel,
     userId: String? = null,
     profileImageUrl: String? = null,
     onRefreshProfile: () -> Unit = {}
@@ -196,6 +203,14 @@ fun MainScreen(
         ViewModelProvider(owner, OwnProfileViewModel.Factory(activity.applicationContext))
             .get("MongoskyOwnProfile", OwnProfileViewModel::class.java)
     }
+    val drawerSignupViewModel = remember(owner) {
+        ViewModelProvider(owner, SignupViewModel.Factory())
+            .get("MongoskyDrawerSignup", SignupViewModel::class.java)
+    }
+    val drawerViewModel = remember(owner) {
+        ViewModelProvider(owner, DrawerViewModel.Factory(friendsTokenStore::read))
+            .get("MongoskyLeftDrawer", DrawerViewModel::class.java)
+    }
     val userProfileViewModel = remember(owner) {
         ViewModelProvider(owner, UserProfileViewModel.Factory(TokenStore(activity.applicationContext), feedViewModel::beginProfileCountRead))
             .get("MongoskyUserProfile", UserProfileViewModel::class.java)
@@ -207,6 +222,48 @@ fun MainScreen(
     val reelsPreviewViewModel = remember(owner) {
         ViewModelProvider(owner, ReelsPreviewViewModel.Factory(TokenStore(activity.applicationContext)))
             .get("MongoskyReelsPreview", ReelsPreviewViewModel::class.java)
+    }
+    // The factory retains only activity-owned models, never an Activity or a composition callback.
+    val drawerLoginViewModel = remember(owner, loginViewModel) {
+        val factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                require(modelClass == LoginViewModel::class.java)
+                return LoginViewModel(friendsTokenStore, restoreOnStart = false) { confirmed ->
+                    val previous = loginViewModel.uiState
+                    try {
+                        loginViewModel.commitAuthenticatedSession(confirmed) {
+                            drawerViewModel.endSession()
+                            friendsViewModel.endSession()
+                            searchViewModel.endSession()
+                            ownProfileViewModel.endSession()
+                            userProfileViewModel.endSession()
+                            reelsViewModel.setForeground(false)
+                            reelsViewModel.endSession()
+                            reelsPreviewViewModel.endSession()
+                            textPostViewModel.endSession()
+                            mediaPostViewModel.endSession()
+                            feedViewModel.endSession()
+                        }
+                    } catch (error: Exception) {
+                        // Atomic token storage failed: the original account remains active.
+                        val current = loginViewModel.uiState
+                        if (current.signedInName != null && current.sessionRevision == previous.sessionRevision) {
+                            val oldKey = current.signedInUserId ?: current.signedInName
+                            friendsViewModel.startSession(oldKey)
+                            searchViewModel.startSession(oldKey)
+                            textPostViewModel.startSession(current.signedInUserId)
+                            feedViewModel.startSession()
+                            mediaPostViewModel.startSession()
+                            reelsViewModel.enter(current.signedInUserId)
+                            reelsPreviewViewModel.enter(current.signedInUserId)
+                        }
+                        throw error
+                    }
+                } as T
+            }
+        }
+        ViewModelProvider(owner, factory).get("MongoskyDrawerLogin", LoginViewModel::class.java)
     }
     LaunchedEffect(reelsViewModel, userId, signingOut) {
         if (!signingOut) { reelsViewModel.enter(userId); reelsPreviewViewModel.enter(userId) }
@@ -232,7 +289,7 @@ fun MainScreen(
             mediaPostViewModel.startSession()
         }
     }
-    DisposableEffect(feedViewModel, mediaPostViewModel, ownProfileViewModel, searchViewModel, activity) {
+    DisposableEffect(feedViewModel, mediaPostViewModel, ownProfileViewModel, searchViewModel, drawerViewModel, drawerSignupViewModel, activity) {
         onDispose {
             if (!activity.isChangingConfigurations) {
                 searchViewModel.endSession()
@@ -243,6 +300,8 @@ fun MainScreen(
                 textPostViewModel.endSession()
                 mediaPostViewModel.endSession()
                 feedViewModel.endSession()
+                drawerViewModel.endSession()
+                drawerSignupViewModel.endSession()
             }
         }
     }
@@ -261,7 +320,12 @@ fun MainScreen(
     val entry = backStack.lastOrNull() ?: MainRoute.HOME.name
     val route = MainRoute.values().firstOrNull { it.name == entry.substringBefore(':') } ?: MainRoute.HOME
     val isPostComposer = route == MainRoute.MEDIA_POST || route == MainRoute.TEXT_POST
-    val drawerVisible = drawerState.isOpen || drawerState.targetValue == DrawerValue.Open
+    val isSignupPage = route == MainRoute.SIGNUP
+    val drawerVisible = !isSignupPage && (drawerState.isOpen || drawerState.targetValue == DrawerValue.Open)
+    DrawerEffects(drawerViewModel, ownProfileViewModel, userId, drawerVisible, signingOut)
+    LaunchedEffect(isSignupPage, error) {
+        if (isSignupPage && !signingOut && error != null) snackbar.showSnackbar(error)
+    }
     val pickerContract = remember { PickMultipleVisualMedia(MediaPostUploadLimits.MAX_IMAGES) }
     val mediaPicker = rememberLauncherForActivityResult(pickerContract) { uris ->
         val requested = mediaPickerOpen
@@ -347,13 +411,35 @@ fun MainScreen(
         scope.launch { drawerState.close() }
     }
 
-    fun navigateFromDrawer(destination: MainRoute) {
-        navigate(destination)
+    val canOpenSignup by rememberUpdatedState<() -> Boolean>({
+        !signingOut && !mediaPickerOpen && backStack.lastOrNull() != MainRoute.SIGNUP.name
+    })
+    val openSignupPage by rememberUpdatedState<() -> Unit>({
+        if (backStack.lastOrNull() != MainRoute.SIGNUP.name) {
+            contentState.removeState(MainRoute.SIGNUP.name)
+            drawerSignupViewModel.reset()
+            drawerLoginViewModel.endSession()
+            navigate(MainRoute.SIGNUP)
+        }
+    })
+    val signupOpening = remember(scope, drawerState) {
+        DrawerSignupOpening(scope, { drawerState.snapTo(DrawerValue.Closed) }, { canOpenSignup() }, { openSignupPage() })
+    }
+    DisposableEffect(signupOpening) { onDispose { signupOpening.cancel() } }
+    LaunchedEffect(signingOut, signupOpening) { if (signingOut) signupOpening.cancel() }
+
+    fun navigateFromDrawer(destination: DrawerDestination) {
+        if (destination == DrawerDestination.SIGNUP) { signupOpening.open(); return }
+        val target = destination.routeName?.let(MainRoute::valueOf) ?: return
+        navigate(target)
         scope.launch { drawerState.close() }
     }
 
-    fun signOut() {
+    fun leaveAccount(onComplete: () -> Unit, showSignOutPage: Boolean = true) {
         if (signingOut) return
+        signupOpening.cancel()
+        drawerSignupViewModel.endSession()
+        drawerViewModel.endSession()
         friendsViewModel.endSession()
         searchViewModel.endSession()
         ownProfileViewModel.endSession()
@@ -364,10 +450,11 @@ fun MainScreen(
         textPostViewModel.endSession()
         mediaPostViewModel.endSession()
         mediaPickerOpen = false
-        navigate(MainRoute.PROFILE)
+        if (showSignOutPage) navigate(MainRoute.PROFILE)
         scope.launch { drawerState.close() }
-        onSignOut()
+        onComplete()
     }
+    fun signOut() { leaveAccount(onSignOut) }
 
     fun editFailedUpload() {
         if (!signingOut && mediaPostViewModel.restoreFailedDraft()) {
@@ -413,38 +500,50 @@ fun MainScreen(
     MaterialTheme(colorScheme = MainPalette.colors) {
         Surface(modifier = Modifier.fillMaxSize(), color = if (route == MainRoute.REELS) Color.Black else Color.White) {
             Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
-                ModalNavigationDrawer(
+                if (isSignupPage) {
+                    // Replace the drawer layer in the same frame; its closing animation cannot reveal Home.
+                    contentState.SaveableStateProvider(entry) {
+                        DrawerSignupRoute(
+                            viewModel = drawerSignupViewModel,
+                            loginViewModel = drawerLoginViewModel,
+                            userName = userName,
+                            onBack = {
+                                if (!signingOut) scope.launch {
+                                    drawerState.snapTo(DrawerValue.Closed)
+                                    if (backStack.lastOrNull() == MainRoute.SIGNUP.name) {
+                                        backStack = backStack.dropLast(1).ifEmpty { listOf(MainRoute.HOME.name) }
+                                        contentState.removeState(MainRoute.SIGNUP.name)
+                                    }
+                                }
+                            }
+                        )
+                    }
+                } else ModalNavigationDrawer(
                     drawerState = drawerState,
-                    gesturesEnabled = !isPostComposer && drawerVisible &&
+                    gesturesEnabled = !isPostComposer && !isSignupPage && drawerVisible &&
                         !signingOut && !mediaPickerOpen && !createMenuOpen,
                     scrimColor = Color.Black.copy(alpha = 0.42f),
                     drawerContent = {
-                        ModalDrawerSheet(
-                            modifier = Modifier.width(320.dp).fillMaxHeight(),
-                            drawerShape = RoundedCornerShape(0.dp),
-                            drawerContainerColor = Color.White,
-                            drawerTonalElevation = 0.dp,
-                            windowInsets = WindowInsets(0, 0, 0, 0)
-                        ) {
-                            MainDrawerContent(
-                                userName = userName,
-                                selectedRoute = route,
-                                profileImageUrl = profileImageUrl,
-                                enabled = !signingOut,
-                                onClose = { scope.launch { drawerState.close() } },
-                                onNavigate = ::navigateFromDrawer,
-                                onSignOut = ::signOut
-                            )
-                        }
+                        LeftDrawer(
+                            viewModel = drawerViewModel,
+                            userName = userName,
+                            selectedRouteName = route.name,
+                            profileImageUrl = profileImageUrl,
+                            enabled = !signingOut && !signupOpening.isOpening,
+                            onClose = { signupOpening.cancel(); scope.launch { drawerState.close() } },
+                            onNavigate = ::navigateFromDrawer,
+                            onSignOut = ::signOut
+                        )
                     }
                 ) {
                     BackHandler(
-                        enabled = !isPostComposer && !mediaPickerOpen &&
+                        enabled = !isPostComposer && !isSignupPage && !mediaPickerOpen &&
                             !createMenuOpen && !messagesNoticeOpen &&
-                            (signingOut || drawerVisible || backStack.size > 1)
+                            (signingOut || signupOpening.isOpening || drawerVisible || backStack.size > 1)
                     ) {
                         when {
                             signingOut -> Unit
+                            signupOpening.isOpening -> { signupOpening.cancel(); scope.launch { drawerState.close() } }
                             drawerVisible -> scope.launch { drawerState.close() }
                             else -> backStack = backStack.dropLast(1)
                         }
@@ -457,7 +556,7 @@ fun MainScreen(
                         snackbarHost = { SnackbarHost(snackbar) },
                         topBar = friendsTopBar@ {
                             if (route == MainRoute.FRIENDS) return@friendsTopBar
-                            if (!isPostComposer && route != MainRoute.SEARCH && route != MainRoute.PROFILE && route != MainRoute.USER_PROFILE && route != MainRoute.REELS) MainTopBar(
+                            if (!isPostComposer && !isSignupPage && route != MainRoute.SEARCH && route != MainRoute.PROFILE && route != MainRoute.USER_PROFILE && route != MainRoute.REELS) MainTopBar(
                                 enabled = !signingOut && !mediaPickerOpen,
                                 onHome = { navigate(MainRoute.HOME) },
                                 onSearch = { navigate(MainRoute.SEARCH) },
@@ -470,7 +569,7 @@ fun MainScreen(
                             )
                         },
                         bottomBar = {
-                            if (!isPostComposer && route != MainRoute.SEARCH && route != MainRoute.REELS) MainBottomBar(
+                            if (!isPostComposer && !isSignupPage && route != MainRoute.SEARCH && route != MainRoute.REELS) MainBottomBar(
                                 selectedRoute = route,
                                 enabled = !signingOut && !mediaPickerOpen,
                                 createMenuOpen = createMenuOpen,
@@ -775,91 +874,6 @@ private fun MainCreateItem(label: String, image: ImageVector, onClick: () -> Uni
 }
 
 @Composable
-private fun MainDrawerContent(
-    userName: String,
-    selectedRoute: MainRoute,
-    enabled: Boolean,
-    profileImageUrl: String?,
-    onClose: () -> Unit,
-    onNavigate: (MainRoute) -> Unit,
-    onSignOut: () -> Unit
-) {
-    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
-                    .clickable(enabled = enabled) { onNavigate(MainRoute.PROFILE) },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                MainAvatar(userName, Modifier.size(48.dp), profileImageUrl)
-                Text(
-                    text = userName.ifBlank { "Mongosky" },
-                    color = MainPalette.text,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            MainActionIcon(MainIcons.close, "Close menu", true, onClose)
-        }
-        MainDivider()
-        Spacer(Modifier.height(8.dp))
-
-        MainDrawerItem(MainRoute.PROFILE, MainIcons.user, selectedRoute, enabled, onNavigate)
-        MainDrawerItem(MainRoute.MY_ACTIVITY, MainIcons.history, selectedRoute, enabled, onNavigate)
-        MainDrawerItem(MainRoute.SAVED_ITEMS, MainIcons.bookmark, selectedRoute, enabled, onNavigate)
-        MainDrawerItem(MainRoute.SETTINGS, MainIcons.settings, selectedRoute, enabled, onNavigate)
-        MainDrawerItem(MainRoute.GUIDELINES, MainIcons.shield, selectedRoute, enabled, onNavigate)
-        MainDrawerItem(MainRoute.CHANGE_NAME, MainIcons.edit, selectedRoute, enabled, onNavigate)
-
-        Spacer(Modifier.height(8.dp))
-        MainDivider()
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .clickable(enabled = enabled, onClick = onSignOut)
-                .padding(horizontal = 16.dp, vertical = 18.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(18.dp)
-        ) {
-            Icon(MainIcons.signOut, contentDescription = null, tint = MainPalette.brand, modifier = Modifier.size(24.dp))
-            Text("Sign out", color = MainPalette.brand, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-        }
-        Spacer(Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun MainDrawerItem(
-    route: MainRoute,
-    image: ImageVector,
-    selectedRoute: MainRoute,
-    enabled: Boolean,
-    onNavigate: (MainRoute) -> Unit
-) {
-    val selected = route == selectedRoute
-    val tint = if (selected) MainPalette.brand else MainPalette.text
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (selected) MainPalette.soft else Color.White)
-            .selectable(selected = selected, enabled = enabled, role = Role.Tab) { onNavigate(route) }
-            .padding(horizontal = 16.dp, vertical = 18.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(18.dp)
-    ) {
-        Icon(image, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
-        Text(route.title, color = tint, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
 private fun MainAvatar(userName: String, modifier: Modifier, profileImageUrl: String?) {
     val initial = remember(userName) {
         val name = userName.trim()
@@ -917,7 +931,8 @@ private enum class MainRoute(val title: String) {
     SEARCH("Search"), NOTIFICATIONS("Notifications"), TEXT_POST("Text post"),
     MEDIA_POST("Media post"), CREATE_REEL("Reels"), STORY("Story"), AI("AI"),
     MY_ACTIVITY("My Activity"), SAVED_ITEMS("Saved Items"), SETTINGS("Settings"),
-    GUIDELINES("Community Guidelines"), CHANGE_NAME("Change name");
+    GUIDELINES("Community Guidelines"), CHANGE_NAME("Change name"),
+    SIGNUP("Signup"), MOBILE_APP("Mobile App");
 
     val isCreateRoute: Boolean
         get() = this == TEXT_POST || this == MEDIA_POST || this == CREATE_REEL || this == STORY || this == AI

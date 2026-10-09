@@ -3,6 +3,7 @@ package com.mongosky.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.key
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.mongosky.app.auth.AuthEntryScreen
@@ -57,15 +58,18 @@ class MainActivity : ComponentActivity() {
                 val userName = state.signedInName
 
                 if (userName != null) {
-                    MainScreen(
-                        userName = userName,
-                        signingOut = state.loading,
-                        error = state.error,
-                        onSignOut = { loginViewModel.signOut() },
-                        userId = state.signedInUserId,
-                        profileImageUrl = state.signedInProfileImageUrl,
-                        onRefreshProfile = loginViewModel::refreshProfile
-                    )
+                    key(state.signedInUserId, state.sessionRevision) {
+                        MainScreen(
+                            userName = userName,
+                            signingOut = state.loading,
+                            error = state.error,
+                            onSignOut = loginViewModel::signOut,
+                            loginViewModel = loginViewModel,
+                            userId = state.signedInUserId,
+                            profileImageUrl = state.signedInProfileImageUrl,
+                            onRefreshProfile = loginViewModel::refreshProfile
+                        )
+                    }
                 } else {
                     AuthEntryScreen(
                         loginViewModel = loginViewModel,
