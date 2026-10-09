@@ -36,6 +36,10 @@ import com.mongosky.app.post.HomePost
 import com.mongosky.app.post.PhotoViewer
 import com.mongosky.app.post.PhotoViewerState
 import com.mongosky.app.reactions.ReactionPeopleSheet
+import com.mongosky.app.profile.feed.OwnProfileFeedEffects
+import com.mongosky.app.profile.feed.OwnProfileFeedOverlays
+import com.mongosky.app.profile.feed.OwnProfileFeedPostItem
+import com.mongosky.app.profile.feed.rememberOwnProfileFeed
 import java.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -62,6 +66,11 @@ fun OwnProfileScreen(
     var videoViewer by remember { mutableStateOf<ProfileGalleryAsset?>(null) }
     var now by remember { mutableStateOf(Instant.now()) }
     var started by remember(lifecycleOwner) { mutableStateOf(lifecycleOwner?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) ?: true) }
+    val feed = rememberOwnProfileFeed(viewModel, actionsModel)
+    OwnProfileFeedEffects(feed, state, list,
+        active = started && !signingOut && !state.sessionExpired && !actionsModel.uiState.sessionExpired,
+        signingOut = signingOut)
+    LaunchedEffect(feed) { feed.controls.notices.collect { snackbar.showSnackbar(it) } }
     val picker = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
         val kind = requestedImage?.let { value -> ProfileImageKind.entries.firstOrNull { it.name == value } }
         requestedImage = null
@@ -168,7 +177,8 @@ fun OwnProfileScreen(
                     } }
                     if (state.tab == OwnProfileTab.ALL) {
                         items(state.posts, key = { "post:${it.source}:${it.id}" }, contentType = { it.type.name }) { post ->
-                            OwnProfilePostItem(post, state.profile, now, actionsModel, !state.sessionExpired && !actionsModel.uiState.sessionExpired && !signingOut,
+                            OwnProfileFeedPostItem(post, state.profile, now, actionsModel, feed,
+                                !state.sessionExpired && !actionsModel.uiState.sessionExpired && !signingOut,
                                 onPhotos = { media, index -> photoViewer = PhotoViewerState(media, index) },
                                 onVideo = { videoViewer = it }, onCopy = ::copyPost, onShare = ::sharePost)
                         }
@@ -218,6 +228,7 @@ fun OwnProfileScreen(
             }
         }
     }
+    OwnProfileFeedOverlays(feed, !state.sessionExpired && !actionsModel.uiState.sessionExpired && !signingOut, ::copyPost)
     actionsModel.commentsState?.let { CommentsSheet(it, state.profile?.displayName ?: userName, actionsModel.comments) }
     actionsModel.peopleState?.let {
         ReactionPeopleSheet(it, actionsModel::closeReactionPeople,

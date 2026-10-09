@@ -58,6 +58,18 @@ internal class ReactionsController(
         }
     }
 
+    /** Home polling refreshes only settled visible rows and never races a saving reaction. */
+    fun refreshVisible(posts: List<HomePost>) {
+        posts.forEach { post ->
+            val current = reactions[post.key]
+            if (current?.saving == true || current?.loading == true) return@forEach
+            reactionJobs.remove(post.key)?.cancel()
+            reactionVersions[post.key] = (reactionVersions[post.key] ?: 0) + 1
+            if (current != null) reactions[post.key] = current.copy(loaded = false, error = null)
+            ensureReaction(post)
+        }
+    }
+
     fun ensureReaction(post: HomePost) {
         val auth = token ?: return
         if (sessionExpired) return

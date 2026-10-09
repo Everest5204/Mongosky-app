@@ -34,9 +34,10 @@ import kotlin.math.sin
 
 @Composable
 fun TextPostCard(post: TextPost, now: Instant, reaction: PostReactionState, commentsCount: Long,
-    enabled: Boolean, actions: PostCardActions, modifier: Modifier = Modifier) {
+    enabled: Boolean, actions: PostCardActions, modifier: Modifier = Modifier,
+    header: (@Composable () -> Unit)? = null, footer: (@Composable () -> Unit)? = null) {
     Column(modifier.fillMaxWidth().background(Color.White)) {
-        PostHeader(post.author, post.createdAt, now, actions)
+        if (header != null) header() else PostHeader(post.author, post.createdAt, now, actions)
         val centered = post.textStyle == FeedTextStyle.BOLD_CENTER || post.textStyle == FeedTextStyle.NORMAL_CENTER
         val bold = post.textStyle == FeedTextStyle.BOLD_CENTER || post.textStyle == FeedTextStyle.BOLD_LEFT
         val length = post.displayText.codePointCount(0, post.displayText.length)
@@ -51,7 +52,7 @@ fun TextPostCard(post: TextPost, now: Instant, reaction: PostReactionState, comm
                 textAlign = if (centered) TextAlign.Center else TextAlign.Start,
                 modifier = Modifier.fillMaxWidth().padding(24.dp))
         }
-        PostFooter(reaction, commentsCount, enabled, actions)
+        if (footer != null) footer() else PostFooter(reaction, commentsCount, enabled, actions)
     }
 }
 

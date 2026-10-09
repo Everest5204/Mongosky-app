@@ -8,15 +8,20 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.mongosky.app.auth.TokenStore
+import com.mongosky.app.home.HomeFeedActions
+import com.mongosky.app.home.HomeFeedApi
+import com.mongosky.app.home.isOwn
 import com.mongosky.app.mediapost.MediaPost
 import com.mongosky.app.post.FeedApiException
 import com.mongosky.app.post.FeedApiFailure
 import com.mongosky.app.post.FeedPost
 import com.mongosky.app.post.FeedSource
+import com.mongosky.app.post.HomePost
 import com.mongosky.app.profile.OwnProfileDataSource
 import com.mongosky.app.profile.OwnProfileException
 import com.mongosky.app.profile.OwnProfileRepository
 import com.mongosky.app.profile.ProfileImagePreparer
+import com.mongosky.app.profile.feed.OwnProfileFeedController
 import com.mongosky.app.textpost.TextPost
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
@@ -71,6 +76,8 @@ class OwnProfileViewModel(
     private var retainedPosts = emptyList<FeedPost>()
     private var publicationOwner: String? = null
     private val unseenPublished = mutableMapOf<String, FeedPost>()
+    private val removedPostKeys = mutableSetOf<String>()
+    private var ownPostFeedController: OwnProfileFeedController? = null
     private var profileJob: Job? = null
     private var mutationJob: Job? = null
     private var badgeJob: Job? = null
@@ -78,6 +85,14 @@ class OwnProfileViewModel(
     private val readJobs = mutableMapOf<FeedSource, Job>()
     private val headJobs = mutableMapOf<FeedSource, Job>()
     private var lastCheck = Long.MIN_VALUE
+
+    /** Keep confirmed post actions and image geometry across screen recreation. */
+    internal fun postFeed(
+        readToken: suspend () -> String?, homeSessionExpired: () -> Boolean,
+        onHomeFeedChanged: () -> Unit, actions: HomeFeedActions = HomeFeedApi()
+    ): OwnProfileFeedController = ownPostFeedController ?: OwnProfileFeedController(
+        this, readToken, viewModelScope, homeSessionExpired, onHomeFeedChanged, actions
+    ).also { ownPostFeedController = it }
 
     fun enter(userId: String?) {
         val id = userId?.trim()?.lowercase(java.util.Locale.ROOT)?.takeIf {
@@ -118,6 +133,8 @@ class OwnProfileViewModel(
     }
     private fun cancelWork() {
         sessionVersion++; feedVersion++; profileRequest++; mutationVersion++
+        ownPostFeedController?.endSession()
+        removedPostKeys.clear()
         profileJob?.cancel(); mutationJob?.cancel(); badgeJob?.cancel()
         profileJob = null; mutationJob = null; badgeJob = null; lastBadgeCheck = Long.MIN_VALUE
         readJobs.values.toList().forEach { it.cancel() }; readJobs.clear()
@@ -136,6 +153,25 @@ class OwnProfileViewModel(
     fun recordPublishedText(userId: String?, post: TextPost): Boolean =
         post.toOwnProfilePost()?.let { recordPublished(userId, it) } ?: false
 
+    /** Apply only a confirmed menu deletion; late reads cannot restore that row. */
+    internal fun recordDeletedPost(post: HomePost): Boolean {
+        val owner = mutable.value.ownerId
+        val postOwner = when (post) { is HomePost.Text -> post.post.userId; is HomePost.Media -> post.post.userId }
+        if (owner.isBlank() || mutable.value.sessionExpired || !post.isOwn || postOwner != owner || post.author.id != owner)
+            return false
+        val key = "${post.source}:${post.id}"
+        if (!removedPostKeys.add(key)) return false
+        unseenPublished.remove(key)
+        retainedPosts = retainedPosts.filterNot { "${it.source}:${it.id}" == key }
+        pager?.let(::publishPosts)
+        // Discard a pre-deletion profile response before reading the server's new count.
+        profileRevision++
+        loadProfile(force = true)
+        return true
+    }
+
+    internal fun postActionFailed(error: Exception) { if (requiresSignIn(error)) expire() }
+
     private fun recordPublished(userId: String?, post: FeedPost): Boolean {
         val owner = userId?.trim()?.lowercase(java.util.Locale.ROOT) ?: return false
         val idPattern = Regex("[a-f0-9]{24}")
@@ -144,6 +180,7 @@ class OwnProfileViewModel(
             (mutable.value.ownerId.isNotBlank() && mutable.value.ownerId != owner)) return false
         if (publicationOwner != owner) { publicationOwner = owner; unseenPublished.clear() }
         val key = "${post.source}:${post.id}"
+        if (key in removedPostKeys) return false
         val existing = unseenPublished[key] ?: pager?.existing(post.source, post.id)
         if (existing != null && existing.updatedAt >= post.updatedAt) return true
         unseenPublished[key] = post
@@ -228,7 +265,7 @@ class OwnProfileViewModel(
             (incoming + retained).distinctBy { "${it.source}:${it.id}" }
                 .sortedWith(compareByDescending<FeedPost> { it.createdAt }.thenByDescending { it.id }.thenBy { it.source })
         retainedPosts = retained
-        mutable.value = mutable.value.copy(posts = visible, initializedSources = activePager.initializedSources,
+        mutable.value = mutable.value.copy(posts = visible.filterNot { "${it.source}:${it.id}" in removedPostKeys }, initializedSources = activePager.initializedSources,
             hasMoreSources = activePager.hasMoreSources, postPageVersion = mutable.value.postPageVersion + 1)
     }
 

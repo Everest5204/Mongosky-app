@@ -48,6 +48,31 @@ internal class FeedPager(
     val size: Int
         get() = emitted.size
 
+    /** Includes buffered posts; head polling must not call them new posts. */
+    fun contains(post: HomePost): Boolean = post.id in stream(post.source).seen
+
+    /** Update known posts without consuming a cursor or inserting a new head. */
+    fun update(post: HomePost) {
+        val index = emitted.indexOfFirst { it.key == post.key }
+        if (index >= 0 && post.updatedAt >= emitted[index].updatedTime()) emitted[index] = post
+        val stream = stream(post.source)
+        val pending = stream.pending.map { old -> if (old.key == post.key && post.updatedAt >= old.updatedTime()) post else old }
+        stream.pending.clear(); stream.pending.addAll(pending)
+    }
+
+    private fun HomePost.updatedTime() = when (this) {
+        is HomePost.Text -> post.updatedAt
+        is HomePost.Media -> post.updatedAt
+    }
+
+    fun remove(key: String) {
+        emitted.removeAll { it.key == key }
+        media.pending.removeAll { it.key == key }
+        text.pending.removeAll { it.key == key }
+        unseenPublished.entries.removeAll { "MEDIA:${it.key}" == key }
+        unseenPublishedText.entries.removeAll { "TEXT:${it.key}" == key }
+    }
+
     /** Carry these across a refresh until the media feed has returned them. */
     val unseenPublishedPosts: List<MediaPost>
         get() = unseenPublished.values.sortedWith(

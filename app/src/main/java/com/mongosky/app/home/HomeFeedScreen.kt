@@ -6,6 +6,8 @@ package com.mongosky.app.home
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -97,9 +99,31 @@ fun HomeFeedScreen(
     val clipboard = LocalClipboardManager.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val controls = viewModel.controls
     var now by remember { mutableStateOf(Instant.now()) }
     var photoViewer by remember { mutableStateOf<PhotoViewerState?>(null) }
     var handledTopRequest by rememberSaveable { mutableStateOf(0) }
+    var launchedDownloadKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val downloadPicker = rememberLauncherForActivityResult(object : ActivityResultContracts.CreateDocument("*/*") {
+        override fun createIntent(context: android.content.Context, input: String): Intent =
+            super.createIntent(context, input).setType(viewModel.download?.mimeType ?: "application/octet-stream")
+    }) { uri ->
+        launchedDownloadKey = null
+        viewModel.completeDownloadPicker(context, uri)
+    }
+    val download = viewModel.download
+    LaunchedEffect(download?.post?.key, download?.choosing) {
+        if (download?.choosing == true && launchedDownloadKey != download.post.key) {
+            launchedDownloadKey = download.post.key
+            try { downloadPicker.launch(download.fileName) }
+            catch (_: ActivityNotFoundException) {
+                launchedDownloadKey = null; viewModel.cancelDownloadPicker()
+                controls.notify("No file picker is available.")
+            }
+        }
+    }
+    LaunchedEffect(controls) { controls.notices.collect { snackbar.showSnackbar(it) } }
+    HomeFeedEffects(viewModel, listState)
     val preview = reelsPreviewViewModel.state
     val hasReelsPreview = state.posts.size >= HOME_REELS_AFTER_POSTS &&
         (!preview.initialized || preview.reels.isNotEmpty() || preview.error != null)
@@ -128,9 +152,8 @@ fun HomeFeedScreen(
 
     fun postLink(post: HomePost) = "https://mongosky.com/post/${post.id}"
 
-    fun share(post: HomePost) {
-        val content = when (post) { is HomePost.Text -> post.post.displayText; is HomePost.Media -> post.post.caption }
-        val text = listOf(content.take(650).trim(), postLink(post)).filter { it.isNotBlank() }.joinToString("\n\n")
+    val sharePost: (HomePost) -> Unit = remember(context, scope, snackbar) { { post ->
+        val text = listOf(post.content.take(650).trim(), postLink(post)).filter { it.isNotBlank() }.joinToString("\n\n")
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TITLE, "${post.author.displayName.ifBlank { "Mongosky" }}'s post")
@@ -138,7 +161,14 @@ fun HomeFeedScreen(
         }
         try { context.startActivity(Intent.createChooser(intent, "Share post")) }
         catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar("No sharing app is available.") } }
-    }
+    } }
+    val copyPost: (HomePost) -> Unit = remember(clipboard, scope, snackbar) { { post ->
+        clipboard.setText(AnnotatedString(postLink(post)))
+        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar("Link copied") }
+    } }
+    val openPhotos: (List<FeedMedia>, Int) -> Unit = remember { { photos, index ->
+        photoViewer = PhotoViewerState(photos, index)
+    } }
 
     Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.TopCenter) {
         PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = viewModel::refresh,
@@ -160,6 +190,14 @@ fun HomeFeedScreen(
                     FeedNotice(state.sessionError, if (state.sessionExpired) "Sign in again" else "Retry",
                         if (state.sessionExpired) onSignInAgain else viewModel::startSession)
                 }
+                if (state.newPostsCount > 0) item(key = "new-posts", contentType = "notice") {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        TextButton(onClick = { viewModel.refresh(); scope.launch { listState.scrollToItem(0) } }) {
+                            Text("${state.newPostsCount} new ${if (state.newPostsCount == 1) "post" else "posts"}",
+                                color = FeedColors.brand, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
                 if (state.posts.isEmpty() && state.loading) item(key = "initial_loading", contentType = "loading") {
                     Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) { FeedSpinner() }
                 }
@@ -174,23 +212,8 @@ fun HomeFeedScreen(
                         FeedDivider()
                     } else {
                         val post = state.posts[homeFeedPostIndex(index, hasReelsPreview)]
-                        LaunchedEffect(post.key, state.refreshVersion) { viewModel.ensureReaction(post) }
-                        val reaction = viewModel.reactions[post.key] ?: PostReactionState(ReactionSummary(total = post.likesCount))
-                        val commentsCount = viewModel.commentCounts[post.key] ?: post.commentsCount
-                        val actions = PostCardActions(
-                            onReact = { viewModel.react(post, it) }, onComments = { viewModel.openComments(post) },
-                            onShare = { share(post) }, onCopyLink = {
-                                clipboard.setText(AnnotatedString(postLink(post)))
-                                if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar("Link copied") }
-                            }, onReactionPeople = { viewModel.openReactionPeople(post) },
-                            onRetryReaction = { viewModel.ensureReaction(post) }
-                        )
                         val enabled = !state.sessionExpired
-                        when (post) {
-                            is HomePost.Text -> TextPostCard(post.post, now, reaction, commentsCount, enabled, actions)
-                            is HomePost.Media -> MediaPostCard(post.post, now, reaction, commentsCount, enabled, actions,
-                                onOpenPhotos = { photos, index -> photoViewer = PhotoViewerState(photos, index) })
-                        }
+                        HomeFeedPostItem(post, now, viewModel, enabled, sharePost, copyPost, openPhotos)
                         FeedDivider()
                     }
                 }
@@ -229,6 +252,19 @@ fun HomeFeedScreen(
             viewModel::selectReactionPeopleFilter, viewModel::retryReactionPeople)
     }
     photoViewer?.let { PhotoViewer(it) { photoViewer = null } }
+    if (!state.sessionExpired) {
+        controls.menu?.let { post ->
+            HomePostMenu(post, controls::closeMenu) { action -> when (action) {
+                HomeMenuAction.COPY -> { controls.closeMenu(); copyPost(post) }
+                HomeMenuAction.DOWNLOAD -> viewModel.requestDownload(post)
+                HomeMenuAction.EDIT -> controls.openEditor(post)
+                HomeMenuAction.DELETE -> controls.openDelete(post)
+                else -> controls.unavailable(action)
+            } }
+        }
+        controls.editor?.let { HomePostEditor(it, controls) }
+        controls.deletion?.let { HomeDeleteDialog(it, controls::closeDelete, controls::confirmDelete) }
+    }
 }
 
 internal const val HOME_REELS_AFTER_POSTS = 3

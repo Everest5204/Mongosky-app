@@ -119,6 +119,10 @@ import com.mongosky.app.reels.ReelsViewModel
 import com.mongosky.app.reels.ReelsPreviewViewModel
 import com.mongosky.app.shared.ProfileAvatar
 import com.mongosky.app.shared.preloadProfileAvatar
+import com.mongosky.app.friends.FriendsRoute
+import com.mongosky.app.friends.FriendsViewModel
+import com.mongosky.app.search.SearchRoute
+import com.mongosky.app.search.SearchViewModel
 import com.mongosky.app.textpost.CreateTextPostScreen
 import com.mongosky.app.textpost.TextPostPublication
 import com.mongosky.app.textpost.TextPostViewModel
@@ -149,6 +153,27 @@ fun MainScreen(
         onDispose { preload?.dispose() }
     }
     val owner = checkNotNull(activity as? ViewModelStoreOwner)
+    // Mongosky Friends integration v1
+    val friendsTokenStore = remember(activity.applicationContext) { TokenStore(activity.applicationContext) }
+    val friendsViewModel = remember(owner) {
+        ViewModelProvider(owner, FriendsViewModel.Factory(friendsTokenStore::read))
+            .get("MongoskyFriends", FriendsViewModel::class.java)
+    }
+    LaunchedEffect(friendsViewModel, sessionKey, signingOut) {
+        if (signingOut) friendsViewModel.endSession() else friendsViewModel.startSession(sessionKey)
+    }
+    DisposableEffect(friendsViewModel, activity) {
+        onDispose { if (!activity.isChangingConfigurations) friendsViewModel.endSession() }
+    }
+    // Mongosky Search integration v2
+    val searchTokenStore = remember(activity.applicationContext) { TokenStore(activity.applicationContext) }
+    val searchViewModel = remember(owner) {
+        ViewModelProvider(owner, SearchViewModel.Factory(searchTokenStore::read))
+            .get("MongoskySearch", SearchViewModel::class.java)
+    }
+    LaunchedEffect(searchViewModel, sessionKey, signingOut) {
+        if (signingOut) searchViewModel.endSession() else searchViewModel.startSession(sessionKey)
+    }
     val feedViewModel = remember(owner) {
         ViewModelProvider(owner, HomeFeedViewModel.Factory(TokenStore(activity.applicationContext)))
             .get("MongoskyHomeFeed", HomeFeedViewModel::class.java)
@@ -207,9 +232,10 @@ fun MainScreen(
             mediaPostViewModel.startSession()
         }
     }
-    DisposableEffect(feedViewModel, mediaPostViewModel, ownProfileViewModel, activity) {
+    DisposableEffect(feedViewModel, mediaPostViewModel, ownProfileViewModel, searchViewModel, activity) {
         onDispose {
             if (!activity.isChangingConfigurations) {
+                searchViewModel.endSession()
                 ownProfileViewModel.endSession()
                 userProfileViewModel.endSession()
                 reelsViewModel.endSession()
@@ -328,6 +354,8 @@ fun MainScreen(
 
     fun signOut() {
         if (signingOut) return
+        friendsViewModel.endSession()
+        searchViewModel.endSession()
         ownProfileViewModel.endSession()
         userProfileViewModel.endSession()
         reelsViewModel.setForeground(false)
@@ -427,8 +455,9 @@ fun MainScreen(
                         contentColor = MainPalette.text,
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                         snackbarHost = { SnackbarHost(snackbar) },
-                        topBar = {
-                            if (!isPostComposer && route != MainRoute.PROFILE && route != MainRoute.USER_PROFILE && route != MainRoute.REELS) MainTopBar(
+                        topBar = friendsTopBar@ {
+                            if (route == MainRoute.FRIENDS) return@friendsTopBar
+                            if (!isPostComposer && route != MainRoute.SEARCH && route != MainRoute.PROFILE && route != MainRoute.USER_PROFILE && route != MainRoute.REELS) MainTopBar(
                                 enabled = !signingOut && !mediaPickerOpen,
                                 onHome = { navigate(MainRoute.HOME) },
                                 onSearch = { navigate(MainRoute.SEARCH) },
@@ -441,7 +470,7 @@ fun MainScreen(
                             )
                         },
                         bottomBar = {
-                            if (!isPostComposer && route != MainRoute.REELS) MainBottomBar(
+                            if (!isPostComposer && route != MainRoute.SEARCH && route != MainRoute.REELS) MainBottomBar(
                                 selectedRoute = route,
                                 enabled = !signingOut && !mediaPickerOpen,
                                 createMenuOpen = createMenuOpen,
@@ -502,6 +531,27 @@ fun MainScreen(
                                             feedViewModel.refresh()
                                         },
                                         onSignInAgain = ::signOut
+                                    )
+                                    MainRoute.SEARCH -> SearchRoute(
+                                        viewModel = searchViewModel,
+                                        onSignInAgain = ::signOut,
+                                        onOpenProfile = { user ->
+                                            openUserProfile(ProfileOpenRequest(
+                                                user.id,
+                                                FeedAuthor(user.id, user.firstName, user.lastName, user.imageUrl)
+                                            ))
+                                        }
+                                    )
+                                    MainRoute.FRIENDS -> FriendsRoute(
+                                        viewModel = friendsViewModel,
+                                        onBack = { if (!signingOut) backStack = backStack.dropLast(1).ifEmpty { listOf(MainRoute.HOME.name) } },
+                                        onSignInAgain = ::signOut,
+                                        onOpenProfile = { user ->
+                                            openUserProfile(ProfileOpenRequest(
+                                                user.id,
+                                                FeedAuthor(user.id, user.firstName, user.lastName, user.imageUrl)
+                                            ))
+                                        }
                                     )
                                     MainRoute.USER_PROFILE -> UserProfileScreen(
                                         viewModel = userProfileViewModel, actionsModel = feedViewModel, viewerId = userId,
