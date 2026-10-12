@@ -1,0 +1,120 @@
+package com.mongosky.app.communityguidelines
+
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import com.mongosky.app.shared.InformationArt
+import com.mongosky.app.shared.InformationArtNode
+
+// Geometry ported from the web SVGs; no downloads or bitmap decoding are required.
+internal object CommunityGuidelinesArt {
+    val respect by lazy {
+        InformationArt(560f, 360f, "People communicating safely around a protective shield", listOf(
+            InformationArtNode(data = "M48.0 12.0H512.0A36.0 36.0 0 0 1 548.0 48.0V312.0A36.0 36.0 0 0 1 512.0 348.0H48.0A36.0 36.0 0 0 1 12.0 312.0V48.0A36.0 36.0 0 0 1 48.0 12.0Z", fill = Brush.linearGradient(0f to Color(0xFFEEF4FF), 0.52f to Color(0xFFF5F1FF), 1f to Color(0xFFE8FAFF), start = Offset(30f, 24f), end = Offset(525f, 340f)), alpha = 1f),
+            InformationArtNode(data = "M44.0 68.0A28.0 28.0 0 1 0 100.0 68.0A28.0 28.0 0 1 0 44.0 68.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 0.7f),
+            InformationArtNode(data = "M461.0 295.0A42.0 42.0 0 1 0 545.0 295.0A42.0 42.0 0 1 0 461.0 295.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 0.52f),
+            InformationArtNode(data = "M471.0 61.0A10.0 10.0 0 1 0 491.0 61.0A10.0 10.0 0 1 0 471.0 61.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF8AD7E8)), alpha = 0.72f),
+            InformationArtNode(data = "M80.0 290.0A9.0 9.0 0 1 0 98.0 290.0A9.0 9.0 0 1 0 80.0 290.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFA79AFC)), alpha = 0.72f),
+            InformationArtNode(data = "M219.0 54.0H341.0A34.0 34.0 0 0 1 375.0 88.0V272.0A34.0 34.0 0 0 1 341.0 306.0H219.0A34.0 34.0 0 0 1 185.0 272.0V88.0A34.0 34.0 0 0 1 219.0 54.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M280 80C309 99 335 105 348 108V169C348 219 317 255 280 272C243 255 212 219 212 169V108C225 105 251 99 280 80Z", fill = Brush.linearGradient(0f to Color(0xFF6D5DFB), 1f to Color(0xFF4169E1), start = Offset(232f, 74f), end = Offset(335f, 257f)), alpha = 1f),
+            InformationArtNode(data = "M280 210C273 203 247 185 247 161C247 147 257 138 270 138C278 138 285 143 280 148C286 142 292 138 301 138C314 138 323 147 323 161C323 185 297 203 280 210Z", fill = Brush.linearGradient(0f to Color(0xFFFF8CAD), 1f to Color(0xFFFF4D7D), start = Offset(254f, 142f), end = Offset(307f, 208f)), alpha = 1f),
+            InformationArtNode(data = "M260 169L274 183L303 152", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 8f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M67.0 84.0H148.0A22.0 22.0 0 0 1 170.0 106.0V138.0A22.0 22.0 0 0 1 148.0 160.0H67.0A22.0 22.0 0 0 1 45.0 138.0V106.0A22.0 22.0 0 0 1 67.0 84.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M61.0 116.0A14.0 14.0 0 1 0 89.0 116.0A14.0 14.0 0 1 0 61.0 116.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFB78A)), alpha = 1f),
+            InformationArtNode(data = "M64 114C64 103 70 97 78 97C87 97 92 103 92 112C87 108 80 106 73 106C70 110 67 112 64 114Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF49366F)), alpha = 1f),
+            InformationArtNode(data = "M103.0 105.0H140.0A4.0 4.0 0 0 1 144.0 109.0V109.0A4.0 4.0 0 0 1 140.0 113.0H103.0A4.0 4.0 0 0 1 99.0 109.0V109.0A4.0 4.0 0 0 1 103.0 105.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF7E75D8)), alpha = 1f),
+            InformationArtNode(data = "M102.5 122.0H127.5A3.5 3.5 0 0 1 131.0 125.5V125.5A3.5 3.5 0 0 1 127.5 129.0H102.5A3.5 3.5 0 0 1 99.0 125.5V125.5A3.5 3.5 0 0 1 102.5 122.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFD4D1F7)), alpha = 1f),
+            InformationArtNode(data = "M146 154L156 172L128 157", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M412.0 185.0H494.0A22.0 22.0 0 0 1 516.0 207.0V240.0A22.0 22.0 0 0 1 494.0 262.0H412.0A22.0 22.0 0 0 1 390.0 240.0V207.0A22.0 22.0 0 0 1 412.0 185.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M406.0 218.0A14.0 14.0 0 1 0 434.0 218.0A14.0 14.0 0 1 0 406.0 218.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF8AD7E8)), alpha = 1f),
+            InformationArtNode(data = "M410 216C410 205 416 199 424 199C433 199 438 205 438 214C433 210 426 208 419 208C416 212 413 214 410 216Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF234B6D)), alpha = 1f),
+            InformationArtNode(data = "M448.0 207.0H485.0A4.0 4.0 0 0 1 489.0 211.0V211.0A4.0 4.0 0 0 1 485.0 215.0H448.0A4.0 4.0 0 0 1 444.0 211.0V211.0A4.0 4.0 0 0 1 448.0 207.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF4385D7)), alpha = 1f),
+            InformationArtNode(data = "M447.5 224.0H472.5A3.5 3.5 0 0 1 476.0 227.5V227.5A3.5 3.5 0 0 1 472.5 231.0H447.5A3.5 3.5 0 0 1 444.0 227.5V227.5A3.5 3.5 0 0 1 447.5 224.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFCFE3F6)), alpha = 1f),
+            InformationArtNode(data = "M410 256L396 274L425 259", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M86.0 230.0A31.0 31.0 0 1 0 148.0 230.0A31.0 31.0 0 1 0 86.0 230.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M104.0 220.0A13.0 13.0 0 1 0 130.0 220.0A13.0 13.0 0 1 0 104.0 220.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFF2A879)), alpha = 1f),
+            InformationArtNode(data = "M91 252C94 236 104 229 117 229C130 229 140 236 143 252", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF6D5DFB)), alpha = 1f),
+            InformationArtNode(data = "M106 217C106 207 112 201 120 201C129 201 134 207 134 216C129 212 123 210 116 210C113 214 110 216 106 217Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF372B5D)), alpha = 1f),
+            InformationArtNode(data = "M417.0 117.0A31.0 31.0 0 1 0 479.0 117.0A31.0 31.0 0 1 0 417.0 117.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M435.0 107.0A13.0 13.0 0 1 0 461.0 107.0A13.0 13.0 0 1 0 435.0 107.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFC98C69)), alpha = 1f),
+            InformationArtNode(data = "M422 139C425 123 435 116 448 116C461 116 471 123 474 139", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF35A7A0)), alpha = 1f),
+            InformationArtNode(data = "M437 104C437 94 443 88 451 88C460 88 465 94 465 103C460 99 454 97 447 97C444 101 441 103 437 104Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF253B52)), alpha = 1f),
+        ))
+    }
+    val trust by lazy {
+        InformationArt(560f, 360f, "Verified profile and connected trust signals", listOf(
+            InformationArtNode(data = "M48.0 12.0H512.0A36.0 36.0 0 0 1 548.0 48.0V312.0A36.0 36.0 0 0 1 512.0 348.0H48.0A36.0 36.0 0 0 1 12.0 312.0V48.0A36.0 36.0 0 0 1 48.0 12.0Z", fill = Brush.linearGradient(0f to Color(0xFFFFF3E9), 0.5f to Color(0xFFF6F0FF), 1f to Color(0xFFEDF7FF), start = Offset(24f, 20f), end = Offset(534f, 345f)), alpha = 1f),
+            InformationArtNode(data = "M93 193C145 135 194 117 245 123", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFC9C1F3)), strokeWidth = 4f, roundCap = true, dash = listOf(8f, 11f)),
+            InformationArtNode(data = "M321 235C385 261 433 249 479 205", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFBFDDF2)), strokeWidth = 4f, roundCap = true, dash = listOf(8f, 11f)),
+            InformationArtNode(data = "M191.0 45.0H369.0A34.0 34.0 0 0 1 403.0 79.0V281.0A34.0 34.0 0 0 1 369.0 315.0H191.0A34.0 34.0 0 0 1 157.0 281.0V79.0A34.0 34.0 0 0 1 191.0 45.0Z", fill = Brush.linearGradient(0f to Color(0xFFFFFFFF), 1f to Color(0xFFFAFAFF), start = Offset(168f, 55f), end = Offset(397f, 305f)), alpha = 1f),
+            InformationArtNode(data = "M198.0 67.0H362.0A19.0 19.0 0 0 1 381.0 86.0V104.0A19.0 19.0 0 0 1 362.0 123.0H198.0A19.0 19.0 0 0 1 179.0 104.0V86.0A19.0 19.0 0 0 1 198.0 67.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFF2F0FF)), alpha = 1f),
+            InformationArtNode(data = "M193.0 95.0A17.0 17.0 0 1 0 227.0 95.0A17.0 17.0 0 1 0 193.0 95.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFF6B386)), alpha = 1f),
+            InformationArtNode(data = "M197 93C197 81 204 75 213 75C223 75 229 82 229 92C223 87 216 85 208 85C205 89 201 92 197 93Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF40325E)), alpha = 1f),
+            InformationArtNode(data = "M245.5 82.0H319.5A4.5 4.5 0 0 1 324.0 86.5V86.5A4.5 4.5 0 0 1 319.5 91.0H245.5A4.5 4.5 0 0 1 241.0 86.5V86.5A4.5 4.5 0 0 1 245.5 82.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF554B86)), alpha = 1f),
+            InformationArtNode(data = "M244.5 100.0H295.5A3.5 3.5 0 0 1 299.0 103.5V103.5A3.5 3.5 0 0 1 295.5 107.0H244.5A3.5 3.5 0 0 1 241.0 103.5V103.5A3.5 3.5 0 0 1 244.5 100.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFC6C1E4)), alpha = 1f),
+            InformationArtNode(data = "M333.0 95.0A24.0 24.0 0 1 0 381.0 95.0A24.0 24.0 0 1 0 333.0 95.0Z", fill = Brush.linearGradient(0f to Color(0xFF6E62F6), 1f to Color(0xFF3F82E0), start = Offset(336f, 74f), end = Offset(382f, 124f)), alpha = 1f),
+            InformationArtNode(data = "M346 95L353 102L368 87", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 6f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M199.0 145.0H361.0A20.0 20.0 0 0 1 381.0 165.0V192.0A20.0 20.0 0 0 1 361.0 212.0H199.0A20.0 20.0 0 0 1 179.0 192.0V165.0A20.0 20.0 0 0 1 199.0 145.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFF7F8FC)), alpha = 1f),
+            InformationArtNode(data = "M202.5 163.0H301.5A4.5 4.5 0 0 1 306.0 167.5V167.5A4.5 4.5 0 0 1 301.5 172.0H202.5A4.5 4.5 0 0 1 198.0 167.5V167.5A4.5 4.5 0 0 1 202.5 163.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF827BA3)), alpha = 1f),
+            InformationArtNode(data = "M201.5 181.0H356.5A3.5 3.5 0 0 1 360.0 184.5V184.5A3.5 3.5 0 0 1 356.5 188.0H201.5A3.5 3.5 0 0 1 198.0 184.5V184.5A3.5 3.5 0 0 1 201.5 181.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFD3D1DF)), alpha = 1f),
+            InformationArtNode(data = "M201.5 195.0H318.5A3.5 3.5 0 0 1 322.0 198.5V198.5A3.5 3.5 0 0 1 318.5 202.0H201.5A3.5 3.5 0 0 1 198.0 198.5V198.5A3.5 3.5 0 0 1 201.5 195.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFE0DFE8)), alpha = 1f),
+            InformationArtNode(data = "M197.0 231.0H257.0A18.0 18.0 0 0 1 275.0 249.0V268.0A18.0 18.0 0 0 1 257.0 286.0H197.0A18.0 18.0 0 0 1 179.0 268.0V249.0A18.0 18.0 0 0 1 197.0 231.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFEEEAFE)), alpha = 1f),
+            InformationArtNode(data = "M191.0 258.0A13.0 13.0 0 1 0 217.0 258.0A13.0 13.0 0 1 0 191.0 258.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF7567EF)), alpha = 1f),
+            InformationArtNode(data = "M198 258L203 263L211 253", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 4f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M229.5 249.0H255.5A3.5 3.5 0 0 1 259.0 252.5V252.5A3.5 3.5 0 0 1 255.5 256.0H229.5A3.5 3.5 0 0 1 226.0 252.5V252.5A3.5 3.5 0 0 1 229.5 249.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF8E84D8)), alpha = 1f),
+            InformationArtNode(data = "M229.0 263.0H247.0A3.0 3.0 0 0 1 250.0 266.0V266.0A3.0 3.0 0 0 1 247.0 269.0H229.0A3.0 3.0 0 0 1 226.0 266.0V266.0A3.0 3.0 0 0 1 229.0 263.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFC8C2EE)), alpha = 1f),
+            InformationArtNode(data = "M304.0 231.0H363.0A18.0 18.0 0 0 1 381.0 249.0V268.0A18.0 18.0 0 0 1 363.0 286.0H304.0A18.0 18.0 0 0 1 286.0 268.0V249.0A18.0 18.0 0 0 1 304.0 231.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFEAF7FB)), alpha = 1f),
+            InformationArtNode(data = "M298.0 258.0A13.0 13.0 0 1 0 324.0 258.0A13.0 13.0 0 1 0 298.0 258.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF49A8BC)), alpha = 1f),
+            InformationArtNode(data = "M305 258L310 263L318 253", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 4f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M336.5 249.0H361.5A3.5 3.5 0 0 1 365.0 252.5V252.5A3.5 3.5 0 0 1 361.5 256.0H336.5A3.5 3.5 0 0 1 333.0 252.5V252.5A3.5 3.5 0 0 1 336.5 249.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF6AA9B6)), alpha = 1f),
+            InformationArtNode(data = "M336.0 263.0H353.0A3.0 3.0 0 0 1 356.0 266.0V266.0A3.0 3.0 0 0 1 353.0 269.0H336.0A3.0 3.0 0 0 1 333.0 266.0V266.0A3.0 3.0 0 0 1 336.0 263.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFB9DEE5)), alpha = 1f),
+            InformationArtNode(data = "M46.0 206.0A42.0 42.0 0 1 0 130.0 206.0A42.0 42.0 0 1 0 46.0 206.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M65.0 206.0A23.0 23.0 0 1 0 111.0 206.0A23.0 23.0 0 1 0 65.0 206.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFB176)), alpha = 1f),
+            InformationArtNode(data = "M77 205L85 213L101 195", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 6f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M438.0 196.0A42.0 42.0 0 1 0 522.0 196.0A42.0 42.0 0 1 0 438.0 196.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M457.0 196.0A23.0 23.0 0 1 0 503.0 196.0A23.0 23.0 0 1 0 457.0 196.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF58B6C6)), alpha = 1f),
+            InformationArtNode(data = "M469 196L477 204L493 186", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 6f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M98 78L103 90L116 95L103 100L98 113L93 100L80 95L93 90L98 78Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFF6AA66)), alpha = 1f),
+            InformationArtNode(data = "M471 74L475 84L486 88L475 92L471 103L467 92L456 88L467 84L471 74Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF887AF5)), alpha = 1f),
+            InformationArtNode(data = "M107.0 285.0A8.0 8.0 0 1 0 123.0 285.0A8.0 8.0 0 1 0 107.0 285.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF9D8EF8)), alpha = 0.7f),
+            InformationArtNode(data = "M453.0 286.0A9.0 9.0 0 1 0 471.0 286.0A9.0 9.0 0 1 0 453.0 286.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFF0A66C)), alpha = 0.72f),
+        ))
+    }
+    val privacy by lazy {
+        InformationArt(560f, 360f, "Secure privacy controls and a reporting shield", listOf(
+            InformationArtNode(data = "M48.0 12.0H512.0A36.0 36.0 0 0 1 548.0 48.0V312.0A36.0 36.0 0 0 1 512.0 348.0H48.0A36.0 36.0 0 0 1 12.0 312.0V48.0A36.0 36.0 0 0 1 48.0 12.0Z", fill = Brush.linearGradient(0f to Color(0xFFEAFBF5), 0.52f to Color(0xFFEDF7FF), 1f to Color(0xFFF3EFFF), start = Offset(22f, 20f), end = Offset(536f, 344f)), alpha = 1f),
+            InformationArtNode(data = "M49.0 78.0A31.0 31.0 0 1 0 111.0 78.0A31.0 31.0 0 1 0 49.0 78.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 0.68f),
+            InformationArtNode(data = "M451.0 288.0A40.0 40.0 0 1 0 531.0 288.0A40.0 40.0 0 1 0 451.0 288.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 0.55f),
+            InformationArtNode(data = "M455.0 64.0A9.0 9.0 0 1 0 473.0 64.0A9.0 9.0 0 1 0 455.0 64.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF55C5A7)), alpha = 0.75f),
+            InformationArtNode(data = "M82.0 293.0A10.0 10.0 0 1 0 102.0 293.0A10.0 10.0 0 1 0 82.0 293.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF7DA7E8)), alpha = 0.68f),
+            InformationArtNode(data = "M187.0 38.0H317.0A36.0 36.0 0 0 1 353.0 74.0V288.0A36.0 36.0 0 0 1 317.0 324.0H187.0A36.0 36.0 0 0 1 151.0 288.0V74.0A36.0 36.0 0 0 1 187.0 38.0Z", fill = Brush.linearGradient(0f to Color(0xFF283B63), 1f to Color(0xFF182743), start = Offset(174f, 53f), end = Offset(334f, 313f)), alpha = 1f),
+            InformationArtNode(data = "M191.0 57.0H313.0A25.0 25.0 0 0 1 338.0 82.0V269.0A25.0 25.0 0 0 1 313.0 294.0H191.0A25.0 25.0 0 0 1 166.0 269.0V82.0A25.0 25.0 0 0 1 191.0 57.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFF9FCFF)), alpha = 1f),
+            InformationArtNode(data = "M226.5 47.0H277.5A3.5 3.5 0 0 1 281.0 50.5V50.5A3.5 3.5 0 0 1 277.5 54.0H226.5A3.5 3.5 0 0 1 223.0 50.5V50.5A3.5 3.5 0 0 1 226.5 47.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF637493)), alpha = 1f),
+            InformationArtNode(data = "M218.0 112.0A34.0 34.0 0 1 0 286.0 112.0A34.0 34.0 0 1 0 218.0 112.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFE7F6F2)), alpha = 1f),
+            InformationArtNode(data = "M241.0 108.0H263.0A10.0 10.0 0 0 1 273.0 118.0V132.0A10.0 10.0 0 0 1 263.0 142.0H241.0A10.0 10.0 0 0 1 231.0 132.0V118.0A10.0 10.0 0 0 1 241.0 108.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF42B99A)), alpha = 1f),
+            InformationArtNode(data = "M239 109V98C239 90 245 84 252 84C260 84 266 90 266 98V109", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFF42B99A)), strokeWidth = 8f, roundCap = true),
+            InformationArtNode(data = "M247.0 124.0A5.0 5.0 0 1 0 257.0 124.0A5.0 5.0 0 1 0 247.0 124.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M252 128V135", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF000000)), alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 4f, roundCap = true),
+            InformationArtNode(data = "M196.5 168.0H307.5A6.5 6.5 0 0 1 314.0 174.5V174.5A6.5 6.5 0 0 1 307.5 181.0H196.5A6.5 6.5 0 0 1 190.0 174.5V174.5A6.5 6.5 0 0 1 196.5 168.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF354A70)), alpha = 1f),
+            InformationArtNode(data = "M206.0 194.0H298.0A4.0 4.0 0 0 1 302.0 198.0V198.0A4.0 4.0 0 0 1 298.0 202.0H206.0A4.0 4.0 0 0 1 202.0 198.0V198.0A4.0 4.0 0 0 1 206.0 194.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFBFC9D8)), alpha = 1f),
+            InformationArtNode(data = "M218.0 211.0H286.0A4.0 4.0 0 0 1 290.0 215.0V215.0A4.0 4.0 0 0 1 286.0 219.0H218.0A4.0 4.0 0 0 1 214.0 215.0V215.0A4.0 4.0 0 0 1 218.0 211.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFD5DCE7)), alpha = 1f),
+            InformationArtNode(data = "M205.5 245.0H298.5A15.5 15.5 0 0 1 314.0 260.5V260.5A15.5 15.5 0 0 1 298.5 276.0H205.5A15.5 15.5 0 0 1 190.0 260.5V260.5A15.5 15.5 0 0 1 205.5 245.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFE8F6F2)), alpha = 1f),
+            InformationArtNode(data = "M201.0 260.5A8.0 8.0 0 1 0 217.0 260.5A8.0 8.0 0 1 0 201.0 260.5Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF43B99A)), alpha = 1f),
+            InformationArtNode(data = "M205 261L208 264L213 257", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 3f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M229.0 256.0H287.0A4.0 4.0 0 0 1 291.0 260.0V260.0A4.0 4.0 0 0 1 287.0 264.0H229.0A4.0 4.0 0 0 1 225.0 260.0V260.0A4.0 4.0 0 0 1 229.0 256.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF6AAE9D)), alpha = 1f),
+            InformationArtNode(data = "M244.0 308.0A8.0 8.0 0 1 0 260.0 308.0A8.0 8.0 0 1 0 244.0 308.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF60708E)), alpha = 1f),
+            InformationArtNode(data = "M415 112C438 127 459 132 470 135V190C470 233 445 264 415 279C385 264 360 233 360 190V135C371 132 392 127 415 112Z", fill = Brush.linearGradient(0f to Color(0xFF46C4A3), 1f to Color(0xFF278EB2), start = Offset(352f, 127f), end = Offset(472f, 273f)), alpha = 1f),
+            InformationArtNode(data = "M390 185C404 168 426 168 440 185C426 202 404 202 390 185Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 0.96f),
+            InformationArtNode(data = "M406.0 185.0A9.0 9.0 0 1 0 424.0 185.0A9.0 9.0 0 1 0 406.0 185.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF2F9D9B)), alpha = 1f),
+            InformationArtNode(data = "M391 210L439 162", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF000000)), alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 7f, roundCap = true),
+            InformationArtNode(data = "M73.0 158.0H138.0A24.0 24.0 0 0 1 162.0 182.0V225.0A24.0 24.0 0 0 1 138.0 249.0H73.0A24.0 24.0 0 0 1 49.0 225.0V182.0A24.0 24.0 0 0 1 73.0 158.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), alpha = 1f),
+            InformationArtNode(data = "M64.0 190.0A15.0 15.0 0 1 0 94.0 190.0A15.0 15.0 0 1 0 64.0 190.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFB477)), alpha = 1f),
+            InformationArtNode(data = "M70 191L77 198L89 182", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFFFFFFFF)), strokeWidth = 5f, roundCap = true, roundJoin = true),
+            InformationArtNode(data = "M107.0 182.0H134.0A4.0 4.0 0 0 1 138.0 186.0V186.0A4.0 4.0 0 0 1 134.0 190.0H107.0A4.0 4.0 0 0 1 103.0 186.0V186.0A4.0 4.0 0 0 1 107.0 182.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFF547199)), alpha = 1f),
+            InformationArtNode(data = "M106.5 199.0H126.5A3.5 3.5 0 0 1 130.0 202.5V202.5A3.5 3.5 0 0 1 126.5 206.0H106.5A3.5 3.5 0 0 1 103.0 202.5V202.5A3.5 3.5 0 0 1 106.5 199.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFC5CFDC)), alpha = 1f),
+            InformationArtNode(data = "M72.5 222.0H138.5A4.5 4.5 0 0 1 143.0 226.5V226.5A4.5 4.5 0 0 1 138.5 231.0H72.5A4.5 4.5 0 0 1 68.0 226.5V226.5A4.5 4.5 0 0 1 72.5 222.0Z", fill = androidx.compose.ui.graphics.SolidColor(Color(0xFFE5EAF0)), alpha = 1f),
+            InformationArtNode(data = "M112 84C112 70 123 59 137 59", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFF67BEAA)), strokeWidth = 5f, roundCap = true),
+            InformationArtNode(data = "M126 55L139 58L135 71", fill = null, alpha = 1f, stroke = androidx.compose.ui.graphics.SolidColor(Color(0xFF67BEAA)), strokeWidth = 5f, roundCap = true, roundJoin = true),
+        ))
+    }
+}

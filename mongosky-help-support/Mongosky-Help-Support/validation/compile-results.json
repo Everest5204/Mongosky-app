@@ -1,0 +1,19 @@
+{
+  "compiler": "Kotlin 2.2.10 + official Compose compiler plugin",
+  "platform": "Android API 36 type checking; project SDK 37 unchanged",
+  "checks": [
+    {
+      "project": "clean",
+      "sourceFiles": 161,
+      "compileExit": 0,
+      "policyTests": 7
+    },
+    {
+      "project": "upgraded",
+      "sourceFiles": 176,
+      "compileExit": 0,
+      "policyTests": 7
+    }
+  ],
+  "fullGradleBuild": "Unavailable in this runtime: SDK 37/JDK 25 toolchain missing"
+}

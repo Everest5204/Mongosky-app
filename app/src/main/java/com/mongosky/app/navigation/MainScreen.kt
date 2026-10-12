@@ -2,6 +2,40 @@
 
 package com.mongosky.app.navigation
 
+import com.mongosky.app.personaldetails.PersonalDetailsHost
+import com.mongosky.app.personaldetails.LocalPersonalDetailsHost
+
+import com.mongosky.app.deactivateaccount.DeactivateAccountHost
+import com.mongosky.app.deactivateaccount.LocalDeactivateAccountHost
+
+// Mongosky AI integration v1
+import com.mongosky.app.ai.AiHost
+import com.mongosky.app.ai.AiScreen
+import com.mongosky.app.ai.AiViewModel
+import androidx.compose.foundation.isSystemInDarkTheme
+
+import com.mongosky.app.notifications.NotificationHost
+import com.mongosky.app.notifications.NotificationBell
+import com.mongosky.app.notifications.NotificationsScreen
+import com.mongosky.app.notifications.NotificationsViewModel
+
+import com.mongosky.app.settingsinformation.SettingsInformationNavigation
+import com.mongosky.app.settingsinformation.SettingsInformationRoute
+
+import com.mongosky.app.deleteaccount.DeleteAccountNavigation
+import com.mongosky.app.deleteaccount.DeleteAccountRoute
+
+import com.mongosky.app.changepassword.ChangePasswordNavigation
+import com.mongosky.app.changepassword.ChangePasswordRoute
+import com.mongosky.app.changepassword.ChangePasswordRecoveryRoute
+
+import com.mongosky.app.settings.SettingsNavigation
+import com.mongosky.app.settings.SettingsRoute
+
+import com.mongosky.app.drawer.DrawerInformationNavigation
+import com.mongosky.app.drawer.DrawerInformationPage
+
+import com.mongosky.app.changename.ChangeNameRoute
 import androidx.compose.runtime.CompositionLocalProvider
 import com.mongosky.app.post.FeedAuthor
 import com.mongosky.app.profile.LocalProfileNavigator
@@ -160,6 +194,19 @@ fun MainScreen(
         onDispose { preload?.dispose() }
     }
     val owner = checkNotNull(activity as? ViewModelStoreOwner)
+    // Mongosky AI integration v1: Activity state survives rotation.
+    val aiViewModel = remember(owner) {
+        ViewModelProvider(owner, AiViewModel.Factory(activity.applicationContext))
+            .get("MongoskyAI", AiViewModel::class.java)
+    }
+    val aiTheme by aiViewModel.theme.collectAsState()
+    val aiDark = aiTheme.resolve(isSystemInDarkTheme())
+    // Mongosky Notification integration v1
+    val notificationsViewModel = remember(owner) {
+        ViewModelProvider(owner, NotificationsViewModel.Factory(activity.applicationContext))
+            .get("MongoskyNotifications", NotificationsViewModel::class.java)
+    }
+    val notificationsState by notificationsViewModel.controller.state.collectAsState()
     // Mongosky Friends integration v1
     val friendsTokenStore = remember(activity.applicationContext) { TokenStore(activity.applicationContext) }
     val friendsViewModel = remember(owner) {
@@ -319,9 +366,15 @@ fun MainScreen(
     var profileHint by remember(sessionKey) { mutableStateOf<FeedAuthor?>(null) }
     val entry = backStack.lastOrNull() ?: MainRoute.HOME.name
     val route = MainRoute.values().firstOrNull { it.name == entry.substringBefore(':') } ?: MainRoute.HOME
+    AiHost(aiViewModel, identity = sessionKey, signingOut = signingOut, active = route == MainRoute.AI)
     val isPostComposer = route == MainRoute.MEDIA_POST || route == MainRoute.TEXT_POST
     val isSignupPage = route == MainRoute.SIGNUP
-    val drawerVisible = !isSignupPage && (drawerState.isOpen || drawerState.targetValue == DrawerValue.Open)
+    val isSettingsPage = route == MainRoute.SETTINGS
+    val isSettingsInformationPage = SettingsInformationNavigation.owns(route.name)
+    val isDeleteAccountPage = route == MainRoute.DELETE_ACCOUNT
+    val isPasswordSection = ChangePasswordNavigation.owns(route.name)
+    val isInformationPage = DrawerInformationNavigation.opens(route.name)
+    val drawerVisible = !isSettingsInformationPage && !isDeleteAccountPage && !isPasswordSection && !isSettingsPage && !isInformationPage && !isSignupPage && (drawerState.isOpen || drawerState.targetValue == DrawerValue.Open)
     DrawerEffects(drawerViewModel, ownProfileViewModel, userId, drawerVisible, signingOut)
     LaunchedEffect(isSignupPage, error) {
         if (isSignupPage && !signingOut && error != null) snackbar.showSnackbar(error)
@@ -411,6 +464,12 @@ fun MainScreen(
         scope.launch { drawerState.close() }
     }
 
+    NotificationHost(
+        viewModel = notificationsViewModel, owner = userId, signingOut = signingOut,
+        onOpenNotifications = { navigate(MainRoute.NOTIFICATIONS) }, onOpenProfile = ::openUserProfile,
+        navigationEnabled = !mediaPickerOpen
+    )
+
     val canOpenSignup by rememberUpdatedState<() -> Boolean>({
         !signingOut && !mediaPickerOpen && backStack.lastOrNull() != MainRoute.SIGNUP.name
     })
@@ -431,12 +490,31 @@ fun MainScreen(
     fun navigateFromDrawer(destination: DrawerDestination) {
         if (destination == DrawerDestination.SIGNUP) { signupOpening.open(); return }
         val target = destination.routeName?.let(MainRoute::valueOf) ?: return
+        if (target == MainRoute.SETTINGS) {
+            if (signingOut || mediaPickerOpen || signupOpening.isOpening) return
+            feedViewModel.closeOverlays()
+            createMenuOpen = false
+            backStack = SettingsNavigation.push(backStack)
+            scope.launch { drawerState.snapTo(DrawerValue.Closed) }
+            return
+        }
+        if (DrawerInformationNavigation.opens(target.name)) {
+            if (signingOut || mediaPickerOpen || signupOpening.isOpening) return
+            feedViewModel.closeOverlays()
+            createMenuOpen = false
+            backStack = DrawerInformationNavigation.push(backStack, target.name)
+            // Render the page immediately; snap the now-hidden drawer closed without a Home flash.
+            scope.launch { drawerState.snapTo(DrawerValue.Closed) }
+            return
+        }
         navigate(target)
         scope.launch { drawerState.close() }
     }
 
     fun leaveAccount(onComplete: () -> Unit, showSignOutPage: Boolean = true) {
         if (signingOut) return
+        aiViewModel.endSession()
+        notificationsViewModel.endSession()
         signupOpening.cancel()
         drawerSignupViewModel.endSession()
         drawerViewModel.endSession()
@@ -476,7 +554,7 @@ fun MainScreen(
         }
     }
 
-    LightMainSystemBars(dark = route == MainRoute.REELS)
+    LightMainSystemBars(dark = route == MainRoute.REELS || (route == MainRoute.AI && aiDark))
 
     val publishedText = textPublication as? TextPostPublication.Published
     LaunchedEffect(publishedText?.post?.id, signingOut) {
@@ -496,11 +574,100 @@ fun MainScreen(
         }
     }
 
-    CompositionLocalProvider(LocalProfileNavigator provides ::openUserProfile, LocalProfileViewerId provides userId) {
+    // Mongosky Deactivate Account host v1
+    // Mongosky Personal Details host v1
+    CompositionLocalProvider(LocalProfileNavigator provides ::openUserProfile, LocalProfileViewerId provides userId,
+        LocalPersonalDetailsHost provides PersonalDetailsHost(
+            sessionKey = userId.orEmpty(), sessionRevision = loginViewModel.uiState.sessionRevision,
+            busy = signingOut, error = error,
+            onSignIn = { leaveAccount(onSignOut, showSignOutPage = false) },
+            onNameUpdated = {
+                onRefreshProfile()
+                if (ownProfileViewModel.state.value.ownerId == userId) ownProfileViewModel.retryProfile()
+                drawerViewModel.refresh(force = true)
+            }
+        ),
+        LocalDeactivateAccountHost provides DeactivateAccountHost(
+            sessionKey = userId.orEmpty(), sessionRevision = loginViewModel.uiState.sessionRevision,
+            busy = signingOut, error = error,
+            onLeaveAccount = { leaveAccount(onSignOut, showSignOutPage = false) }
+        )) {
     MaterialTheme(colorScheme = MainPalette.colors) {
-        Surface(modifier = Modifier.fillMaxSize(), color = if (route == MainRoute.REELS) Color.Black else Color.White) {
+        Surface(modifier = Modifier.fillMaxSize(), color = if (route == MainRoute.REELS) Color.Black else if (route == MainRoute.AI && aiDark) Color(0xFF101113) else Color.White) {
             Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
-                if (isSignupPage) {
+                if (isSettingsInformationPage) {
+                    contentState.SaveableStateProvider(entry) {
+                        SettingsInformationRoute(route = route.name, onBack = {
+                            if (!signingOut) backStack = SettingsInformationNavigation.back(backStack, entry)
+                        })
+                    }
+                } else if (isDeleteAccountPage) {
+                    contentState.SaveableStateProvider(entry) {
+                        val deletionSessionRevision = loginViewModel.uiState.sessionRevision
+                        DeleteAccountRoute(sessionKey = sessionKey, sessionRevision = deletionSessionRevision,
+                            hostBusy = signingOut, hostError = error,
+                            onBack = { if (!signingOut) backStack = DeleteAccountNavigation.back(backStack, entry) },
+                            onLeaveAccount = {
+                                if (loginViewModel.uiState.sessionRevision == deletionSessionRevision) {
+                                    leaveAccount(onSignOut, showSignOutPage = false)
+                                }
+                            })
+                    }
+                } else if (isPasswordSection) {
+                    contentState.SaveableStateProvider(entry) {
+                        if (route == MainRoute.CHANGE_PASSWORD_RESET) {
+                            ChangePasswordRecoveryRoute(sessionKey = sessionKey,
+                                loginViewModel = drawerLoginViewModel, signupViewModel = drawerSignupViewModel, signedInAs = userName,
+                                onBack = { if (!signingOut) backStack = ChangePasswordNavigation.back(backStack, entry) })
+                        } else {
+                            ChangePasswordRoute(sessionKey = sessionKey, hostBusy = signingOut,
+                                onBack = { if (!signingOut) backStack = ChangePasswordNavigation.back(backStack, entry) },
+                                onForgotPassword = { if (!signingOut) backStack = ChangePasswordNavigation.recover(backStack) },
+                                onSignInAgain = { leaveAccount(onSignOut, showSignOutPage = false) })
+                        }
+                    }
+                } else if (isSettingsPage) {
+                    contentState.SaveableStateProvider(entry) {
+                        SettingsRoute(onBack = {
+                            if (!signingOut) backStack = SettingsNavigation.back(backStack, entry)
+                        }, onInformationSelected = { menu ->
+                            SettingsInformationNavigation.destination(menu)?.let { destination ->
+                                if (!signingOut) backStack = SettingsInformationNavigation.open(backStack, destination)
+                            }
+                        }, onChangePassword = {
+                            if (!signingOut) backStack = ChangePasswordNavigation.open(backStack)
+                        }, onDeleteAccount = {
+                            if (!signingOut) backStack = DeleteAccountNavigation.open(backStack)
+                        })
+                    }
+                } else if (isInformationPage) {
+                    contentState.SaveableStateProvider(entry) {
+                        DrawerInformationPage(route = route.name, onBack = {
+                            if (!signingOut) {
+                                backStack = DrawerInformationNavigation.back(backStack, entry)
+                            }
+                        })
+                    }
+                } else if (route == MainRoute.CHANGE_NAME) {
+                    ChangeNameRoute(
+                        sessionKey = sessionKey,
+                        onBack = {
+                            scope.launch {
+                                drawerState.snapTo(DrawerValue.Closed)
+                                backStack = backStack.dropLast(1).ifEmpty { listOf(MainRoute.HOME.name) }
+                            }
+                        },
+                        onSaved = { displayName ->
+                            onRefreshProfile()
+                            ownProfileViewModel.retryProfile()
+                            drawerViewModel.state.value.profile?.let {
+                                drawerViewModel.adoptProfile(it.copy(displayName = displayName))
+                            }
+                            if (feedViewModel.uiState.sessionReady && !feedViewModel.uiState.sessionExpired) feedViewModel.refresh()
+                        },
+                        onSignInAgain = ::signOut
+                    )
+                } else if (isSignupPage) {
                     // Replace the drawer layer in the same frame; its closing animation cannot reveal Home.
                     contentState.SaveableStateProvider(entry) {
                         DrawerSignupRoute(
@@ -555,11 +722,14 @@ fun MainScreen(
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                         snackbarHost = { SnackbarHost(snackbar) },
                         topBar = friendsTopBar@ {
+                            if (route == MainRoute.AI) return@friendsTopBar
+                            if (route == MainRoute.NOTIFICATIONS) return@friendsTopBar
                             if (route == MainRoute.FRIENDS) return@friendsTopBar
                             if (!isPostComposer && !isSignupPage && route != MainRoute.SEARCH && route != MainRoute.PROFILE && route != MainRoute.USER_PROFILE && route != MainRoute.REELS) MainTopBar(
                                 enabled = !signingOut && !mediaPickerOpen,
                                 onHome = { navigate(MainRoute.HOME) },
                                 onSearch = { navigate(MainRoute.SEARCH) },
+                                unreadNotifications = notificationsState.unreadCount,
                                 onNotifications = { navigate(MainRoute.NOTIFICATIONS) },
                                 onMessages = { messagesNoticeOpen = true },
                                 onMenu = {
@@ -568,8 +738,9 @@ fun MainScreen(
                                 }
                             )
                         },
-                        bottomBar = {
-                            if (!isPostComposer && !isSignupPage && route != MainRoute.SEARCH && route != MainRoute.REELS) MainBottomBar(
+                        bottomBar = aiBottomBar@ {
+                            if (route == MainRoute.AI) return@aiBottomBar
+                            if (!isPostComposer && !isSignupPage && route != MainRoute.SEARCH && route != MainRoute.REELS && route != MainRoute.NOTIFICATIONS) MainBottomBar(
                                 selectedRoute = route,
                                 enabled = !signingOut && !mediaPickerOpen,
                                 createMenuOpen = createMenuOpen,
@@ -631,6 +802,12 @@ fun MainScreen(
                                         },
                                         onSignInAgain = ::signOut
                                     )
+                                    MainRoute.NOTIFICATIONS -> NotificationsScreen(
+                                        viewModel = notificationsViewModel,
+                                        onBack = { backStack = backStack.dropLast(1).ifEmpty { listOf(MainRoute.HOME.name) } },
+                                        onSignInAgain = ::signOut, onOpenProfile = ::openUserProfile
+                                    )
+                                    MainRoute.AI -> AiScreen(viewModel = aiViewModel, onSignInAgain = ::signOut)
                                     MainRoute.SEARCH -> SearchRoute(
                                         viewModel = searchViewModel,
                                         onSignInAgain = ::signOut,
@@ -709,6 +886,7 @@ private fun MainTopBar(
     enabled: Boolean,
     onHome: () -> Unit,
     onSearch: () -> Unit,
+    unreadNotifications: Long,
     onNotifications: () -> Unit,
     onMessages: () -> Unit,
     onMenu: () -> Unit
@@ -736,7 +914,7 @@ private fun MainTopBar(
                 )
             }
             MainActionIcon(MainIcons.search, "Search people", enabled, onSearch)
-            MainActionIcon(MainIcons.bell, "Notifications", enabled, onNotifications)
+            NotificationBell(unreadNotifications, enabled, onNotifications)
             MainActionIcon(MainIcons.message, "Messages", enabled, onMessages)
             MainActionIcon(MainIcons.menu, "Open menu", enabled, onMenu)
         }
@@ -932,6 +1110,9 @@ private enum class MainRoute(val title: String) {
     MEDIA_POST("Media post"), CREATE_REEL("Reels"), STORY("Story"), AI("AI"),
     MY_ACTIVITY("My Activity"), SAVED_ITEMS("Saved Items"), SETTINGS("Settings"),
     GUIDELINES("Community Guidelines"), CHANGE_NAME("Change name"),
+    CHANGE_PASSWORD("Change password"), CHANGE_PASSWORD_RESET("Forgot password"),
+    DELETE_ACCOUNT("Delete Account"),
+    ABOUT("About"), PRIVACY_POLICY("Privacy Policy"), GET_VERIFIED("Get Verified"),
     SIGNUP("Signup"), MOBILE_APP("Mobile App");
 
     val isCreateRoute: Boolean

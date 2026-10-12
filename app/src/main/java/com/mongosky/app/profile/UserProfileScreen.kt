@@ -25,6 +25,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.mongosky.app.comments.CommentsSheet
 import com.mongosky.app.home.HomeFeedViewModel
+import com.mongosky.app.profile.userfeed.UserProfileFeedEffects
+import com.mongosky.app.profile.userfeed.UserProfileFeedOverlays
+import com.mongosky.app.profile.userfeed.UserProfileFeedPostItem
+import com.mongosky.app.profile.userfeed.rememberUserProfileFeed
 import com.mongosky.app.post.FeedAuthor
 import com.mongosky.app.post.FeedMediaType
 import com.mongosky.app.post.HomePost
@@ -56,6 +60,11 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     var now by remember { mutableStateOf(Instant.now()) }
     var reactionVersion by remember(userId) { mutableStateOf(0L) }
     var started by remember(lifecycleOwner) { mutableStateOf(lifecycleOwner?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) ?: true) }
+    val feed = rememberUserProfileFeed(viewModel, actionsModel)
+    UserProfileFeedEffects(feed, state, list,
+        active = started && state.profile != null && !state.sessionExpired && !state.unavailable && !actionsModel.uiState.sessionExpired,
+        homeExpired = actionsModel.uiState.sessionExpired)
+    LaunchedEffect(feed) { feed.controls.notices.collect { snackbar.showSnackbar(it) } }
     LaunchedEffect(viewerId, userId) { viewModel.enter(viewerId, userId, hint) }
     LaunchedEffect(userId, state.refreshVersion, state.profile != null) {
         if (state.profile != null) { actionsModel.refreshProfileReactions(); reactionVersion++ }
@@ -104,7 +113,7 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     val available = state.profile != null && !state.unavailable && !state.sessionExpired
 
     Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.TopCenter) {
-        BoxWithConstraints(Modifier.widthIn(max = 620.dp).fillMaxSize()) {
+        BoxWithConstraints(Modifier.widthIn(max = 520.dp).fillMaxSize()) {
             val columns = if (maxWidth < 350.dp) 2 else 3
             val rows = remember(assets, columns) { assets.chunked(columns) }
             val nearKeys = remember(state.posts, rows, state.tab) {
@@ -138,10 +147,11 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
                         } }
                         if (state.tab == OwnProfileTab.ALL) {
                             items(state.posts, key = { "post:${it.source}:${it.id}" }, contentType = { it.type.name }) { post ->
-                                OwnProfilePostItem(post, state.profile?.asPostOwner(), now, actionsModel, !actionsModel.uiState.sessionExpired,
+                                UserProfileFeedPostItem(post, state, now, actionsModel, feed,
+                                    !state.sessionExpired && !actionsModel.uiState.sessionExpired,
                                     onPhotos = { media, index -> photoViewer = PhotoViewerState(media, index) }, onVideo = { videoViewer = it },
                                     onCopy = { copyLink("https://mongosky.com/post/${it.id}") }, onShare = ::sharePost,
-                                    isSelf = state.profile?.isSelf == true, reactionRefreshVersion = reactionVersion)
+                                    reactionRefreshVersion = reactionVersion, onFollow = { viewModel.followFromPost(viewerId, userId) })
                             }
                         } else items(rows, key = { "gallery:${it.first().key}" }, contentType = { "gallery_row" }) { row ->
                             OwnProfileGalleryRow(row, columns) { asset ->
@@ -170,6 +180,8 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(12.dp))
     }
+    UserProfileFeedOverlays(feed, enabled = available && !actionsModel.uiState.sessionExpired,
+        onCopy = { copyLink("https://mongosky.com/post/${it.id}") })
     OwnProfileConnectionsSheet(viewModel.connections, ::openProfile)
     if (optionsOpen && available) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = Color.White,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {

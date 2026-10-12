@@ -1,6 +1,9 @@
 package com.mongosky.app
 
 import android.os.Bundle
+import android.content.Intent
+import androidx.compose.runtime.LaunchedEffect
+import com.mongosky.app.notifications.NotificationSystem
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.key
@@ -16,8 +19,15 @@ import com.mongosky.app.theme.MongoskyTheme
 
 class MainActivity : ComponentActivity() {
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        NotificationSystem.receiveIntent(applicationContext, intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NotificationSystem.receiveIntent(applicationContext, intent)
 
         val tokenStore = TokenStore(applicationContext)
 
@@ -56,6 +66,9 @@ class MainActivity : ComponentActivity() {
             MongoskyTheme {
                 val state = loginViewModel.uiState
                 val userName = state.signedInName
+                LaunchedEffect(userName, state.checkingSession, state.restoreError) {
+                    if (userName == null && !state.checkingSession && state.restoreError == null) NotificationSystem.clear(applicationContext)
+                }
 
                 if (userName != null) {
                     key(state.signedInUserId, state.sessionRevision) {

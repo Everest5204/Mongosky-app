@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.mongosky.app.auth.TokenStore
+import com.mongosky.app.home.HomeFeedActions
+import com.mongosky.app.home.HomeFeedApi
+import com.mongosky.app.profile.userfeed.UserProfileFeedController
 import com.mongosky.app.post.FeedApiException
 import com.mongosky.app.post.FeedApiFailure
 import com.mongosky.app.post.FeedAuthor
@@ -38,6 +41,21 @@ class UserProfileViewModel internal constructor(
     private var followRevision = 0L
     private val headCheckpoints = mutableMapOf<FeedSource, HeadCheckpoint>()
     private val jobs = mutableMapOf<String, Job>()
+    private var userPostFeedController: UserProfileFeedController? = null
+
+    internal fun postFeed(readToken: suspend () -> String?, homeSessionExpired: () -> Boolean,
+        onHomeFeedChanged: () -> Unit, actions: HomeFeedActions = HomeFeedApi()): UserProfileFeedController =
+        userPostFeedController ?: UserProfileFeedController(this, readToken, viewModelScope,
+            homeSessionExpired, onHomeFeedChanged, actions).also { userPostFeedController = it }
+
+    internal fun postActionFailed(error: Exception) { if (expired(error)) expire() }
+
+    /** Post-header Follow only follows; repeated taps can never toggle into an unfollow. */
+    internal fun followFromPost(viewerId: String?, userId: String) {
+        val current = mutable.value
+        if (current.viewerId == profileUserId(viewerId) && current.userId == profileUserId(userId) &&
+            current.profile?.isFollowing == false) toggleFollowing()
+    }
 
     // Reuse the native connection sheet; its owner is the viewed profile, its follow state is the viewer's.
     private val connectionSource = object : OwnProfileDataSource {
@@ -98,6 +116,7 @@ class UserProfileViewModel internal constructor(
     }
 
     fun endSession() {
+        userPostFeedController?.endSession()
         pause(); cache.clear(); headCheckpoints.clear(); token = null; badgeAt = 0; lastCheck = 0
         pager = OwnProfilePager(""); mutable.value = UserProfileState()
     }
@@ -277,6 +296,7 @@ class UserProfileViewModel internal constructor(
             loadingSources = if (denied) emptySet() else mutable.value.loadingSources)
     }
     private fun expire() {
+        userPostFeedController?.endSession()
         pause(); cache.clear(); token = null
         mutable.value = mutable.value.copy(profile = null, posts = emptyList(), hasMore = false,
             sessionExpired = true, profileError = "Please sign in again.")
@@ -287,6 +307,11 @@ class UserProfileViewModel internal constructor(
     private suspend fun <T> connectionRequest(block: suspend () -> T): T = try { block() }
     catch (error: CancellationException) { throw error }
     catch (error: Exception) { throw OwnProfileException(message(error), requiresSignIn = expired(error), cause = error) }
+
+    override fun onCleared() {
+        userPostFeedController?.endSession()
+        super.onCleared()
+    }
 
     companion object {
         const val UPDATE_INTERVAL_MILLIS = 10_000L

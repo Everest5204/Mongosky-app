@@ -45,9 +45,12 @@ import kotlinx.coroutines.flow.first
 
 @Composable
 internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedController,
-    images: HomeFeedImageState, enabled: Boolean) {
+    images: HomeFeedImageState, enabled: Boolean,
+    authorStateOverride: HomeAuthorState? = null, onFollow: (() -> Unit)? = null,
+    onMenu: (() -> Unit)? = null) {
     val authorState = remember(controls, controls.authorGeneration, post.author.id) { controls.author(post) }
-    val state by authorState
+    // A public profile already reads its owner's badge and relationship once for the screen.
+    val state = authorStateOverride ?: authorState.value
     var shown by remember(controls, controls.authorGeneration, post.author.id) { mutableStateOf(state) }
     LaunchedEffect(controls.authorGeneration, post.author.id, state, images) {
         // Resolving a badge or relationship must not change the header height mid-fling.
@@ -86,7 +89,9 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
                 .clip(RoundedCornerShape(8.dp))
                 .background(if (shown.following) Color(0xFFF1F5F9) else Color.Transparent)
                 .clickable(enabled = enabled && !shown.pending && !shown.following,
-                    role = Role.Button, onClickLabel = "Follow $name") { controls.follow(post) }
+                    role = Role.Button, onClickLabel = "Follow $name") {
+                    if (onFollow != null) onFollow() else controls.follow(post)
+                }
                 .semantics { stateDescription = if (shown.pending) "Following in progress" else
                     if (shown.following) "Following" else "Not following" },
                 contentAlignment = Alignment.Center) {
@@ -109,7 +114,7 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
                 fontSize = 12.sp, lineHeight = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
         }
-        IconButton(onClick = { controls.openMenu(post) }, enabled = enabled, modifier = Modifier.size(48.dp)) {
+        IconButton(onClick = { if (onMenu != null) onMenu() else controls.openMenu(post) }, enabled = enabled, modifier = Modifier.size(48.dp)) {
             Icon(FeedIcons.more, "Post options", tint = FeedColors.muted, modifier = Modifier.size(22.dp))
         }
     }

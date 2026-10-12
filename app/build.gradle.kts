@@ -97,3 +97,9 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-ui-compose:$media3Version")
 }
+// Mongosky Notification dependencies v1
+android.sourceSets.getByName("main").res.srcDir("src/main/java/com/mongosky/app/notifications/res")
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:35.0.0"))
+    implementation("com.google.firebase:firebase-messaging")
+}

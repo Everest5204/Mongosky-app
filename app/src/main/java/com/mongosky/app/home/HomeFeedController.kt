@@ -1,6 +1,5 @@
 package com.mongosky.app.home
 
-import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -8,7 +7,7 @@ import androidx.compose.runtime.setValue
 import com.mongosky.app.mediapost.*
 import com.mongosky.app.post.*
 import com.mongosky.app.textpost.TextPostPreset
-import java.util.UUID
+import com.mongosky.app.editpost.EditPostController
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -40,17 +39,15 @@ internal class HomeFeedController(
         private set
     var authorGeneration by mutableStateOf(0)
         private set
-    private var editJob: Job? = null
-    private var selectionJob: Job? = null
     private var deleteJob: Job? = null
     private var overlayVersion = 0
-    private var selectionVersion = 0
     private val noticeChannel = Channel<String>(Channel.BUFFERED)
     val notices = noticeChannel.receiveAsFlow()
     var menu by mutableStateOf<HomePost?>(null)
         private set
-    var editor by mutableStateOf<HomeEditState?>(null)
-        private set
+    internal val postEditor = EditPostController(actions, token, scope, session, expired, onSessionFailure,
+        onEdited, ::notify, verified = { author(it).value.verified })
+    val editor get() = postEditor.state
     var deletion by mutableStateOf<HomeDeleteState?>(null)
         private set
 
@@ -177,112 +174,15 @@ internal class HomeFeedController(
 
     fun openEditor(post: HomePost) {
         if (!post.editable || expired() || token() == null || editor?.saving == true) return
-        closeOverlays()
-        editor = HomeEditState(post)
-        reloadEditor()
+        closeMenu(); closeDelete()
+        postEditor.open(post)
     }
-
-    fun reloadEditor() {
-        val auth = token() ?: return
-        val old = editor ?: return
-        if (old.saving || expired()) return
-        editJob?.cancel(); selectionJob?.cancel(); selectionVersion++
-        val request = ++overlayVersion
-        val generation = session()
-        editor = old.copy(loading = true, selecting = false, error = null)
-        editJob = scope().launch {
-            try {
-                val fresh = actions.editable(auth, old.post)
-                ensureActive()
-                if (request == overlayVersion && generation == session()) editor = HomeEditState(fresh, loading = false)
-            } catch (error: CancellationException) { throw error }
-            catch (error: Exception) {
-                if (request == overlayVersion && generation == session()) {
-                    onSessionFailure(error)
-                    editor = editor?.copy(loading = false, error = message(error), needsReload = true)
-                }
-            }
-        }
-    }
-
-    fun editText(text: String) { changeEditor { it.copy(text = text, error = null) } }
-    fun editPreset(preset: TextPostPreset) { changeEditor { it.copy(background = preset.background, textColor = preset.textColor) } }
-    fun editStyle(style: FeedTextStyle) { changeEditor { it.copy(textStyle = style) } }
-    fun removeMedia(key: String) {
-        changeEditor { it.copy(keptMedia = it.keptMedia.filterNot { media -> (media.id ?: media.url) == key },
-            selectedMedia = it.selectedMedia.filterNot { media -> media.id == key }, error = null) }
-    }
-    private inline fun changeEditor(change: (HomeEditState) -> HomeEditState) {
-        val value = editor ?: return
-        if (!value.busy && !value.needsReload && !expired()) editor = change(value)
-    }
-
-    fun addPhotos(uris: List<Uri>, files: MediaPostFileStore) {
-        val state = editor ?: return
-        if (state.busy || state.needsReload || state.post !is HomePost.Media || expired()) return
-        val selection = uris.distinct().filter { uri -> state.selectedMedia.none { it.uri == uri.toString() } }
-        if (selection.isEmpty()) return
-        if (state.keptMedia.size + state.selectedMedia.size + selection.size > 10) {
-            editor = state.copy(error = "You can keep up to 10 photos."); return
-        }
-        val version = ++selectionVersion
-        val request = overlayVersion
-        val generation = session()
-        editor = state.copy(selecting = true, error = null)
-        selectionJob = scope().launch {
-            try {
-                val chosen = files.inspect(selection)
-                ensureActive()
-                require(chosen.all { it.kind == PostMediaKind.IMAGE }) { "Please select photos for this post." }
-                if (version == selectionVersion && request == overlayVersion && generation == session()) {
-                    editor = editor?.copy(selecting = false, selectedMedia = state.selectedMedia + chosen)
-                }
-            } catch (error: CancellationException) { throw error }
-            catch (error: Exception) {
-                if (version == selectionVersion && request == overlayVersion && generation == session()) {
-                    editor = editor?.copy(selecting = false, error = error.message ?: "Could not read these photos.")
-                }
-            }
-        }
-    }
-
-    fun saveEditor(files: MediaPostFileStore? = null) {
-        val auth = token() ?: return
-        val draft = editor ?: return
-        if (!draft.valid || expired()) return
-        val request = overlayVersion
-        val generation = session()
-        editor = draft.copy(saving = true, error = null)
-        editJob = scope().launch {
-            var prepared: PreparedMediaPost? = null
-            try {
-                if (draft.selectedMedia.isNotEmpty()) {
-                    val store = requireNotNull(files)
-                    prepared = store.prepare(MediaPostDraft("home-edit-${UUID.randomUUID()}", draft.text,
-                        draft.selectedMedia), draft.post.author.id)
-                }
-                val result = actions.edit(auth, HomeEditRequest(draft, prepared?.media.orEmpty()))
-                ensureActive()
-                if (generation != session()) return@launch
-                onEdited(result)
-                if (request == overlayVersion) { editor = null; overlayVersion++ }
-                notify("Post updated")
-            } catch (error: CancellationException) { throw error }
-            catch (error: Exception) {
-                if (request == overlayVersion && generation == session()) {
-                    onSessionFailure(error)
-                    val reload = error is FeedApiException && (error.statusCode == 409 ||
-                        error.failure in setOf(FeedApiFailure.NETWORK, FeedApiFailure.TIMEOUT,
-                            FeedApiFailure.SERVER, FeedApiFailure.INVALID_RESPONSE))
-                    editor = draft.copy(error = message(error), needsReload = reload)
-                }
-            } finally {
-                prepared?.let { upload -> withContext(NonCancellable) {
-                    try { files?.delete(upload) } catch (_: Exception) { }
-                } }
-            }
-        }
-    }
+    fun reloadEditor() = postEditor.reload()
+    fun editText(text: String) = postEditor.text(text)
+    fun editPreset(preset: TextPostPreset) = postEditor.preset(preset)
+    fun editStyle(style: FeedTextStyle) = postEditor.style(style)
+    fun removeMedia(key: String) = postEditor.removeMedia(key)
+    fun saveEditor(files: MediaPostFileStore? = null) = postEditor.save(files)
 
     fun openDelete(post: HomePost) {
         if (!post.isOwn || expired() || token() == null || deletion?.busy == true) return
@@ -322,19 +222,20 @@ internal class HomeFeedController(
         }
     }
 
-    fun closeEditor() { if (editor?.saving != true) { overlayVersion++; selectionVersion++; editJob?.cancel(); selectionJob?.cancel(); editor = null } }
+    fun closeEditor() = postEditor.requestClose()
     fun closeDelete() { if (deletion?.busy != true) deletion = null }
     fun closeOverlays() { closeMenu(); closeEditor(); closeDelete() }
 
     fun endSession() {
-        overlayVersion++; selectionVersion++
+        overlayVersion++
+        postEditor.reset()
         authorGeneration++
         followJobs.values.forEach { it.cancel() }; followJobs.clear()
-        editJob?.cancel(); selectionJob?.cancel(); deleteJob?.cancel()
+        deleteJob?.cancel()
         relationJobs.values.forEach { it.cancel() }; relationJobs.clear(); relationReadAt.clear()
         authors.values.forEach { it.value = HomeAuthorState() }
         authors.clear(); badgeReadAt.clear(); pendingBadges.clear(); confirmedRevision.clear(); relationVersion = 0
-        menu = null; editor = null; deletion = null
+        menu = null; deletion = null
         while (noticeChannel.tryReceive().isSuccess) { }
     }
 

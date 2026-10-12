@@ -14,284 +14,449 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** Shared comment state for Home and Profile, owned by the signed-in session. */
+/** One session-owned comment section shared by Home, both Profiles and Reels. */
 internal class CommentsController(
     private val actions: CommentActions,
     private val currentToken: () -> String?,
     private val currentScope: () -> CoroutineScope,
     private val expired: () -> Boolean,
     private val currentSession: () -> Int,
-    private val onSessionFailure: (Exception) -> Unit
+    private val onSessionFailure: (Exception) -> Unit,
+    private val badges: CommentBadges = CommentBadgeApi(),
+    private val clock: () -> Long = { System.nanoTime() / 1_000_000 }
 ) {
-    private val token get() = currentToken()
-    private val scope get() = currentScope()
     val sessionExpired get() = expired()
-    private val sessionVersion get() = currentSession()
-    private fun handleSessionFailure(error: Exception) = onSessionFailure(error)
     val commentCounts = mutableStateMapOf<String, Long>()
     var commentsState by mutableStateOf<CommentsState?>(null)
         private set
-    private val commentVersions = mutableMapOf<String, Int>()
-    private var commentsAtRefresh: Map<String, Int> = emptyMap()
-    private var commentReadJob: Job? = null
-    private var commentWindow = 0
-    private var commentRevision = 0
-    private val changedComments = mutableMapOf<String, Pair<Int, PostComment>>()
-    private val deletedComments = mutableSetOf<String>()
+    var writing by mutableStateOf(false)
+        private set
+    private val countVersions = mutableMapOf<String, Int>()
+    private var countsAtRefresh: Map<String, Int> = emptyMap()
+    private var window = 0
+    private var revision = 0
+    private var requestSerial = 0
+    private val readVersions = mutableMapOf<String, Int>()
+    private val reads = mutableMapOf<String, Job>()
+    private val reviewsAfterRead = mutableSetOf<String>()
+    private var mutation: Job? = null
+    private val loves = mutableMapOf<String, Job>()
+    private val changed = mutableMapOf<String, Pair<Int, PostComment>>()
+    private val deleted = mutableSetOf<String>()
+    private var foreground = false
+    private var nextSync = 0L
+    private var syncFailures = 0
+    private var replyRound = 0
+    private var uncertainParent: String? = null
+    private var badgeJob: Job? = null
+    private var badgeRetryAt = 0L
+    private var visibleAuthorIds: Set<String> = emptySet()
+    private val badgeCache = LinkedHashMap<String, Pair<Long, Boolean>>()
+    private val cache = LinkedHashMap<String, Pair<Long, CommentsState>>()
 
-    fun onFeedRefresh() { commentsAtRefresh = commentVersions.toMap() }
-    /** Accept fresh metadata only when no newer local comment mutation or session change occurred. */
+    fun onFeedRefresh() { countsAtRefresh = countVersions.toMap() }
     fun beginPostCountRead(): (List<FeedPost>) -> Unit {
-        val session = sessionVersion
-        val revisions = commentVersions.toMap()
+        val session = currentSession(); val auth = currentToken(); val versions = countVersions.toMap()
         return { posts ->
-            if (session == sessionVersion && !sessionExpired) posts.forEach { post ->
+            if (sameSession(session, auth)) posts.forEach { post ->
                 val key = "${post.source.name}:${post.id}"
-                if (commentVersions[key] == revisions[key]) commentCounts[key] = post.commentsCount
+                if (countVersions[key] == versions[key]) commentCounts[key] = post.commentsCount.coerceAtLeast(0)
             }
         }
     }
     fun onFeedReady() {
-        commentCounts.keys.toList().forEach { key ->
-            if (commentVersions[key] == commentsAtRefresh[key]) commentCounts.remove(key)
-        }
+        commentCounts.keys.toList().forEach { if (countVersions[it] == countsAtRefresh[it]) commentCounts.remove(it) }
     }
     fun endSession() {
-        closeComments()
-        commentCounts.clear(); commentVersions.clear(); commentsAtRefresh = emptyMap()
-        commentRevision = 0; changedComments.clear(); deletedComments.clear()
+        closeComments(); mutation?.cancel(); mutation = null; loves.values.toList().forEach { it.cancel() }; loves.clear()
+        badgeJob?.cancel(); badgeJob = null; badgeCache.clear(); badgeRetryAt = 0; visibleAuthorIds = emptySet()
+        writing = false; commentCounts.clear(); countVersions.clear(); countsAtRefresh = emptyMap()
+        changed.clear(); deleted.clear(); cache.clear(); revision = 0
     }
 
     fun openComments(post: HomePost) {
-        if (token == null || sessionExpired) return
+        if (currentToken() == null || sessionExpired || !CommentPolicy.validId(post.id)) return
         closeComments()
-        commentsState = CommentsState(post.key, post.id)
-        loadComments()
+        val cached = cache[post.key]?.takeIf { clock() - it.first < 120_000 }?.second
+        commentsState = cached?.copy(draft = "", editing = null, replying = null, inlineDraft = "", menuId = null,
+            busyIds = emptySet(), sending = false, sendingInline = false, error = null, inlineError = null,
+            unconfirmedCreate = false, replies = emptyMap(), expandedIds = emptySet(),
+            root = cached.root.copy(comments = cached.root.comments.take(10), initialized = false, cursor = null,
+                seenCursors = emptySet(), headIds = emptyList(), hasMore = true)) ?: CommentsState(post.key, post.id)
+        nextSync = 0; syncFailures = 0; replyRound = 0
+        readThread(null, refresh = cached != null)
+        resolveBadges()
     }
-
     fun closeComments() {
-        commentReadJob?.cancel()
-        commentReadJob = null
-        commentWindow++
-        commentsState = null
+        commentsState?.takeIf { it.root.initialized }?.let { state ->
+            cache[state.postKey] = clock() to state.copy(root = idle(state.root),
+                replies = state.replies.mapValues { idle(it.value) })
+            while (cache.size > 6) cache.remove(cache.keys.first())
+        }
+        window++; cancelReads(); badgeJob?.cancel(); badgeJob = null
+        commentsState = null; foreground = false
+        changed.clear(); deleted.clear(); reviewsAfterRead.clear(); uncertainParent = null; visibleAuthorIds = emptySet()
     }
-
     fun backComments() {
         val state = commentsState ?: return
-        if (state.threads.size == 1) { closeComments(); return }
-        commentReadJob?.cancel()
-        commentsState = state.copy(threads = state.threads.dropLast(1), editing = null, draft = "", error = null)
-        if (commentsState?.current?.initialized == false) loadComments()
-    }
-
-    fun openReplies(comment: PostComment) {
-        val state = commentsState ?: return
-        if (state.sending || state.busyIds.contains(comment.id)) return
-        commentReadJob?.cancel()
-        val previous = state.threads.dropLast(1) + state.current.copy(loading = false)
-        commentsState = state.copy(threads = previous + CommentThread(parent = comment), editing = null, draft = "", error = null)
-        loadComments()
-    }
-
-    fun retryComments() {
-        val state = commentsState ?: return
-        updateCurrentThread { it.copy(error = null) }
-        commentsState = commentsState?.copy(error = null)
-        if (state.current.initialized) refreshCurrentThread() else loadComments()
-    }
-
-    private fun refreshCurrentThread() {
-        commentReadJob?.cancel()
-        updateCurrentThread { CommentThread(parent = it.parent) }
-        loadComments()
-    }
-
-    fun loadComments() {
-        val auth = token ?: return
-        val state = commentsState ?: return
-        val thread = state.current
-        if (thread.loading || !thread.hasMore || thread.error != null || sessionExpired) return
-        val window = commentWindow
-        val parentId = thread.parent?.id
-        val depth = state.threads.size
-        val readRevision = commentRevision
-        val session = sessionVersion
-        updateCurrentThread { it.copy(loading = true) }
-        commentReadJob = scope.launch {
-            try {
-                val page = actions.comments(auth, state.postId, parentId, thread.cursor)
-                if (session != sessionVersion) return@launch
-                if (page.hasMore && (page.nextCursor == null || page.nextCursor in thread.seenCursors)) {
-                    throw FeedApiException("Could not load more comments. Please refresh.", FeedApiFailure.INVALID_RESPONSE)
-                }
-                if (sameThread(window, parentId, depth)) updateCurrentThread { current ->
-                    current.copy(
-                        comments = (current.comments + page.comments.map { row ->
-                            changedComments[row.id]?.takeIf { it.first > readRevision }?.second ?: row
-                        }).filterNot { it.id in deletedComments }.distinctBy { it.id },
-                        cursor = page.nextCursor, hasMore = page.hasMore, initialized = true,
-                        seenCursors = current.seenCursors + listOfNotNull(page.nextCursor), loading = false, error = null
-                    )
-                }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                if (session != sessionVersion) return@launch
-                handleSessionFailure(error)
-                if (sameThread(window, parentId, depth)) updateCurrentThread { it.copy(loading = false, error = message(error)) }
-            }
+        when {
+            state.menuId != null -> closeMenu()
+            state.inlineTargetId != null && !writing -> cancelEdit()
+            else -> closeComments()
         }
     }
-
-    fun setCommentDraft(value: String) {
-        val state = commentsState ?: return
-        if (!state.sending && value.codePointCount(0, value.length) <= 2000) commentsState = state.copy(draft = value, error = null)
+    fun setForeground(visible: Boolean) {
+        if (foreground == visible) return
+        foreground = visible
+        if (!visible) { cancelReads(); badgeJob?.cancel(); badgeJob = null }
+        else {
+            nextSync = 0
+            if (commentsState?.root?.initialized == false) loadComments() else checkForUpdates()
+            resolveBadges()
+        }
     }
-
+    /** Only the open, resumed section polls. One root and one visible reply page per cycle. */
+    fun checkForUpdates(visibleIds: Set<String> = emptySet()) {
+        val state = commentsState ?: return
+        if (!foreground || sessionExpired || writing || state.busyIds.isNotEmpty() || clock() < nextSync) return
+        nextSync = clock() + CommentPolicy.UPDATE_INTERVAL_MILLIS
+        if (state.root.initialized) readThread(null, refresh = true, quiet = true) else loadComments()
+        val candidates = state.expandedIds.filter { id -> visibleIds.isEmpty() || id in visibleIds ||
+            state.replies[id]?.comments?.any { it.id in visibleIds } == true }
+        if (candidates.isNotEmpty()) {
+            val id = candidates[replyRound % candidates.size]; replyRound++
+            readThread(id, refresh = state.replies[id]?.initialized == true, quiet = true)
+        }
+        resolveBadges()
+    }
+    fun visibleComments(ids: Set<String>) {
+        val state = commentsState ?: return
+        val authors = ids.mapNotNull { state.find(it)?.userId }.toSet()
+        if (authors != visibleAuthorIds) { visibleAuthorIds = authors; resolveBadges() }
+    }
+    fun openReplies(comment: PostComment) = startReply(comment)
+    fun toggleReplies(comment: PostComment) {
+        val state = commentsState ?: return
+        val row = state.find(comment.id) ?: return
+        if (row.isDeleted) return
+        if (row.id in state.expandedIds) {
+            commentsState = state.copy(expandedIds = state.expandedIds - row.id)
+            stopRead(row.id)
+        } else {
+            commentsState = state.copy(expandedIds = state.expandedIds + row.id,
+                replies = state.replies + (row.id to (state.replies[row.id] ?: CommentThread())))
+            if (state.replies[row.id]?.initialized != true) readThread(row.id)
+        }
+    }
+    fun startReply(comment: PostComment) {
+        val state = commentsState ?: return
+        val row = state.find(comment.id) ?: return
+        if (writing || row.isDeleted || row.id in state.busyIds || sessionExpired) return
+        if (state.replying?.id == row.id) { cancelEdit(); return }
+        commentsState = state.copy(replying = row, editing = null, inlineDraft = "", inlineError = null, menuId = null)
+    }
     fun editComment(comment: PostComment) {
         val state = commentsState ?: return
-        if (comment.canModify && !state.sending && comment.id !in state.busyIds) {
-            commentsState = state.copy(editing = comment, draft = comment.text, error = null)
-        }
+        val row = state.find(comment.id) ?: return
+        if (!row.canModify || row.isDeleted || writing || row.id in state.busyIds || sessionExpired) return
+        if (state.editing?.id == row.id) { closeMenu(); return }
+        commentsState = state.copy(editing = row, replying = null, inlineDraft = row.text, inlineError = null, menuId = null)
+    }
+    fun cancelEdit() {
+        if (!writing) commentsState = commentsState?.copy(editing = null, replying = null, inlineDraft = "", inlineError = null)
+    }
+    fun openMenu(comment: PostComment) {
+        val state = commentsState ?: return
+        val row = state.find(comment.id) ?: return
+        if (row.canModify && !row.isDeleted && !writing && row.id !in state.busyIds && !sessionExpired)
+            commentsState = state.copy(menuId = row.id)
+    }
+    fun closeMenu() { commentsState = commentsState?.copy(menuId = null) }
+    fun setCommentDraft(value: String) {
+        val state = commentsState ?: return
+        if (!state.sending) commentsState = state.copy(draft = CommentPolicy.limitDraft(value), error = if (state.unconfirmedCreate) state.error else null)
+    }
+    fun setInlineDraft(value: String) {
+        val state = commentsState ?: return
+        if (!state.sendingInline) commentsState = state.copy(inlineDraft = CommentPolicy.limitDraft(value), inlineError = if (state.unconfirmedCreate) state.inlineError else null)
+    }
+    fun loadComments() = readThread(null)
+    fun loadReplies(parentId: String) = readThread(parentId)
+    fun retryThread(parentId: String?) {
+        val state = commentsState ?: return
+        readThread(parentId, refresh = thread(state, parentId).initialized || thread(state, parentId).comments.isNotEmpty(), resetPages = true,
+            reviewCreate = state.unconfirmedCreate && parentId == uncertainParent)
+    }
+    fun retryComments() {
+        val state = commentsState ?: return
+        if (!state.unconfirmedCreate) commentsState = state.copy(error = null, inlineError = null)
+        retryThread(null)
+        val parent = if (state.unconfirmedCreate) uncertainParent else state.replying?.id ?: state.editing?.parentId
+        parent?.takeIf { state.find(it) != null }?.let { retryThread(it) }
     }
 
-    fun cancelEdit() { commentsState = commentsState?.copy(editing = null, draft = "", error = null) }
-
-    fun sendComment() {
-        val auth = token ?: return
+    private fun readThread(parentId: String?, refresh: Boolean = false, quiet: Boolean = false, reviewCreate: Boolean = false, resetPages: Boolean = false) {
+        val auth = currentToken() ?: return
         val state = commentsState ?: return
-        if (state.sending || state.draft.isBlank() || sessionExpired) return
-        val window = commentWindow
-        val parent = state.current.parent?.id
-        val session = sessionVersion
-        commentsState = state.copy(sending = true, error = null)
-        scope.launch {
+        val key = parentId ?: ""
+        val before = thread(state, parentId)
+        if (sessionExpired) return
+        if (reads[key]?.isActive == true) {
+            if (reviewCreate) reviewsAfterRead.add(key)
+            return
+        }
+        if (!refresh && before.initialized && !before.hasMore) return
+        if (parentId != null && (state.find(parentId) == null || parentId in deleted)) return
+        val session = currentSession(); val view = window; val serial = ++requestSerial; val readRevision = revision
+        readVersions[key] = serial
+        updateThread(parentId) { it.copy(loading = !refresh, refreshing = refresh, error = if (quiet) it.error else null) }
+        val job = currentScope().launch(start = CoroutineStart.LAZY) {
             try {
-                if (state.editing != null) {
-                    val edited = actions.editComment(auth, state.editing.id, state.draft)
-                    if (session != sessionVersion) return@launch
-                    rememberChangedComment(edited)
-                    if (window == commentWindow) mapComments { if (it.id == edited.id) edited else it }
-                } else {
-                    val result = actions.createComment(auth, state.postId, state.draft, parent)
-                    if (session != sessionVersion) return@launch
-                    recordCommentCount(state.postKey, result.commentsCount)
-                    rememberChangedComment(result.comment)
-                    if (window == commentWindow) {
-                        if (parent != null) mapComments { if (it.id == parent) it.copy(repliesCount = it.repliesCount + 1) else it }
-                        commentsState = commentsState?.let { current ->
-                            current.copy(threads = current.threads.map { thread ->
-                                if (thread.parent?.id == parent) thread.copy(comments =
-                                    listOf(result.comment) + thread.comments.filterNot { it.id == result.comment.id }) else thread
-                            })
-                        }
-                    }
+                val page = actions.comments(auth, state.postId, parentId, if (refresh) null else before.cursor)
+                if (!validRead(session, auth, view, key, serial)) return@launch
+                if (page.comments.any { it.postId != state.postId || it.parentId != parentId } ||
+                    (page.hasMore && (page.nextCursor.isNullOrBlank() || (!refresh && page.nextCursor in before.seenCursors)))) {
+                    throw FeedApiException("Could not load more comments. Please refresh.", FeedApiFailure.INVALID_RESPONSE)
                 }
-                if (window == commentWindow) commentsState = commentsState?.copy(sending = false, editing = null, draft = "")
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                if (session != sessionVersion) return@launch
-                handleSessionFailure(error)
-                if (window == commentWindow) commentsState = commentsState?.copy(sending = false,
-                    error = if (state.editing == null && error is FeedApiException &&
-                        error.failure in setOf(FeedApiFailure.NETWORK, FeedApiFailure.TIMEOUT)) {
-                        "Could not confirm your comment. Refresh comments to check before sending again."
-                    } else message(error))
+                val protected = changed.filterValues { it.first > readRevision }.keys + commentsState!!.busyIds +
+                    draftPath(commentsState!!)
+                val safePage = page.copy(comments = page.comments.filterNot { it.id in deleted || it.parentId in deleted }.map {
+                    changed[it.id]?.takeIf { change -> change.first > readRevision }?.second ?: it
+                })
+                val old = thread(commentsState!!, parentId)
+                val refreshed = if (resetPages) old.copy(comments = old.comments.filter { it.id in protected }, initialized = false) else old
+                val next = if (refresh) CommentPolicy.refresh(refreshed, safePage, protected) else CommentPolicy.append(old, safePage)
+                updateThread(parentId) { next }
+                val removed = old.comments.map { it.id }.toSet() - next.comments.map { it.id }.toSet()
+                removed.filterNot { it in protected }.forEach { prune(it, tombstone = false) }
+                if (reviewCreate) commentsState = commentsState?.copy(unconfirmedCreate = false,
+                    error = "Comments refreshed. Check whether it was posted before sending again.", inlineError = null)
+                syncFailures = 0
+                resolveBadges()
+            } catch (cancel: CancellationException) { throw cancel }
+            catch (error: Exception) {
+                if (!validRead(session, auth, view, key, serial)) return@launch
+                onSessionFailure(error)
+                syncFailures = (syncFailures + 1).coerceAtMost(3)
+                nextSync = clock() + (CommentPolicy.UPDATE_INTERVAL_MILLIS shl syncFailures)
+                if (!quiet || !before.initialized || sessionExpired) updateThread(parentId) {
+                    it.copy(error = message(error), loading = false, refreshing = false)
+                }
+            } finally {
+                if (validRead(session, auth, view, key, serial)) {
+                    reads.remove(key)
+                    updateThread(parentId) { idle(it) }
+                    if (reviewsAfterRead.remove(key) && commentsState?.unconfirmedCreate == true)
+                        readThread(parentId, refresh = true, reviewCreate = true, resetPages = true)
+                }
             }
         }
+        reads[key] = job; job.start()
+    }
+
+    fun sendComment() = send(inline = false)
+    fun sendInline() = send(inline = true)
+    private fun send(inline: Boolean) {
+        val auth = currentToken() ?: return
+        val state = commentsState ?: return
+        val edit = if (inline) state.editing else null
+        val parent = if (inline && edit == null) state.replying?.id else null
+        val text = if (inline) state.inlineDraft else state.draft
+        if (writing || sessionExpired || !CommentPolicy.canSend(text) || (edit == null && state.unconfirmedCreate) ||
+            (inline && state.inlineTargetId == null) || (edit != null && state.find(edit.id)?.canModify != true)) return
+        val session = currentSession(); val view = window
+        writing = true
+        if (edit == null) bumpCount(state.postKey)
+        commentsState = state.copy(sending = !inline, sendingInline = inline, error = null, inlineError = null)
+        val job = currentScope().launch(start = CoroutineStart.LAZY) {
+            try {
+                if (edit != null) {
+                    val row = actions.editComment(auth, edit.id, text)
+                    if (!sameSession(session, auth)) return@launch
+                    if (row.id != edit.id || row.postId != state.postId || row.parentId != edit.parentId || row.isDeleted) throw badResponse()
+                    cache.remove(state.postKey)
+                    if (view == window) { rememberChanged(row); mapRows { if (it.id == row.id) row else it } }
+                } else {
+                    val result = actions.createComment(auth, state.postId, text, parent)
+                    if (!sameSession(session, auth)) return@launch
+                    if (result.comment.postId != state.postId || result.comment.parentId != parent || result.comment.isDeleted) throw badResponse()
+                    recordCount(state.postKey, result.commentsCount); cache.remove(state.postKey)
+                    if (view == window) {
+                        rememberChanged(result.comment)
+                        updateThread(parent) { it.copy(comments = listOf(result.comment) + it.comments.filterNot { row -> row.id == result.comment.id }) }
+                        if (parent != null) {
+                            mapRows { if (it.id == parent) it.copy(repliesCount = it.repliesCount + 1).also(::rememberChanged) else it }
+                            commentsState = commentsState?.let { it.copy(expandedIds = it.expandedIds + parent) }
+                        }
+                        resolveBadges()
+                    }
+                }
+                if (view == window) commentsState = commentsState?.let {
+                    if (inline) it.copy(editing = null, replying = null, inlineDraft = "", inlineError = null)
+                    else it.copy(draft = "", error = null)
+                }
+            } catch (cancel: CancellationException) { throw cancel }
+            catch (error: Exception) {
+                if (!sameSession(session, auth)) return@launch
+                onSessionFailure(error)
+                if (view == window) {
+                    val unknown = edit == null && error is FeedApiException && error.failure in setOf(
+                        FeedApiFailure.NETWORK, FeedApiFailure.TIMEOUT, FeedApiFailure.SERVER, FeedApiFailure.INVALID_RESPONSE)
+                    val text = if (unknown) "Could not confirm your comment. Refresh to check before sending again." else message(error)
+                    if (unknown) uncertainParent = parent
+                    commentsState = commentsState?.let { it.copy(error = if (inline) it.error else text,
+                        inlineError = if (inline) text else it.inlineError, unconfirmedCreate = it.unconfirmedCreate || unknown) }
+                }
+            } finally {
+                if (sameSession(session, auth)) {
+                    writing = false; mutation = null
+                    if (view == window) {
+                        commentsState = commentsState?.copy(sending = false, sendingInline = false)
+                        if (parent != null && commentsState?.replies?.get(parent)?.initialized != true) readThread(parent)
+                    }
+                }
+            }
+        }
+        mutation = job; job.start()
     }
 
     fun loveComment(comment: PostComment) {
-        val auth = token ?: return
+        val auth = currentToken() ?: return
         val state = commentsState ?: return
-        if (comment.id in state.busyIds || sessionExpired) return
-        val window = commentWindow
-        val session = sessionVersion
-        commentsState = state.copy(busyIds = state.busyIds + comment.id, error = null)
-        mapComments { if (it.id == comment.id) it.copy(
-            isLovedByMe = !comment.isLovedByMe,
-            lovesCount = (comment.lovesCount + if (comment.isLovedByMe) -1 else 1).coerceAtLeast(0)) else it }
-        scope.launch {
+        val row = state.find(comment.id) ?: return
+        if (sessionExpired || row.isDeleted || row.id in state.busyIds || (writing && state.inlineTargetId == row.id)) return
+        val session = currentSession(); val view = window
+        commentsState = state.copy(busyIds = state.busyIds + row.id, error = null)
+        val optimistic = row.copy(isLovedByMe = !row.isLovedByMe,
+            lovesCount = (row.lovesCount + if (row.isLovedByMe) -1 else 1).coerceAtLeast(0))
+        rememberChanged(optimistic); mapRows { if (it.id == row.id) optimistic else it }
+        val job = currentScope().launch(start = CoroutineStart.LAZY) {
             try {
-                val result = actions.loveComment(auth, comment.id)
-                if (session != sessionVersion) return@launch
-                val confirmed = comment.copy(isLovedByMe = result.loved, lovesCount = result.count)
-                rememberChangedComment(confirmed)
-                if (window == commentWindow) mapComments { if (it.id == comment.id) it.copy(isLovedByMe = result.loved, lovesCount = result.count) else it }
-            } catch (error: CancellationException) { throw error }
+                val result = actions.loveComment(auth, row.id)
+                if (!sameSession(session, auth) || view != window) return@launch
+                mapRows { if (it.id == row.id) it.copy(isLovedByMe = result.loved, lovesCount = result.count.coerceAtLeast(0)).also(::rememberChanged) else it }
+            } catch (cancel: CancellationException) { throw cancel }
             catch (error: Exception) {
-                if (session != sessionVersion) return@launch
-                handleSessionFailure(error)
-                if (window == commentWindow) {
-                    mapComments { if (it.id == comment.id) comment else it }
-                    commentsState = commentsState?.copy(error = message(error))
-                    refreshCurrentThread()
-                }
+                if (!sameSession(session, auth) || view != window) return@launch
+                onSessionFailure(error)
+                mapRows { if (it.id == row.id) it.copy(isLovedByMe = row.isLovedByMe, lovesCount = row.lovesCount).also(::rememberChanged) else it }
+                commentsState = commentsState?.copy(error = message(error))
             } finally {
-                if (window == commentWindow) commentsState = commentsState?.let { it.copy(busyIds = it.busyIds - comment.id) }
+                if (sameSession(session, auth) && view == window) {
+                    loves.remove(row.id)
+                    commentsState = commentsState?.let { it.copy(busyIds = it.busyIds - row.id) }
+                }
             }
         }
+        loves[row.id] = job; job.start()
     }
 
     fun deleteComment(comment: PostComment) {
-        val auth = token ?: return
+        val auth = currentToken() ?: return
         val state = commentsState ?: return
-        if (!comment.canModify || comment.id in state.busyIds || sessionExpired) return
-        val window = commentWindow
-        val session = sessionVersion
-        commentsState = state.copy(busyIds = state.busyIds + comment.id, error = null)
-        scope.launch {
+        val row = state.find(comment.id) ?: return
+        if (!row.canModify || row.isDeleted || writing || row.id in state.busyIds || sessionExpired) return
+        val session = currentSession(); val view = window
+        writing = true; bumpCount(state.postKey)
+        commentsState = state.copy(busyIds = state.busyIds + row.id, menuId = null, error = null)
+        val job = currentScope().launch(start = CoroutineStart.LAZY) {
             try {
-                val result = actions.deleteComment(auth, comment.id)
-                if (session != sessionVersion) return@launch
-                recordCommentCount(state.postKey, result.commentsCount)
-                if (result.deleted) {
-                    deletedComments.add(comment.id)
-                    changedComments.remove(comment.id)
+                val result = actions.deleteComment(auth, row.id)
+                if (!sameSession(session, auth)) return@launch
+                if (!result.deleted) throw FeedApiException("Could not delete this comment. Please refresh.", FeedApiFailure.REQUEST_REJECTED)
+                recordCount(state.postKey, result.commentsCount); cache.remove(state.postKey)
+                if (view == window) {
+                    prune(row.id, tombstone = true)
+                    row.parentId?.let { parent -> mapRows { if (it.id == parent)
+                        it.copy(repliesCount = (it.repliesCount - 1).coerceAtLeast(0)).also(::rememberChanged) else it } }
                 }
-                if (result.deleted && window == commentWindow) {
-                    commentsState = commentsState?.let { current -> current.copy(threads = current.threads.map { thread ->
-                        thread.copy(comments = thread.comments.filterNot { it.id == comment.id })
-                    }) }
-                    comment.parentId?.let { parent -> mapComments { if (it.id == parent) it.copy(repliesCount = (it.repliesCount - 1).coerceAtLeast(0)) else it } }
-                    if (commentsState?.editing?.id == comment.id) cancelEdit()
-                }
-            } catch (error: CancellationException) { throw error }
+            } catch (cancel: CancellationException) { throw cancel }
             catch (error: Exception) {
-                if (session != sessionVersion) return@launch
-                handleSessionFailure(error)
-                if (window == commentWindow) commentsState = commentsState?.copy(error = message(error))
+                if (!sameSession(session, auth)) return@launch
+                onSessionFailure(error)
+                if (view == window) commentsState = commentsState?.copy(error = message(error))
             } finally {
-                if (window == commentWindow) commentsState = commentsState?.let { it.copy(busyIds = it.busyIds - comment.id) }
+                if (sameSession(session, auth)) {
+                    writing = false; mutation = null
+                    if (view == window) commentsState = commentsState?.let { it.copy(busyIds = it.busyIds - row.id) }
+                }
             }
         }
+        mutation = job; job.start()
     }
 
-    private fun sameThread(window: Int, parent: String?, depth: Int): Boolean = window == commentWindow &&
-        commentsState?.threads?.size == depth && commentsState?.current?.parent?.id == parent
-
-    private fun updateCurrentThread(block: (CommentThread) -> CommentThread) {
-        commentsState = commentsState?.let { it.copy(threads = it.threads.dropLast(1) + block(it.current)) }
+    private fun resolveBadges() {
+        val auth = currentToken() ?: return
+        val state = commentsState ?: return
+        if (sessionExpired || badgeJob?.isActive == true || clock() < badgeRetryAt) return
+        val ids = (state.root.comments + state.replies.values.flatMap { it.comments }).map { it.userId }.distinct()
+        val visible = if (visibleAuthorIds.isEmpty()) ids.take(20) else visibleAuthorIds.toList()
+        val missing = visible.filter { id -> badgeCache[id]?.let { clock() - it.first < 300_000 } != true }.take(64)
+        val verified = ids.filterTo(HashSet()) { badgeCache[it]?.second == true }
+        if (state.verifiedAuthors != verified) commentsState = state.copy(verifiedAuthors = verified)
+        if (missing.isEmpty()) return
+        val session = currentSession(); val view = window
+        val job = currentScope().launch(start = CoroutineStart.LAZY) {
+            try {
+                val resolved = badges.verified(auth, missing)
+                if (!sameSession(session, auth) || view != window) return@launch
+                missing.forEach { badgeCache[it] = clock() to (it in resolved) }
+                while (badgeCache.size > 400) badgeCache.remove(badgeCache.keys.first())
+            } catch (cancel: CancellationException) { throw cancel }
+            catch (error: Exception) {
+                if (sameSession(session, auth) && view == window) { badgeRetryAt = clock() + 60_000; onSessionFailure(error) }
+            } finally {
+                if (sameSession(session, auth) && view == window) { badgeJob = null; resolveBadges() }
+            }
+        }
+        badgeJob = job; job.start()
     }
 
-    private fun mapComments(block: (PostComment) -> PostComment) {
-        commentsState = commentsState?.let { state -> state.copy(threads = state.threads.map {
-            it.copy(parent = it.parent?.let(block), comments = it.comments.map(block))
-        }) }
+    private fun prune(id: String, tombstone: Boolean) {
+        val state = commentsState ?: return
+        val ids = mutableSetOf(id); val queue = ArrayDeque<String>(); queue.add(id)
+        while (queue.isNotEmpty()) state.replies[queue.removeFirst()]?.comments?.forEach { if (ids.add(it.id)) queue.add(it.id) }
+        ids.forEach { stopRead(it); changed.remove(it) }
+        if (tombstone) deleted.addAll(ids)
+        val closeInline = state.inlineTargetId in ids
+        commentsState = state.copy(root = state.root.copy(comments = state.root.comments.filterNot { it.id in ids }),
+            replies = state.replies.filterKeys { it !in ids }.mapValues { it.value.copy(comments = it.value.comments.filterNot { row -> row.id in ids }) },
+            expandedIds = state.expandedIds - ids, menuId = state.menuId.takeUnless { it in ids },
+            editing = if (closeInline) null else state.editing, replying = if (closeInline) null else state.replying,
+            inlineDraft = if (closeInline) "" else state.inlineDraft, inlineError = if (closeInline) null else state.inlineError)
     }
-
-    private fun recordCommentCount(key: String, count: Long) {
-        commentCounts[key] = count
-        commentVersions[key] = commentVersions[key].orZero() + 1
+    private fun thread(state: CommentsState, parent: String?) = if (parent == null) state.root else state.replies[parent] ?: CommentThread()
+    private fun draftPath(state: CommentsState): Set<String> {
+        val target = state.inlineTargetId ?: return emptySet()
+        val parents = (state.root.comments + state.replies.values.flatMap { it.comments }).associate { it.id to it.parentId }
+        val path = mutableSetOf<String>()
+        var id: String? = target
+        while (id != null && path.add(id)) id = parents[id]
+        return path
     }
-
-    private fun rememberChangedComment(comment: PostComment) {
-        changedComments[comment.id] = (++commentRevision) to comment
+    private fun updateThread(parent: String?, block: (CommentThread) -> CommentThread) {
+        commentsState = commentsState?.let { if (parent == null) it.copy(root = block(it.root))
+            else it.copy(replies = it.replies + (parent to block(it.replies[parent] ?: CommentThread()))) }
     }
-
-    private fun message(error: Exception): String = if (error is FeedApiException) error.message ?: "Please try again."
-        else "Could not complete the request. Please try again."
-    private fun Int?.orZero() = this ?: 0
-
+    private fun mapRows(block: (PostComment) -> PostComment) {
+        commentsState = commentsState?.let { it.copy(root = it.root.copy(comments = it.root.comments.map(block)),
+            replies = it.replies.mapValues { entry -> entry.value.copy(comments = entry.value.comments.map(block)) }) }
+    }
+    private fun stopRead(parent: String) {
+        readVersions[parent] = ++requestSerial; reads.remove(parent)?.cancel()
+        updateThread(parent) { idle(it) }
+    }
+    private fun cancelReads() {
+        reads.values.toList().forEach { it.cancel() }; reads.clear(); readVersions.clear()
+        commentsState = commentsState?.let { it.copy(root = idle(it.root), replies = it.replies.mapValues { row -> idle(row.value) }) }
+    }
+    private fun idle(thread: CommentThread) = thread.copy(loading = false, refreshing = false)
+    private fun validRead(session: Int, auth: String, view: Int, key: String, serial: Int) =
+        sameSession(session, auth) && view == window && readVersions[key] == serial
+    private fun sameSession(session: Int, auth: String?) = session == currentSession() && auth == currentToken() && !sessionExpired
+    private fun bumpCount(key: String) { countVersions[key] = (countVersions[key] ?: 0) + 1 }
+    private fun recordCount(key: String, count: Long) { commentCounts[key] = count.coerceAtLeast(0); bumpCount(key) }
+    private fun rememberChanged(row: PostComment) { changed[row.id] = ++revision to row }
+    private fun badResponse() = FeedApiException("Could not read the server response. Please refresh.", FeedApiFailure.INVALID_RESPONSE)
+    private fun message(error: Exception) = (error as? FeedApiException)?.message ?: "Could not complete the request. Please try again."
 }

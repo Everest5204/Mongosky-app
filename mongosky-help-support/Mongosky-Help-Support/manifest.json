@@ -1,0 +1,155 @@
+{
+  "name": "Mongosky Help & Support",
+  "version": "1.0.1",
+  "repository": "https://github.com/Everest5204/Mongosky-app",
+  "baseCommit": "030f42e7e5302e252e83ac73442b7e560689a20c",
+  "contactEmail": "mongosky0@gmail.com",
+  "files": [
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportActions.kt",
+      "sha256": "f27447833c285ba07c4feaaf1ac97af4cd0aeab3d80ac19d6c7d12544526adf9",
+      "acceptedPreviousNormalizedSha256": [
+        "f27447833c285ba07c4feaaf1ac97af4cd0aeab3d80ac19d6c7d12544526adf9"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportComponents.kt",
+      "sha256": "6090f0b061e7d27d4d0ef138dd598adc9d4c0ac3be6348445644a898a81b8e9a",
+      "acceptedPreviousNormalizedSha256": [
+        "6090f0b061e7d27d4d0ef138dd598adc9d4c0ac3be6348445644a898a81b8e9a"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportContactScreen.kt",
+      "sha256": "90d869871fd34ce078dc421f0a85986286e4a32a4fa0fea7f80f926bc90b4f0a",
+      "acceptedPreviousNormalizedSha256": [
+        "90d869871fd34ce078dc421f0a85986286e4a32a4fa0fea7f80f926bc90b4f0a"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportContent.kt",
+      "sha256": "7feb1afc011a95a0a130f02c0f9f40f521c4987a9d7d236506ec718d96822e3c",
+      "acceptedPreviousNormalizedSha256": [
+        "7feb1afc011a95a0a130f02c0f9f40f521c4987a9d7d236506ec718d96822e3c"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportIcons.kt",
+      "sha256": "3ff9d5d3e2c82859e77b6ca1de7f792ab5c47473200ea4d4e6a955dbcbcd3eca",
+      "acceptedPreviousNormalizedSha256": [
+        "3ff9d5d3e2c82859e77b6ca1de7f792ab5c47473200ea4d4e6a955dbcbcd3eca"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportListKeys.kt",
+      "sha256": "38cff028204af770b9569afec62abf0c714ecd7578e3b1f72f41a846b2f3f971"
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportModels.kt",
+      "sha256": "929bfb954c217f90911129ca9a3f7ca300c072ab47ca577aa70be2e470e01c54",
+      "acceptedPreviousNormalizedSha256": [
+        "929bfb954c217f90911129ca9a3f7ca300c072ab47ca577aa70be2e470e01c54"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportPolicy.kt",
+      "sha256": "ba714a9716f67145b80e416c1e3c91b22017d61db30bc2bbcc31281f80009995",
+      "acceptedPreviousNormalizedSha256": [
+        "ba714a9716f67145b80e416c1e3c91b22017d61db30bc2bbcc31281f80009995"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportRoute.kt",
+      "sha256": "e50af92323964c6909162b18c59be85eb2091174650c7f1d85560c9c724b4c8d",
+      "acceptedPreviousNormalizedSha256": [
+        "e50af92323964c6909162b18c59be85eb2091174650c7f1d85560c9c724b4c8d"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportScreen.kt",
+      "sha256": "af8bd653f64eab0fd190d1f30d37782870f29eee83b469af1c1ac5103c1261c7",
+      "acceptedPreviousNormalizedSha256": [
+        "ff7805836fd029fa3d87b94414d97a391ebb4ded645ebd9f296990a2f021f533"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportSettingsHost.kt",
+      "sha256": "c2e9f3bb3c63e0ce2ecda6ade98b63ed37c2dcf8bdb3b7000bb4ac1a96af5bf2",
+      "acceptedPreviousNormalizedSha256": [
+        "c2e9f3bb3c63e0ce2ecda6ade98b63ed37c2dcf8bdb3b7000bb4ac1a96af5bf2"
+      ]
+    },
+    {
+      "path": "app/src/main/java/com/mongosky/app/helpsupport/HelpSupportTheme.kt",
+      "sha256": "27cc673bf176f3d5895e7dddaa9f1ea113af0e32530a4c28d36853197225c076",
+      "acceptedPreviousNormalizedSha256": [
+        "27cc673bf176f3d5895e7dddaa9f1ea113af0e32530a4c28d36853197225c076"
+      ]
+    }
+  ],
+  "compatibilityFiles": [
+    {
+      "name": "SettingsIcons.kt",
+      "sha256": "63490cdf6d1ce3e81a0ec4282ec494abe6fa169d546abd55c43efdc21c914504"
+    },
+    {
+      "name": "SettingsModels.kt",
+      "sha256": "afc3856bbf88e343ea9585265a25d27d73e5c73b79066b1b227b16df4168babc"
+    },
+    {
+      "name": "SettingsNavigation.kt",
+      "sha256": "59e692723f77b3a2c7cf3834f28c71a769e0b9808b96863a99b4250de1515570"
+    },
+    {
+      "name": "SettingsRoute.kt",
+      "sha256": "da563f1cbf8c0f13655fa78d507b700050b4acdbf537caae9c7a287c01b20299"
+    },
+    {
+      "name": "SettingsScreen.kt",
+      "sha256": "8d660a6c43c679a6c4976449ee4d4c391db0aa074c8f8f74492cf8c9be1f624f"
+    }
+  ],
+  "baselineIntegrationPatches": [
+    {
+      "name": "Settings imports",
+      "before": [
+        "package com.mongosky.app.navigation\n"
+      ],
+      "after": "package com.mongosky.app.navigation\n\nimport com.mongosky.app.settings.SettingsNavigation\nimport com.mongosky.app.settings.SettingsRoute\n"
+    },
+    {
+      "name": "Settings destination",
+      "before": [
+        "    val isSignupPage = route == MainRoute.SIGNUP\n"
+      ],
+      "after": "    val isSignupPage = route == MainRoute.SIGNUP\n    val isSettingsPage = route == MainRoute.SETTINGS\n"
+    },
+    {
+      "name": "Settings drawer visibility",
+      "before": [
+        "    val drawerVisible = !isInformationPage && !isSignupPage && (drawerState.isOpen || drawerState.targetValue == DrawerValue.Open)",
+        "    val drawerVisible = !isSignupPage && (drawerState.isOpen || drawerState.targetValue == DrawerValue.Open)"
+      ],
+      "mode": "drawer-prefix",
+      "after": "    val drawerVisible = !isSettingsPage && "
+    },
+    {
+      "name": "Settings drawer opening",
+      "before": [
+        "        val target = destination.routeName?.let(MainRoute::valueOf) ?: return\n"
+      ],
+      "after": "        val target = destination.routeName?.let(MainRoute::valueOf) ?: return\n        if (target == MainRoute.SETTINGS) {\n            if (signingOut || mediaPickerOpen || signupOpening.isOpening) return\n            feedViewModel.closeOverlays()\n            createMenuOpen = false\n            backStack = SettingsNavigation.push(backStack)\n            scope.launch { drawerState.snapTo(DrawerValue.Closed) }\n            return\n        }\n"
+    },
+    {
+      "name": "Settings full-screen host",
+      "before": [
+        "                if (isInformationPage) {",
+        "                if (route == MainRoute.CHANGE_NAME) {",
+        "                if (isSignupPage) {"
+      ],
+      "after": "                if (isSettingsPage) {\n                    contentState.SaveableStateProvider(entry) {\n                        SettingsRoute(onBack = {\n                            if (!signingOut) backStack = SettingsNavigation.back(backStack, entry)\n                        })\n                    }\n                } else ",
+      "mode": "prefix-first"
+    }
+  ],
+  "changes": "Fix Help & Support scroll crash: separate FAQ and fixed action row keys."
+}

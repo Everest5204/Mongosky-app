@@ -1,12 +1,8 @@
 package com.mongosky.app.home
 
-import com.mongosky.app.mediapost.MediaPost
-import com.mongosky.app.mediapost.MediaPostType
 import com.mongosky.app.network.invalidPostResponse
 import com.mongosky.app.post.*
-import com.mongosky.app.textpost.TextPost
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
@@ -20,7 +16,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
@@ -31,7 +26,7 @@ internal class HomeFeedApi(
     baseUrl: String = "https://api.mongosky.com/"
 ) : HomeFeedActions {
     private val base = baseUrl.toHttpUrl()
-    private val decoder = FeedApi()
+    private val editor = com.mongosky.app.editpost.EditPostApi(client, baseUrl)
 
     override suspend fun follow(token: String, userId: String) = withContext(Dispatchers.IO) {
         requireId(userId)
@@ -64,38 +59,8 @@ internal class HomeFeedApi(
         }
     }
 
-    override suspend fun editable(token: String, post: HomePost): HomePost = withContext(Dispatchers.IO) {
-        require(post.editable)
-        decodeOwned(request(token, "GET", editUrl(post)), post)
-    }
-
-    override suspend fun edit(token: String, request: HomeEditRequest): HomePost = withContext(Dispatchers.IO) {
-        val draft = request.draft
-        require(draft.post.editable && draft.length <= draft.limit)
-        val body = if (draft.post is HomePost.Text) {
-            require(draft.text.isNotBlank())
-            jsonBody(JSONObject().put("text", draft.text.trim()).put("caption", draft.text.trim())
-                .put("text_background", JSONObject().put("kind", draft.background.kind.name.lowercase())
-                    .put("value", draft.background.value))
-                .put("text_color", draft.textColor).put("text_style", draft.textStyle.name.lowercase())
-                .put("expected_updated_at", draft.post.updatedAt.toString()))
-        } else {
-            require(draft.keptMedia.size + request.newFiles.size in 1..10)
-            MultipartBody.Builder().setType(MultipartBody.FORM)
-                .addFormDataPart("caption", draft.text.trim())
-                .addFormDataPart("expected_updated_at", draft.post.updatedAt.toString())
-                .apply {
-                    draft.keptMedia.forEach { addFormDataPart("keep_media_key", it.id?.takeIf(String::isNotBlank) ?: it.url) }
-                    request.newFiles.forEach { file ->
-                        val source = File(file.localPath)
-                        require(source.isFile && source.length() == file.sizeBytes)
-                        addFormDataPart("media", file.name.replace('"', '_').replace('\n', '_').replace('\r', '_'),
-                            source.asRequestBody(file.mimeType.toMediaType()))
-                    }
-                }.build()
-        }
-        decodeOwned(request(token, "PATCH", editUrl(draft.post), body), draft.post)
-    }
+    override suspend fun editable(token: String, post: HomePost): HomePost = editor.editable(token, post)
+    override suspend fun edit(token: String, request: HomeEditRequest): HomePost = editor.edit(token, request)
 
     override suspend fun delete(token: String, postId: String) = withContext(Dispatchers.IO) {
         requireId(postId)
@@ -104,37 +69,6 @@ internal class HomeFeedApi(
         Unit
     }
 
-    private suspend fun decodeOwned(raw: JSONObject, original: HomePost): HomePost {
-        val row = raw.optJSONObject("post") ?: throw invalidPostResponse()
-        if (row.optString("id") != original.id || row.optString("user_id") != original.author.id) {
-            throw invalidPostResponse()
-        }
-        // The protected editor verifies ownership; its DTO omits feed relation flags.
-        row.put("is_self", true).put("is_following", false)
-        val page = decoder.parsePage(JSONObject().put("posts", JSONArray().put(row))
-            .put("has_more", false).toString(), original.source, null)
-        val post = page.posts.singleOrNull() ?: throw invalidPostResponse()
-        return if (post.source == FeedSource.TEXT) {
-            if (post.type != FeedPostType.TEXT) throw invalidPostResponse()
-            HomePost.Text(TextPost(post.id, post.userId, post.author, post.createdAt, post.updatedAt,
-                post.text, post.caption, post.textBackground, post.textColor, post.textStyle,
-                post.likesCount, post.commentsCount, post.sharesCount, isSelf = true))
-        } else {
-            val type = when (post.type) {
-                FeedPostType.IMAGE -> MediaPostType.IMAGE
-                FeedPostType.VIDEO -> MediaPostType.VIDEO
-                else -> throw invalidPostResponse()
-            }
-            HomePost.Media(MediaPost(post.id, post.userId, post.author, post.createdAt, post.updatedAt,
-                type, post.caption, post.media, post.likesCount, post.commentsCount, post.sharesCount, isSelf = true))
-        }
-    }
-
-    private fun editUrl(post: HomePost): HttpUrl {
-        requireId(post.id)
-        return if (post is HomePost.Text) url("api", "text-posts", "edit", post.id)
-        else url("api", "posts", "media", "edit", post.id)
-    }
     private fun url(vararg parts: String) = base.newBuilder().apply { parts.forEach(::addPathSegment) }.build()
     private fun requireId(id: String) { require(HomeFeedPolicy.validId(id)) { "This post or profile is unavailable." } }
     private fun jsonBody(json: JSONObject) = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())

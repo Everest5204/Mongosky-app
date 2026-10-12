@@ -2,13 +2,8 @@ package com.mongosky.app.home
 
 import androidx.compose.runtime.Immutable
 import com.mongosky.app.mediapost.MediaPostType
-import com.mongosky.app.mediapost.PreparedPostMedia
-import com.mongosky.app.mediapost.SelectedPostMedia
 import com.mongosky.app.post.FeedMedia
-import com.mongosky.app.post.FeedTextBackground
-import com.mongosky.app.post.FeedTextStyle
 import com.mongosky.app.post.HomePost
-import com.mongosky.app.textpost.TextPostLimits
 
 @Immutable
 internal data class HomeAuthorState(
@@ -65,34 +60,11 @@ internal val HomePost.updatedAt get() = when (this) {
     is HomePost.Media -> post.updatedAt
 }
 
-internal data class HomeEditState(
-    val post: HomePost,
-    val loading: Boolean = true,
-    val saving: Boolean = false,
-    val selecting: Boolean = false,
-    val text: String = post.content,
-    val background: FeedTextBackground = (post as? HomePost.Text)?.post?.textBackground ?: FeedTextBackground(),
-    val textColor: String = (post as? HomePost.Text)?.post?.textColor ?: "#111827",
-    val textStyle: FeedTextStyle = (post as? HomePost.Text)?.post?.textStyle ?: FeedTextStyle.BOLD_CENTER,
-    val keptMedia: List<FeedMedia> = post.photos,
-    val selectedMedia: List<SelectedPostMedia> = emptyList(),
-    val error: String? = null,
-    val needsReload: Boolean = false
-) {
-    val busy get() = loading || saving || selecting
-    val length get() = TextPostLimits.length(text)
-    val limit get() = if (post is HomePost.Text) 650 else 2_200
-    val valid get() = !busy && !needsReload && length <= limit &&
-        (if (post is HomePost.Text) text.isNotBlank() else keptMedia.size + selectedMedia.size in 1..10)
-}
+internal typealias HomeEditState = com.mongosky.app.editpost.EditPostState
+internal typealias HomeEditRequest = com.mongosky.app.editpost.EditPostRequest
 
 internal data class HomeDeleteState(val post: HomePost, val busy: Boolean = false,
     val error: String? = null, val uncertain: Boolean = false)
-
-internal data class HomeEditRequest(
-    val draft: HomeEditState,
-    val newFiles: List<PreparedPostMedia> = emptyList()
-)
 
 internal interface HomeFeedActions {
     suspend fun follow(token: String, userId: String)

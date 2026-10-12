@@ -1,0 +1,15 @@
+{
+  "passed": 10,
+  "checks": [
+    "Clean GitHub checkout: native Settings entry and support module installed",
+    "Reinstallation: all source bytes unchanged",
+    "Existing Settings: only SettingsRoute.kt changes; password, deletion and information callbacks preserved",
+    "Upgraded project reinstallation: all source bytes unchanged",
+    "v1.0.0 upgrade: only the existing HelpSupportScreen.kt changes; one key-policy file added",
+    "v1.0.1 upgrade reinstallation: all source bytes unchanged",
+    "Windows line endings and custom Settings code retained",
+    "Local module edits: rejected with zero project mutations",
+    "Unrecognized Settings structure: rejected before any project write",
+    "Damaged ZIP payload: checksum rejection before any project write"
+  ]
+}
