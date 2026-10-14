@@ -1,5 +1,7 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -41,7 +43,7 @@ internal fun CommentInput(value: String, onValueChange: (String) -> Unit, placeh
         horizontalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 6.dp)) {
         BasicTextField(value = value, onValueChange = onValueChange,
             enabled = enabled && !sending, maxLines = 5,
-            textStyle = TextStyle(fontSize = if (compact) 14.sp else 15.sp, lineHeight = if (compact) 19.sp else 21.sp, color = CommentColors.text),
+            textStyle = TextStyle(fontSize = if (compact) 14.sp else 15.sp, lineHeight = if (compact) 19.sp else 21.sp, color = AppColors.content(CommentColors.text)),
             cursorBrush = SolidColor(CommentColors.active),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onSend = { if (canSend) onSend() }),
@@ -53,24 +55,24 @@ internal fun CommentInput(value: String, onValueChange: (String) -> Unit, placeh
                     } else false
                 },
             decorationBox = { input ->
-                Box(Modifier.fillMaxWidth().border(1.dp, if (focused) Color(0xFFC9C9C9) else CommentColors.inputBorder,
+                Box(Modifier.fillMaxWidth().border(1.dp, AppColors.outline(if (focused) Color(0xFFC9C9C9) else CommentColors.inputBorder),
                     RoundedCornerShape(if (compact) 14.dp else 24.dp))
-                    .background(if (focused || compact) Color.White else CommentColors.input, RoundedCornerShape(if (compact) 14.dp else 24.dp))
+                    .background(AppColors.surface(if (focused || compact) Color.White else CommentColors.input), RoundedCornerShape(if (compact) 14.dp else 24.dp))
                     .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = 11.dp)) {
-                    if (value.isEmpty()) Text(placeholder, color = CommentColors.placeholder,
+                    if (value.isEmpty()) Text(placeholder, color = AppColors.content(CommentColors.placeholder),
                         fontSize = if (compact) 14.sp else 15.sp, lineHeight = 20.sp)
                     input()
                 }
             })
         onCancel?.let { cancel ->
             IconButton(onClick = cancel, enabled = !sending, modifier = Modifier.size(48.dp)) {
-                Icon(CommentIcons.close, "Cancel $submitLabel", Modifier.size(18.dp), tint = CommentColors.muted)
+                Icon(CommentIcons.close, "Cancel $submitLabel", Modifier.size(18.dp), tint = AppColors.content(CommentColors.muted))
             }
         }
         IconButton(onClick = onSend, enabled = canSend, modifier = Modifier.size(48.dp)) {
-            if (sending) CircularProgressIndicator(Modifier.size(21.dp), color = CommentColors.active, strokeWidth = 2.dp)
+            if (sending) CircularProgressIndicator(Modifier.size(21.dp), color = AppColors.content(CommentColors.active), strokeWidth = 2.dp)
             else Icon(CommentIcons.send, submitLabel, Modifier.size(if (compact) 22.dp else 25.dp),
-                tint = if (canSend) CommentColors.active else Color(0xFFD8DCE2))
+                tint = AppColors.content(if (canSend) CommentColors.active else Color(0xFFD8DCE2)))
         }
     }
 }

@@ -16,6 +16,7 @@ import com.mongosky.app.navigation.MainScreen
 import com.mongosky.app.passwordreset.PasswordResetViewModel
 import com.mongosky.app.signup.SignupViewModel
 import com.mongosky.app.theme.MongoskyTheme
+import com.mongosky.app.downloadpost.PostDownloadHost
 
 class MainActivity : ComponentActivity() {
 
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.mongosky.app.darkmode.AppAppearance.prepareStartup(this)
         super.onCreate(savedInstanceState)
         NotificationSystem.receiveIntent(applicationContext, intent)
 
@@ -71,6 +73,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (userName != null) {
+                    PostDownloadHost()
                     key(state.signedInUserId, state.sessionRevision) {
                         MainScreen(
                             userName = userName,

@@ -1,8 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application android:allowBackup="true" android:label="Mongosky" android:supportsRtl="true" android:theme="@style/Theme.Mongosky" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round">
 
@@ -25,6 +28,7 @@
         <service android:name="com.mongosky.app.notifications.NotificationTokenJob" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
         <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
         <meta-data android:name="firebase_messaging_installation_id_enabled" android:value="false" />
+        <service android:name="com.mongosky.app.downloadpost.PostDownloadService" android:exported="false" android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>

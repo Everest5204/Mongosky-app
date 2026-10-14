@@ -1,5 +1,7 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
@@ -23,9 +25,9 @@ internal fun OwnProfileTabs(selected: OwnProfileTab, onSelect: (OwnProfileTab) -
                 Column(Modifier.weight(1f).selectable(active, role = Role.Tab) { onSelect(tab) }, horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.fillMaxWidth().heightIn(min = 58.dp).padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
                         Text(tab.label, fontSize = 17.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-                            color = if (active) OwnProfileColors.brand else OwnProfileColors.text)
+                            color = AppColors.content(if (active) OwnProfileColors.brand else OwnProfileColors.text))
                     }
-                    Box(Modifier.fillMaxWidth().height(3.dp).background(if (active) OwnProfileColors.brand else androidx.compose.ui.graphics.Color.Transparent))
+                    Box(Modifier.fillMaxWidth().height(3.dp).background(AppColors.surface(if (active) OwnProfileColors.brand else androidx.compose.ui.graphics.Color.Transparent)))
                 }
             }
         }

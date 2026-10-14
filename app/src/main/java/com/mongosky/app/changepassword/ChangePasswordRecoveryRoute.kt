@@ -1,5 +1,7 @@
 package com.mongosky.app.changepassword
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,7 +54,7 @@ internal fun ChangePasswordRecoveryRoute(
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp).heightIn(min = 56.dp)) {
                 IconButton(onClick = goBack, enabled = !model.uiState.loading, modifier = Modifier.size(48.dp)) {
-                    Icon(ChangePasswordIcons.back, "Return to previous page", tint = Color(0xFF18181B), modifier = Modifier.size(23.dp))
+                    Icon(ChangePasswordIcons.back, "Return to previous page", tint = AppColors.content(Color(0xFF18181B)), modifier = Modifier.size(23.dp))
                 }
             }
             Box(Modifier.weight(1f)) {

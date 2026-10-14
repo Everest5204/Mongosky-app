@@ -1,5 +1,7 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -71,20 +73,20 @@ internal fun CommentsSheet(state: CommentsState,userName: String,viewModel: Comm
             window?.setDimAmount(0f)
             window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         }
-        Box(Modifier.fillMaxSize().background(if(mobile) Color.White else Color(0x8F0F172A))
+        Box(Modifier.fillMaxSize().background(AppColors.surface(if(mobile) Color.White else Color(0x8F0F172A)))
             .safeDrawingPadding().imePadding().padding(if(mobile) 0.dp else 18.dp),contentAlignment=Alignment.Center) {
             val panel=if(mobile) Modifier.fillMaxSize() else Modifier.widthIn(max=620.dp).fillMaxWidth()
                 .heightIn(max=minOf(760.dp,configuration.screenHeightDp.dp*0.86f)).fillMaxHeight()
-            Column(panel.clip(RoundedCornerShape(if(mobile) 0.dp else 24.dp)).background(Color.White)) {
+            Column(panel.clip(RoundedCornerShape(if(mobile) 0.dp else 24.dp)).background(AppColors.surface(Color.White))) {
                 Row(Modifier.fillMaxWidth().heightIn(min=54.dp).padding(start=if(mobile) 10.dp else 18.dp,end=6.dp),
                     verticalAlignment=Alignment.CenterVertically) {
-                    Text("Comments",color=Color.Black,fontSize=if(configuration.screenWidthDp<=420) 20.sp else 21.sp,
+                    Text("Comments",color=AppColors.content(Color.Black),fontSize=if(configuration.screenWidthDp<=420) 20.sp else 21.sp,
                         fontWeight=FontWeight.Black,modifier=Modifier.weight(1f))
                     IconButton(onClick=viewModel::closeComments,modifier=Modifier.size(48.dp)) {
-                        Icon(CommentIcons.close,"Close comments",Modifier.size(26.dp),tint=Color.Black)
+                        Icon(CommentIcons.close,"Close comments",Modifier.size(26.dp),tint=AppColors.content(Color.Black))
                     }
                 }
-                HorizontalDivider(color=CommentColors.line,thickness=1.dp)
+                HorizontalDivider(color=AppColors.outline(CommentColors.line),thickness=1.dp)
                 LazyColumn(state=list,modifier=Modifier.weight(1f).fillMaxWidth(),
                     contentPadding=PaddingValues(horizontal=if(mobile) 10.dp else 12.dp,vertical=12.dp),
                     verticalArrangement=Arrangement.spacedBy(13.dp)) {
@@ -94,8 +96,8 @@ internal fun CommentsSheet(state: CommentsState,userName: String,viewModel: Comm
                     if (state.root.comments.isEmpty() && !state.root.initialized && state.root.loading) item(key="initial_loading",contentType="state") {
                         Column(Modifier.fillMaxWidth().padding(top=62.dp),horizontalAlignment=Alignment.CenterHorizontally,
                             verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                            CircularProgressIndicator(Modifier.size(22.dp),color=CommentColors.placeholder,strokeWidth=2.dp)
-                            Text("Loading comments...",fontSize=17.sp,color=CommentColors.placeholder)
+                            CircularProgressIndicator(Modifier.size(22.dp),color=AppColors.content(CommentColors.placeholder),strokeWidth=2.dp)
+                            Text("Loading comments...",fontSize=17.sp,color=AppColors.content(CommentColors.placeholder))
                         }
                     }
                     if (state.root.initialized && state.root.comments.isEmpty() && state.root.error==null)
@@ -109,7 +111,7 @@ internal fun CommentsSheet(state: CommentsState,userName: String,viewModel: Comm
                     if (state.root.comments.isNotEmpty() || state.root.error!=null)
                         item(key="root_footer",contentType="thread_footer") { CommentThreadFooter(null,state.root,viewModel,enabled) }
                 }
-                HorizontalDivider(color=CommentColors.line,thickness=1.dp)
+                HorizontalDivider(color=AppColors.outline(CommentColors.line),thickness=1.dp)
                 CommentInput(state.draft,viewModel::setCommentDraft,"Write a comment...","Send comment as $userName",viewModel::sendComment,
                     enabled && !viewModel.writing,state.sending,canSubmit=!state.unconfirmedCreate,
                     modifier=Modifier.padding(horizontal=if(mobile) 8.dp else 12.dp,vertical=10.dp))

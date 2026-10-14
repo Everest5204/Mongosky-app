@@ -95,7 +95,7 @@ fun AuthTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = AuthColors,
+        colorScheme = com.mongosky.app.darkmode.AppColors.scheme(AuthColors),
         typography = AuthTypography,
         shapes = AuthShapes,
         content = content

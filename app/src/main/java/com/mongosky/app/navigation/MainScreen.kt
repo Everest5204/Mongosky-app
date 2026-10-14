@@ -2,6 +2,16 @@
 
 package com.mongosky.app.navigation
 
+import com.mongosky.app.darkmode.AppColors
+
+import com.mongosky.app.saveditems.SavedItemsRoute
+import com.mongosky.app.saveditems.SavedItemsViewModel
+import com.mongosky.app.saveditems.LocalSavedItems
+import com.mongosky.app.saveditems.SavedNoticeHost
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.foundation.layout.navigationBarsPadding
+
 import com.mongosky.app.personaldetails.PersonalDetailsHost
 import com.mongosky.app.personaldetails.LocalPersonalDetailsHost
 
@@ -34,6 +44,8 @@ import com.mongosky.app.settings.SettingsRoute
 
 import com.mongosky.app.drawer.DrawerInformationNavigation
 import com.mongosky.app.drawer.DrawerInformationPage
+import com.mongosky.app.myactivity.ActivityRoute
+import com.mongosky.app.myactivity.ActivityViewModel
 
 import com.mongosky.app.changename.ChangeNameRoute
 import androidx.compose.runtime.CompositionLocalProvider
@@ -199,8 +211,7 @@ fun MainScreen(
         ViewModelProvider(owner, AiViewModel.Factory(activity.applicationContext))
             .get("MongoskyAI", AiViewModel::class.java)
     }
-    val aiTheme by aiViewModel.theme.collectAsState()
-    val aiDark = aiTheme.resolve(isSystemInDarkTheme())
+    val aiDark = com.mongosky.app.darkmode.AppAppearance.isDark
     // Mongosky Notification integration v1
     val notificationsViewModel = remember(owner) {
         ViewModelProvider(owner, NotificationsViewModel.Factory(activity.applicationContext))
@@ -231,6 +242,33 @@ fun MainScreen(
     val feedViewModel = remember(owner) {
         ViewModelProvider(owner, HomeFeedViewModel.Factory(TokenStore(activity.applicationContext)))
             .get("MongoskyHomeFeed", HomeFeedViewModel::class.java)
+    }
+    // Mongosky My Activity v1: private state survives rotation and is cleared on sign out.
+    val activityViewModel = remember(owner) {
+        ViewModelProvider(owner, ActivityViewModel.Factory(activity.applicationContext))
+            .get("MongoskyMyActivity", ActivityViewModel::class.java)
+    }
+    // Mongosky Saved Items v1: shared by menus, reels and the private saved list.
+    val savedItemsViewModel = remember(owner) {
+        ViewModelProvider(owner, SavedItemsViewModel.Factory(activity.applicationContext))
+            .get("MongoskySavedItems", SavedItemsViewModel::class.java)
+    }
+    LaunchedEffect(savedItemsViewModel, userId, loginViewModel.uiState.sessionRevision, signingOut) {
+        if (signingOut) savedItemsViewModel.endSession()
+        else savedItemsViewModel.bind(userId.orEmpty(), loginViewModel.uiState.sessionRevision)
+    }
+    DisposableEffect(savedItemsViewModel, activity) {
+        val savedLifecycle = (activity as? androidx.lifecycle.LifecycleOwner)?.lifecycle
+        val observer = LifecycleEventObserver { _, _ ->
+            savedItemsViewModel.setForeground(savedLifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) ?: true)
+        }
+        savedLifecycle?.addObserver(observer)
+        savedItemsViewModel.setForeground(savedLifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) ?: true)
+        onDispose {
+            savedLifecycle?.removeObserver(observer)
+            savedItemsViewModel.setForeground(false)
+            if (!activity.isChangingConfigurations) savedItemsViewModel.endSession()
+        }
     }
     val mediaPostViewModel = remember(owner) {
         ViewModelProvider(owner, MediaPostViewModel.Factory(activity.applicationContext))
@@ -291,6 +329,7 @@ fun MainScreen(
                             textPostViewModel.endSession()
                             mediaPostViewModel.endSession()
                             feedViewModel.endSession()
+                activityViewModel.endSession()
                         }
                     } catch (error: Exception) {
                         // Atomic token storage failed: the original account remains active.
@@ -347,6 +386,7 @@ fun MainScreen(
                 textPostViewModel.endSession()
                 mediaPostViewModel.endSession()
                 feedViewModel.endSession()
+                activityViewModel.endSession()
                 drawerViewModel.endSession()
                 drawerSignupViewModel.endSession()
             }
@@ -515,6 +555,8 @@ fun MainScreen(
         if (signingOut) return
         aiViewModel.endSession()
         notificationsViewModel.endSession()
+        savedItemsViewModel.endSession()
+        activityViewModel.endSession()
         signupOpening.cancel()
         drawerSignupViewModel.endSession()
         drawerViewModel.endSession()
@@ -554,7 +596,7 @@ fun MainScreen(
         }
     }
 
-    LightMainSystemBars(dark = route == MainRoute.REELS || (route == MainRoute.AI && aiDark))
+    com.mongosky.app.darkmode.DarkModeSystemBars(forceDark = route == MainRoute.REELS)
 
     val publishedText = textPublication as? TextPostPublication.Published
     LaunchedEffect(publishedText?.post?.id, signingOut) {
@@ -577,6 +619,7 @@ fun MainScreen(
     // Mongosky Deactivate Account host v1
     // Mongosky Personal Details host v1
     CompositionLocalProvider(LocalProfileNavigator provides ::openUserProfile, LocalProfileViewerId provides userId,
+        LocalSavedItems provides savedItemsViewModel,
         LocalPersonalDetailsHost provides PersonalDetailsHost(
             sessionKey = userId.orEmpty(), sessionRevision = loginViewModel.uiState.sessionRevision,
             busy = signingOut, error = error,
@@ -592,8 +635,9 @@ fun MainScreen(
             busy = signingOut, error = error,
             onLeaveAccount = { leaveAccount(onSignOut, showSignOutPage = false) }
         )) {
-    MaterialTheme(colorScheme = MainPalette.colors) {
-        Surface(modifier = Modifier.fillMaxSize(), color = if (route == MainRoute.REELS) Color.Black else if (route == MainRoute.AI && aiDark) Color(0xFF101113) else Color.White) {
+    MaterialTheme(colorScheme = com.mongosky.app.darkmode.AppColors.scheme(MainPalette.colors)) {
+    Box(Modifier.fillMaxSize()) {
+        Surface(modifier = Modifier.fillMaxSize(), color = AppColors.surface(if (route == MainRoute.REELS) Color.Black else if (route == MainRoute.AI && aiDark) Color(0xFF101113) else Color.White)) {
             Box(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
                 if (isSettingsInformationPage) {
                     contentState.SaveableStateProvider(entry) {
@@ -639,6 +683,25 @@ fun MainScreen(
                         }, onDeleteAccount = {
                             if (!signingOut) backStack = DeleteAccountNavigation.open(backStack)
                         })
+                    }
+                } else if (route == MainRoute.MY_ACTIVITY) {
+                    contentState.SaveableStateProvider(entry) {
+                        ActivityRoute(viewModel = activityViewModel, feed = feedViewModel,
+                            ownerId = userId.orEmpty(), sessionRevision = loginViewModel.uiState.sessionRevision,
+                            userName = userName, hostBusy = signingOut,
+                            onBack = { if (!signingOut) backStack = DrawerInformationNavigation.back(backStack, entry) },
+                            onSignInAgain = { leaveAccount(onSignOut, showSignOutPage = false) },
+                            onOpenReel = { reelsViewModel.openReel(it); navigate(MainRoute.REELS) },
+                            onChanged = { feedViewModel.refresh(); ownProfileViewModel.checkForUpdates(force = true) })
+                    }
+                } else if (route == MainRoute.SAVED_ITEMS) {
+                    contentState.SaveableStateProvider(entry) {
+                        SavedItemsRoute(model = savedItemsViewModel, feed = feedViewModel,
+                            ownerId = userId.orEmpty(), sessionRevision = loginViewModel.uiState.sessionRevision,
+                            userName = userName, hostBusy = signingOut,
+                            onBack = { if (!signingOut) backStack = DrawerInformationNavigation.back(backStack, entry) },
+                            onSignInAgain = { leaveAccount(onSignOut, showSignOutPage = false) },
+                            onOpenReel = { reelsViewModel.openReel(it); navigate(MainRoute.REELS) })
                     }
                 } else if (isInformationPage) {
                     contentState.SaveableStateProvider(entry) {
@@ -717,8 +780,8 @@ fun MainScreen(
                     }
 
                     Scaffold(
-                        containerColor = Color.White,
-                        contentColor = MainPalette.text,
+                        containerColor = AppColors.surface(Color.White),
+                        contentColor = AppColors.content(MainPalette.text),
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                         snackbarHost = { SnackbarHost(snackbar) },
                         topBar = friendsTopBar@ {
@@ -852,7 +915,7 @@ fun MainScreen(
                                     else -> Text(
                                         text = route.title,
                                         modifier = Modifier.padding(24.dp),
-                                        color = MainPalette.text,
+                                        color = AppColors.content(MainPalette.text),
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -864,10 +927,13 @@ fun MainScreen(
             }
         }
 
+        SavedNoticeHost(savedItemsViewModel, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(12.dp))
+    }
+
         if (messagesNoticeOpen) {
             AlertDialog(
                 onDismissRequest = { messagesNoticeOpen = false },
-                containerColor = Color.White,
+                containerColor = AppColors.surface(Color.White),
                 title = { Text("Messages") },
                 text = { Text("Messaging is currently unavailable.") },
                 confirmButton = {
@@ -891,7 +957,7 @@ private fun MainTopBar(
     onMessages: () -> Unit,
     onMenu: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+    Column(modifier = Modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
         Row(
             modifier = Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -904,7 +970,7 @@ private fun MainTopBar(
             ) {
                 Text(
                     text = "Mongosky",
-                    color = MainPalette.brand,
+                    color = AppColors.content(MainPalette.brand),
                     fontFamily = FontFamily.SansSerif,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Black,
@@ -934,7 +1000,7 @@ private fun MainActionIcon(
             imageVector = image,
             contentDescription = label,
             modifier = Modifier.size(24.dp),
-            tint = if (enabled) MainPalette.text else MainPalette.muted
+            tint = AppColors.content(if (enabled) MainPalette.text else MainPalette.muted)
         )
     }
 }
@@ -948,7 +1014,7 @@ private fun MainBottomBar(
     onToggleCreate: () -> Unit,
     onDismissCreate: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth().background(Color.White)) {
+    Column(modifier = Modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
         MainDivider()
         Row(
             modifier = Modifier.fillMaxWidth().height(64.dp)
@@ -969,7 +1035,7 @@ private fun MainBottomBar(
                         onClick = onToggleCreate,
                         enabled = enabled,
                         modifier = Modifier.size(50.dp).clip(CircleShape)
-                            .background(MainPalette.soft)
+                            .background(AppColors.surface(MainPalette.soft))
                             .semantics {
                                 stateDescription = if (createMenuOpen) "Expanded" else "Collapsed"
                             }
@@ -978,9 +1044,9 @@ private fun MainBottomBar(
                             imageVector = MainIcons.plus,
                             contentDescription = if (createMenuOpen) "Close create menu" else "Open create menu",
                             modifier = Modifier.size(28.dp),
-                            tint = if (createMenuOpen || selectedRoute.isCreateRoute) {
+                            tint = AppColors.content(if (createMenuOpen || selectedRoute.isCreateRoute) {
                                 MainPalette.brand
-                            } else MainPalette.text
+                            } else MainPalette.text)
                         )
                     }
                     DropdownMenu(
@@ -989,10 +1055,10 @@ private fun MainBottomBar(
                         modifier = Modifier.width(196.dp),
                         offset = DpOffset((-73).dp, (-8).dp),
                         shape = RoundedCornerShape(14.dp),
-                        containerColor = Color.White,
+                        containerColor = AppColors.surface(Color.White),
                         tonalElevation = 0.dp,
                         shadowElevation = 10.dp,
-                        border = BorderStroke(1.dp, MainPalette.border)
+                        border = BorderStroke(1.dp, AppColors.outline(MainPalette.border))
                     ) {
                         MainCreateItem("Text post", MainIcons.edit) { onNavigate(MainRoute.TEXT_POST) }
                         MainCreateItem("Media post", MainIcons.image) { onNavigate(MainRoute.MEDIA_POST) }
@@ -1034,7 +1100,7 @@ private fun MainBottomItem(
                 imageVector = image,
                 contentDescription = null,
                 modifier = Modifier.size(if (label == "Reels") 29.dp else 27.dp),
-                tint = if (selected && enabled) MainPalette.brand else MainPalette.muted
+                tint = AppColors.content(if (selected && enabled) MainPalette.brand else MainPalette.muted)
             )
         }
     }
@@ -1043,9 +1109,9 @@ private fun MainBottomItem(
 @Composable
 private fun MainCreateItem(label: String, image: ImageVector, onClick: () -> Unit) {
     DropdownMenuItem(
-        text = { Text(label, color = MainPalette.text, fontSize = 16.sp) },
+        text = { Text(label, color = AppColors.content(MainPalette.text), fontSize = 16.sp) },
         leadingIcon = {
-            Icon(image, contentDescription = null, tint = MainPalette.muted, modifier = Modifier.size(20.dp))
+            Icon(image, contentDescription = null, tint = AppColors.content(MainPalette.muted), modifier = Modifier.size(20.dp))
         },
         onClick = onClick
     )
@@ -1062,7 +1128,7 @@ private fun MainAvatar(userName: String, modifier: Modifier, profileImageUrl: St
 
 @Composable
 private fun MainDivider() {
-    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MainPalette.border))
+    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(MainPalette.border)))
 }
 
 @Suppress("DEPRECATION")

@@ -1,5 +1,7 @@
 package com.mongosky.app.reactions
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -45,14 +47,14 @@ internal fun ReactionSummaryRow(summary: ReactionSummary, enabled: Boolean, onCl
                     Box(Modifier.align(Alignment.CenterStart).offset(x = (iconSize - 6.dp) * index)
                         .size(iconSize).shadow(1.dp, CircleShape, clip = false)
                         .drawBehind { drawCircle(Color.White, radius = size.minDimension / 2 + 2.dp.toPx()) }
-                        .background(Color.White, CircleShape),
+                        .background(AppColors.surface(Color.White), CircleShape),
                         contentAlignment = Alignment.Center) {
                         Text(reaction.emoji, fontSize = if (mobile) 13.sp else 14.sp, lineHeight = 16.sp)
                     }
                 }
             }
             Text(summary.summaryText(), modifier = Modifier.widthIn(max = textLimit),
-                color = Color(0xFF475569), fontSize = if (mobile) 13.sp else 14.sp,
+                color = AppColors.content(Color(0xFF475569)), fontSize = if (mobile) 13.sp else 14.sp,
                 fontWeight = FontWeight.SemiBold, lineHeight = if (mobile) 15.6.sp else 16.8.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

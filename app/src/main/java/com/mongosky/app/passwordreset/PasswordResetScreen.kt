@@ -1,5 +1,7 @@
 package com.mongosky.app.passwordreset
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -220,14 +222,14 @@ fun PasswordResetScreen(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         shape = ResetPill,
                         colors = ButtonDefaults.textButtonColors(
-                            contentColor = ResetBlue,
-                            disabledContentColor = ResetMuted
+                            contentColor = AppColors.content(ResetBlue),
+                            disabledContentColor = AppColors.content(ResetMuted)
                         )
                     ) {
                         if (state.pendingAction == PasswordResetAction.RESEND_CODE) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                color = ResetBlue,
+                                color = AppColors.content(ResetBlue),
                                 strokeWidth = 2.dp
                             )
                             Spacer(Modifier.width(8.dp))
@@ -330,7 +332,7 @@ fun PasswordResetScreen(
 
 @Composable
 private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> Unit) {
-    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
+    Surface(modifier = Modifier.fillMaxSize(), color = AppColors.surface(Color.White)) {
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize().safeDrawingPadding().imePadding()
         ) {
@@ -346,7 +348,7 @@ private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> U
                         text = "Mongosky",
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        color = Color.Black,
+                        color = AppColors.content(Color.Black),
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 32.sp,
                         lineHeight = 40.sp,
@@ -360,7 +362,7 @@ private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> U
                             liveRegion = LiveRegionMode.Polite
                         },
                         textAlign = TextAlign.Center,
-                        color = ResetMuted,
+                        color = AppColors.content(ResetMuted),
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 18.sp,
                         lineHeight = 26.sp,
@@ -380,7 +382,7 @@ private fun ResetHelper(message: String) {
         text = message,
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
-        color = ResetMuted,
+        color = AppColors.content(ResetMuted),
         fontSize = 14.sp,
         lineHeight = 21.sp
     )
@@ -395,7 +397,7 @@ private fun ResetError(message: String?) {
             modifier = Modifier.fillMaxWidth().semantics {
                 liveRegion = LiveRegionMode.Polite
             },
-            color = Color(0xFFD60000),
+            color = AppColors.content(Color(0xFFD60000)),
             fontSize = 14.sp,
             lineHeight = 21.sp
         )
@@ -431,13 +433,13 @@ private fun ResetInput(
             Text(
                 text = placeholder,
                 modifier = Modifier.fillMaxWidth(),
-                color = ResetMuted,
+                color = AppColors.content(ResetMuted),
                 fontSize = 16.sp,
                 textAlign = if (codeField) TextAlign.Center else TextAlign.Start
             )
         },
         textStyle = MaterialTheme.typography.bodyLarge.copy(
-            color = ResetInk,
+            color = AppColors.content(ResetInk),
             fontSize = if (codeField) 22.sp else 16.sp,
             lineHeight = if (codeField) 28.sp else 24.sp,
             letterSpacing = if (codeField) 4.sp else 0.sp,
@@ -453,17 +455,17 @@ private fun ResetInput(
         },
         trailingIcon = trailingIcon,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            disabledContainerColor = Color.White,
-            focusedBorderColor = ResetBlue,
-            unfocusedBorderColor = ResetBorder,
-            disabledBorderColor = ResetBorder,
-            disabledTextColor = ResetInk,
+            focusedContainerColor = AppColors.surface(Color.White),
+            unfocusedContainerColor = AppColors.surface(Color.White),
+            disabledContainerColor = AppColors.surface(Color.White),
+            focusedBorderColor = AppColors.outline(ResetBlue),
+            unfocusedBorderColor = AppColors.outline(ResetBorder),
+            disabledBorderColor = AppColors.outline(ResetBorder),
+            disabledTextColor = AppColors.content(ResetInk),
             focusedLeadingIconColor = ResetMuted,
             unfocusedLeadingIconColor = ResetMuted,
             disabledLeadingIconColor = ResetMuted,
-            cursorColor = ResetBlue
+            cursorColor = AppColors.content(ResetBlue)
         )
     )
 }
@@ -500,7 +502,7 @@ private fun ResetPasswordInput(
                     imageVector = if (visible) ResetEyeOff else ResetEye,
                     contentDescription = if (visible) "Hide password" else "Show password",
                     modifier = Modifier.size(24.dp),
-                    tint = ResetMuted
+                    tint = AppColors.content(ResetMuted)
                 )
             }
         }
@@ -520,17 +522,17 @@ private fun ResetActionButton(
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
         shape = ResetPill,
         colors = ButtonDefaults.buttonColors(
-            containerColor = ResetRed,
-            contentColor = Color.White,
-            disabledContainerColor = if (loading) ResetRed else ResetRed.copy(alpha = 0.45f),
-            disabledContentColor = Color.White
+            containerColor = AppColors.fill(ResetRed),
+            contentColor = AppColors.content(Color.White),
+            disabledContainerColor = AppColors.fill(if (loading) ResetRed else ResetRed.copy(alpha = 0.45f)),
+            disabledContentColor = AppColors.content(Color.White)
         ),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
     ) {
         if (loading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
-                color = Color.White,
+                color = AppColors.content(Color.White),
                 strokeWidth = 2.dp
             )
             Spacer(Modifier.width(10.dp))
@@ -553,8 +555,8 @@ private fun ResetTextButton(label: String, enabled: Boolean, onClick: () -> Unit
         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
         shape = ResetPill,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = ResetBlue,
-            disabledContentColor = ResetMuted
+            contentColor = AppColors.content(ResetBlue),
+            disabledContentColor = AppColors.content(ResetMuted)
         )
     ) {
         Text(

@@ -1,5 +1,7 @@
 package com.mongosky.app.ai
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,8 +27,7 @@ import kotlinx.coroutines.launch
 fun AiScreen(viewModel:AiViewModel,onSignInAgain:()->Unit) {
     AiKeyboardWindow()
     val state by viewModel.controller.state.collectAsState()
-    val theme by viewModel.theme.collectAsState()
-    val dark=theme.resolve(isSystemInDarkTheme())
+    val dark=com.mongosky.app.darkmode.AppAppearance.isDark
     val colors=if(dark) AiColors.Dark else AiColors.Light
     val drawer=rememberDrawerState(DrawerValue.Closed)
     val scope=rememberCoroutineScope()
@@ -42,22 +43,22 @@ fun AiScreen(viewModel:AiViewModel,onSignInAgain:()->Unit) {
             scrimColor=if(dark) Color.Black.copy(alpha=.62f) else Color(0xFF0F172A).copy(alpha=.38f),
             drawerContent={
                 ModalDrawerSheet(modifier=Modifier.fillMaxHeight().width((LocalConfiguration.current.screenWidthDp*.88f).dp.coerceAtMost(370.dp)),
-                    drawerShape=RectangleShape,drawerContainerColor=colors.surface,drawerContentColor=colors.text,
+                    drawerShape=RectangleShape,drawerContainerColor=AppColors.surface(colors.surface),drawerContentColor=AppColors.content(colors.text),
                     drawerTonalElevation=0.dp,windowInsets=WindowInsets(0,0,0,0)) {
                     AiChatDrawer(state,colors,dark,onClose=::close,onNew={
                         controller.newChat();scope.launch { drawer.close();focus.requestFocus() }
-                    },onTheme={viewModel.setDark(!dark)},onOpen={controller.openChat(it);close()},
+                    },onTheme={com.mongosky.app.darkmode.AppAppearance.setDark(!dark)},onOpen={controller.openChat(it);close()},
                         onDelete=controller::deleteChat,onClear={clearConfirm=true},onReload=controller::retryRead)
                 }
-            },modifier=Modifier.fillMaxSize().background(colors.background)) {
-            Column(Modifier.fillMaxSize().background(colors.background).imePadding().navigationBarsPadding()) {
+            },modifier=Modifier.fillMaxSize().background(AppColors.surface(colors.background))) {
+            Column(Modifier.fillMaxSize().background(AppColors.surface(colors.background)).imePadding().navigationBarsPadding()) {
                 Row(Modifier.fillMaxWidth().heightIn(min=66.dp).padding(start=8.dp,end=16.dp),verticalAlignment=Alignment.CenterVertically) {
                     IconButton(onClick={keyboard?.hide();scope.launch { drawer.open() }},modifier=Modifier.size(48.dp)) {
-                        Icon(AiIcons.Menu,"Open chat menu",tint=colors.text,modifier=Modifier.size(24.dp))
+                        Icon(AiIcons.Menu,"Open chat menu",tint=AppColors.content(colors.text),modifier=Modifier.size(24.dp))
                     }
-                    Text("Mongosky",color=colors.text,fontSize=23.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(start=8.dp))
+                    Text("Mongosky",color=AppColors.content(colors.text),fontSize=23.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(start=8.dp))
                 }
-                HorizontalDivider(color=colors.border)
+                HorizontalDivider(color=AppColors.outline(colors.border))
                 Box(Modifier.weight(1f).fillMaxWidth(),contentAlignment=Alignment.Center) {
                     AiMessageList(state,colors,followRequest,Modifier.fillMaxHeight().widthIn(max=880.dp))
                 }
@@ -71,22 +72,22 @@ fun AiScreen(viewModel:AiViewModel,onSignInAgain:()->Unit) {
         }
         if(clearConfirm) AlertDialog(onDismissRequest={clearConfirm=false},title={Text("Clear all chats?")},
             text={Text("Delete all Mongosky AI chats? This cannot be undone.")},
-            confirmButton={TextButton(onClick={clearConfirm=false;controller.clearChats()},enabled=!state.sending && !state.mutating) { Text("Delete all",color=colors.red) }},
-            dismissButton={TextButton(onClick={clearConfirm=false}) { Text("Cancel",color=colors.text) }},containerColor=colors.surface)
+            confirmButton={TextButton(onClick={clearConfirm=false;controller.clearChats()},enabled=!state.sending && !state.mutating) { Text("Delete all",color=AppColors.content(colors.red)) }},
+            dismissButton={TextButton(onClick={clearConfirm=false}) { Text("Cancel",color=AppColors.content(colors.text)) }},containerColor=AppColors.surface(colors.surface))
     }
 }
 
 @Composable
 private fun AiErrorBanner(error:AiError,expired:Boolean,colors:AiColors,onReload:()->Unit,onDismiss:()->Unit,onSignInAgain:()->Unit,enabled:Boolean) {
-    Column(Modifier.fillMaxWidth().padding(bottom=10.dp).background(colors.errorBackground,RoundedCornerShape(14.dp))
-        .border(1.dp,colors.errorBorder,RoundedCornerShape(14.dp))) {
+    Column(Modifier.fillMaxWidth().padding(bottom=10.dp).background(AppColors.surface(colors.errorBackground),RoundedCornerShape(14.dp))
+        .border(1.dp,AppColors.outline(colors.errorBorder),RoundedCornerShape(14.dp))) {
         Row(Modifier.fillMaxWidth().padding(start=12.dp),verticalAlignment=Alignment.CenterVertically) {
-            Text(error.message,color=colors.errorText,fontSize=13.sp,lineHeight=20.sp,modifier=Modifier.weight(1f).padding(vertical=10.dp))
-            if(!expired) IconButton(onDismiss,Modifier.size(48.dp)) { Icon(AiIcons.Close,"Dismiss error",tint=colors.errorText,modifier=Modifier.size(18.dp)) }
+            Text(error.message,color=AppColors.content(colors.errorText),fontSize=13.sp,lineHeight=20.sp,modifier=Modifier.weight(1f).padding(vertical=10.dp))
+            if(!expired) IconButton(onDismiss,Modifier.size(48.dp)) { Icon(AiIcons.Close,"Dismiss error",tint=AppColors.content(colors.errorText),modifier=Modifier.size(18.dp)) }
         }
-        if(expired) TextButton(onSignInAgain,modifier=Modifier.padding(start=4.dp)) { Text("Sign in again",color=colors.errorText) }
+        if(expired) TextButton(onSignInAgain,modifier=Modifier.padding(start=4.dp)) { Text("Sign in again",color=AppColors.content(colors.errorText)) }
         else if(error.action!=AiErrorAction.NONE) TextButton(onReload,enabled=enabled,modifier=Modifier.padding(start=4.dp)) {
-            Text(if(error.action==AiErrorAction.MESSAGES) "Reload chat" else "Reload chats",color=colors.errorText)
+            Text(if(error.action==AiErrorAction.MESSAGES) "Reload chat" else "Reload chats",color=AppColors.content(colors.errorText))
         }
     }
 }

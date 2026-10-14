@@ -1,5 +1,7 @@
 package com.mongosky.app.notifications
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -41,16 +43,16 @@ internal fun NotificationPermission() {
         } }
         lifecycle.addObserver(observer); onDispose { lifecycle.removeObserver(observer) }
     }
-    if (!enabled) Row(Modifier.padding(16.dp,12.dp).fillMaxWidth().background(Color(0xFFF1F5F9),RoundedCornerShape(8.dp)).padding(12.dp),
+    if (!enabled) Row(Modifier.padding(16.dp,12.dp).fillMaxWidth().background(AppColors.surface(Color(0xFFF1F5F9)),RoundedCornerShape(8.dp)).padding(12.dp),
         verticalAlignment=androidx.compose.ui.Alignment.CenterVertically) {
-        Text("Allow phone notifications for new activity.",Modifier.weight(1f),fontSize=13.sp,color=NotificationColors.muted)
+        Text("Allow phone notifications for new activity.",Modifier.weight(1f),fontSize=13.sp,color=AppColors.content(NotificationColors.muted))
         TextButton(onClick={
             val activity = context.notificationActivity()
             val missingPermission = Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(context,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED
             if(missingPermission && (!store.askedPermission() || (activity!=null && ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.POST_NOTIFICATIONS)))) {
                 store.notePermissionAsked(); launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,context.packageName))
-        }) { Text("Enable",color=NotificationColors.blue) }
+        }) { Text("Enable",color=AppColors.content(NotificationColors.blue)) }
     }
 }
 private fun Context.notificationActivity(): Activity? = when(this) { is Activity -> this; is ContextWrapper -> baseContext.notificationActivity(); else -> null }

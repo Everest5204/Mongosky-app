@@ -8,6 +8,12 @@ import com.mongosky.app.mediapost.*
 import com.mongosky.app.post.*
 import com.mongosky.app.textpost.TextPostPreset
 import com.mongosky.app.editpost.EditPostController
+import com.mongosky.app.pinpost.PinPostApi
+import com.mongosky.app.pinpost.PinPostController
+import com.mongosky.app.pinpost.PinTarget
+import com.mongosky.app.reportpost.PostReportApi
+import com.mongosky.app.reportpost.PostReportController
+import com.mongosky.app.reportpost.ReportTarget
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -50,6 +56,11 @@ internal class HomeFeedController(
     val editor get() = postEditor.state
     var deletion by mutableStateOf<HomeDeleteState?>(null)
         private set
+    // Mongosky Post Report controller v1
+    val reports = PostReportController(PostReportApi(), token, scope, session, expired, onSessionFailure, ::notify)
+
+    // Mongosky Pin Post controller v1
+    val pins = PinPostController(PinPostApi(), token, scope, session, expired, onSessionFailure, ::notify)
 
     fun author(post: HomePost): State<HomeAuthorState> = authors.getOrPut(post.author.id) {
         mutableStateOf(HomeAuthorState(following = post.following))
@@ -167,14 +178,27 @@ internal class HomeFeedController(
         job.start()
     }
 
-    fun openMenu(post: HomePost) { if (!expired()) { closeOverlays(); menu = post } }
+    fun openMenu(post: HomePost) { if (!expired() && reports.state?.busy != true && !pins.busy) { closeOverlays(); menu = post; if (post.isOwn) pins.refresh(post.author.id) } }
     fun closeMenu() { menu = null }
     fun unavailable(action: HomeMenuAction) { closeMenu(); notify("${action.label} is coming soon.") }
     fun notify(message: String) { noticeChannel.trySend(message) }
 
+    fun openPin(post: HomePost) {
+        if (!post.isOwn || expired() || pins.busy) return
+        closeOverlays()
+        PinTarget.from(post)?.let(pins::open)
+    }
+
+    fun openReport(post: HomePost) {
+        if (post.isOwn || expired() || reports.state?.busy == true || pins.busy) return
+        closeOverlays()
+        reports.open(ReportTarget.from(post))
+    }
+
     fun openEditor(post: HomePost) {
         if (!post.editable || expired() || token() == null || editor?.saving == true) return
-        closeMenu(); closeDelete()
+        closeMenu(); closeDelete(); reports.dismiss(force = true)
+        pins.dismiss(force = true)
         postEditor.open(post)
     }
     fun reloadEditor() = postEditor.reload()
@@ -201,6 +225,7 @@ internal class HomeFeedController(
                 actions.delete(auth, state.post.id)
                 ensureActive()
                 if (generation != session()) return@launch
+                pins.postDeleted(state.post)
                 onDeleted(state.post)
                 if (request == overlayVersion) deletion = null
                 notify("Post deleted")
@@ -210,7 +235,7 @@ internal class HomeFeedController(
                     onSessionFailure(error)
                     // A server 404 confirms the previously owned post is no longer available.
                     if (error is FeedApiException && error.statusCode == 404) {
-                        onDeleted(state.post); deletion = null; notify("Post is no longer available")
+                        pins.postDeleted(state.post); onDeleted(state.post); deletion = null; notify("Post is no longer available")
                     } else {
                         val unknown = error is FeedApiException && error.failure in setOf(
                             FeedApiFailure.TIMEOUT, FeedApiFailure.NETWORK, FeedApiFailure.SERVER,
@@ -224,9 +249,11 @@ internal class HomeFeedController(
 
     fun closeEditor() = postEditor.requestClose()
     fun closeDelete() { if (deletion?.busy != true) deletion = null }
-    fun closeOverlays() { closeMenu(); closeEditor(); closeDelete() }
+    fun closeOverlays() { closeMenu(); closeEditor(); closeDelete(); reports.dismiss(force = true); pins.dismiss(force = true) }
 
     fun endSession() {
+        pins.endSession()
+        reports.endSession()
         overlayVersion++
         postEditor.reset()
         authorGeneration++

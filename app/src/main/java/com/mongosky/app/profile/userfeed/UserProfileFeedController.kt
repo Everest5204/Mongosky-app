@@ -1,7 +1,5 @@
 package com.mongosky.app.profile.userfeed
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,7 +14,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
-/** Menu/download state belongs to this viewer and target, never to the Home screen's controller. */
+/** Menu state belongs to this viewer and target, never to the Home screen's controller. */
 internal class UserProfileFeedController(
     private val profile: UserProfileViewModel,
     private val readToken: suspend () -> String?,
@@ -30,10 +28,7 @@ internal class UserProfileFeedController(
     private var token: String? = null
     private var session = 0
     private var tokenJob: Job? = null
-    private var downloadJob: Job? = null
     var ready by mutableStateOf(false)
-        private set
-    var download by mutableStateOf<HomeDownloadState?>(null)
         private set
     val images = HomeFeedImageState()
     private val sessionUnavailable get() = viewer.isBlank() || owner.isBlank() || homeSessionExpired() || profile.state.value.let {
@@ -76,43 +71,14 @@ internal class UserProfileFeedController(
         if (!expired && post.author.id == owner) controls.openMenu(post)
     }
 
-    fun requestDownload(post: HomePost) {
-        if (!ready || expired || post.author.id != owner) return
-        if (download != null) { controls.notify("A download is already in progress."); return }
-        controls.closeMenu()
-        download = HomeDownloadState(post)
-    }
-
-    fun completeDownloadPicker(context: Context, uri: Uri?) {
-        val pending = download ?: return
-        if (!pending.choosing) return
-        if (uri == null || expired) { download = null; return }
-        val generation = session
-        download = pending.copy(choosing = false)
-        controls.notify("Downloading post…")
-        downloadJob = scope.launch {
-            try {
-                HomeFeedDownloads.write(context.applicationContext, uri, pending.post)
-                ensureActive()
-                if (generation == session && !expired) controls.notify("Post downloaded")
-            } catch (error: CancellationException) { throw error }
-            catch (_: Exception) {
-                if (generation == session && !expired) controls.notify("Could not download the post. Please try again.")
-            } finally { if (generation == session) download = null }
-        }
-    }
-
-    fun cancelDownloadPicker() { if (download?.choosing == true) download = null }
-    fun leave(preservePicker: Boolean = false) {
+    fun leave() {
         controls.setForeground(false); controls.closeOverlays()
         images.setScrolling(false)
-        if (!preservePicker) cancelDownloadPicker()
     }
     fun endSession() {
         session++
         tokenJob?.cancel(); tokenJob = null
-        downloadJob?.cancel(); downloadJob = null
         controls.endSession(); images.clear()
-        viewer = ""; owner = ""; token = null; ready = false; download = null
+        viewer = ""; owner = ""; token = null; ready = false
     }
 }

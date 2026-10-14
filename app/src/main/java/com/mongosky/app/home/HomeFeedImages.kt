@@ -1,5 +1,7 @@
 package com.mongosky.app.home
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -68,9 +70,9 @@ internal fun HomeFeedPhoto(photo: FeedMedia, images: HomeFeedImageState, enabled
         ImageRequest.Builder(context).data(url).size(width, (width / 0.8f).roundToInt())
             .scale(Scale.FIT).precision(Precision.INEXACT).crossfade(false).build()
     }
-    Box(Modifier.fillMaxWidth().aspectRatio(aspect).background(FeedColors.soft)
+    Box(Modifier.fillMaxWidth().aspectRatio(aspect).background(AppColors.surface(FeedColors.soft))
         .clickable(enabled = enabled, onClick = onOpen), contentAlignment = Alignment.Center) {
-        Icon(FeedIcons.image, null, tint = FeedColors.line, modifier = Modifier.size(36.dp))
+        Icon(FeedIcons.image, null, tint = AppColors.content(FeedColors.line), modifier = Modifier.size(36.dp))
         AsyncImage(model = request, contentDescription = "Post photo", modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
             onSuccess = { loaded ->

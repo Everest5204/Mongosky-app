@@ -1,5 +1,7 @@
 package com.mongosky.app.search
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -84,17 +86,17 @@ internal fun SearchInput(
         value = query, onValueChange = onChange,
         modifier = modifier.fillMaxWidth().heightIn(min = 58.dp).focusRequester(focusRequester)
             .semantics { contentDescription = "Search people by name" },
-        placeholder = { Text("Search people...", color = SearchColors.muted, fontSize = 16.sp) },
-        textStyle = TextStyle(color = SearchColors.text, fontSize = 16.sp, fontWeight = FontWeight.Medium),
-        leadingIcon = { Icon(SearchIcons.search, contentDescription = null, tint = SearchColors.muted) },
+        placeholder = { Text("Search people...", color = AppColors.content(SearchColors.muted), fontSize = 16.sp) },
+        textStyle = TextStyle(color = AppColors.content(SearchColors.text), fontSize = 16.sp, fontWeight = FontWeight.Medium),
+        leadingIcon = { Icon(SearchIcons.search, contentDescription = null, tint = AppColors.content(SearchColors.muted)) },
         trailingIcon = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (busy) CircularProgressIndicator(
                     modifier = Modifier.size(18.dp).semantics { contentDescription = "Searching" },
-                    color = SearchColors.muted, strokeWidth = 2.dp
+                    color = AppColors.content(SearchColors.muted), strokeWidth = 2.dp
                 )
                 if (query.isNotEmpty()) IconButton(onClick = onClear, modifier = Modifier.size(48.dp)) {
-                    Icon(SearchIcons.close, contentDescription = "Clear search", tint = SearchColors.muted)
+                    Icon(SearchIcons.close, contentDescription = "Clear search", tint = AppColors.content(SearchColors.muted))
                 }
                 else Spacer(Modifier.width(14.dp))
             }
@@ -105,9 +107,9 @@ internal fun SearchInput(
         ),
         keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White, unfocusedContainerColor = SearchColors.soft,
-            focusedBorderColor = Color(0xFFCFD4DC), unfocusedBorderColor = Color.Transparent,
-            cursorColor = SearchColors.text
+            focusedContainerColor = AppColors.surface(Color.White), unfocusedContainerColor = AppColors.surface(SearchColors.soft),
+            focusedBorderColor = AppColors.outline(Color(0xFFCFD4DC)), unfocusedBorderColor = AppColors.outline(Color.Transparent),
+            cursorColor = AppColors.content(SearchColors.text)
         )
     )
 }
@@ -119,9 +121,9 @@ internal fun SearchAvatar(user: SearchUser, size: Dp = 52.dp) {
     val request = remember(context, user.imageUrl, pixels) {
         ImageRequest.Builder(context).data(user.imageUrl).size(pixels).crossfade(false).build()
     }
-    Box(Modifier.size(size).clip(CircleShape).background(SearchColors.avatar), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(size).clip(CircleShape).background(AppColors.surface(SearchColors.avatar)), contentAlignment = Alignment.Center) {
         Icon(SearchIcons.person, contentDescription = null,
-            tint = Color(0xFFEAFFF7), modifier = Modifier.size(size * 0.52f))
+            tint = AppColors.content(Color(0xFFEAFFF7)), modifier = Modifier.size(size * 0.52f))
         if (user.imageUrl != null) AsyncImage(
             model = request, contentDescription = null,
             modifier = Modifier.size(size), contentScale = ContentScale.Crop
@@ -132,7 +134,7 @@ internal fun SearchAvatar(user: SearchUser, size: Dp = 52.dp) {
 @Composable
 internal fun SearchPersonRow(user: SearchUser, horizontalPadding: Dp, onClick: () -> Unit) {
     Surface(
-        onClick = onClick, color = Color.White,
+        onClick = onClick, color = AppColors.surface(Color.White),
         modifier = Modifier.fillMaxWidth().semantics {
             role = Role.Button
             contentDescription = "Open ${user.fullName}'s profile"
@@ -143,13 +145,13 @@ internal fun SearchPersonRow(user: SearchUser, horizontalPadding: Dp, onClick: (
             SearchAvatar(user)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(user.fullName, color = SearchColors.text, fontSize = 15.sp,
+                    Text(user.fullName, color = AppColors.content(SearchColors.text), fontSize = 15.sp,
                         fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false))
                     if (user.verified) Icon(SearchIcons.verified, contentDescription = "Verified account",
                         tint = Color.Unspecified, modifier = Modifier.size(18.dp))
                 }
-                if (user.title.isNotBlank()) Text(user.title, color = SearchColors.secondary, fontSize = 13.sp,
+                if (user.title.isNotBlank()) Text(user.title, color = AppColors.content(SearchColors.secondary), fontSize = 13.sp,
                     maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -167,19 +169,19 @@ internal fun SearchStatePanel(
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
     ) {
         Box(Modifier.size(112.dp).clip(CircleShape)
-            .background(if (error) Color(0xFFFFF1F2) else Color(0xFFF3F5F8)), contentAlignment = Alignment.Center) {
+            .background(AppColors.surface(if (error) Color(0xFFFFF1F2) else Color(0xFFF3F5F8))), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(60.dp),
-                tint = if (error) Color(0xFFD92D20) else Color(0xFF59616E))
+                tint = AppColors.content(if (error) Color(0xFFD92D20) else Color(0xFF59616E)))
         }
         Spacer(Modifier.height(20.dp))
-        Text(title, color = SearchColors.text, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold,
+        Text(title, color = AppColors.content(SearchColors.text), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         Spacer(Modifier.height(8.dp))
-        Text(message, modifier = Modifier.widthIn(max = 430.dp), color = SearchColors.muted,
+        Text(message, modifier = Modifier.widthIn(max = 430.dp), color = AppColors.content(SearchColors.muted),
             fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(20.dp))
-            Button(onClick = onAction, colors = ButtonDefaults.buttonColors(containerColor = SearchColors.brand),
+            Button(onClick = onAction, colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(SearchColors.brand)),
                 shape = RoundedCornerShape(12.dp), modifier = Modifier.heightIn(min = 48.dp)) {
                 Icon(SearchIcons.refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -199,10 +201,10 @@ internal fun SearchSkeletonList(horizontalPadding: Dp) {
         repeat(5) {
             Row(Modifier.fillMaxWidth().padding(vertical = 14.dp).graphicsLayer { alpha = pulse.value },
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Box(Modifier.size(52.dp).clip(CircleShape).background(SearchColors.border))
+                Box(Modifier.size(52.dp).clip(CircleShape).background(AppColors.surface(SearchColors.border)))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Box(Modifier.fillMaxWidth(0.72f).height(11.dp).clip(RoundedCornerShape(6.dp)).background(SearchColors.border))
-                    Box(Modifier.fillMaxWidth(0.43f).height(9.dp).clip(RoundedCornerShape(6.dp)).background(SearchColors.border))
+                    Box(Modifier.fillMaxWidth(0.72f).height(11.dp).clip(RoundedCornerShape(6.dp)).background(AppColors.surface(SearchColors.border)))
+                    Box(Modifier.fillMaxWidth(0.43f).height(9.dp).clip(RoundedCornerShape(6.dp)).background(AppColors.surface(SearchColors.border)))
                 }
             }
         }
@@ -211,10 +213,10 @@ internal fun SearchSkeletonList(horizontalPadding: Dp) {
 
 @Composable
 internal fun SearchRefreshError(message: String, horizontalPadding: Dp, onRetry: () -> Unit) {
-    Row(Modifier.fillMaxWidth().background(Color(0xFFFFF8F8)).padding(start = horizontalPadding, end = 8.dp),
+    Row(Modifier.fillMaxWidth().background(AppColors.surface(Color(0xFFFFF8F8))).padding(start = horizontalPadding, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(message, color = SearchColors.muted, fontSize = 12.sp, modifier = Modifier.weight(1f)
+        Text(message, color = AppColors.content(SearchColors.muted), fontSize = 12.sp, modifier = Modifier.weight(1f)
             .padding(vertical = 10.dp).semantics { liveRegion = LiveRegionMode.Polite })
-        TextButton(onClick = onRetry) { Text("Retry", color = SearchColors.brand, fontWeight = FontWeight.Bold) }
+        TextButton(onClick = onRetry) { Text("Retry", color = AppColors.content(SearchColors.brand), fontWeight = FontWeight.Bold) }
     }
 }

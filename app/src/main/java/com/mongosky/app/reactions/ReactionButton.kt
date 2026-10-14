@@ -1,5 +1,7 @@
 package com.mongosky.app.reactions
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.indication
@@ -83,10 +85,10 @@ internal fun ReactionButton(state: PostReactionState, enabled: Boolean, onReact:
                 }
             }.focusable(interactive, interactions),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-            if (active == null) Icon(FeedIcons.heart, null, modifier = Modifier.size(22.dp), tint = FeedColors.muted)
+            if (active == null) Icon(FeedIcons.heart, null, modifier = Modifier.size(22.dp), tint = AppColors.content(FeedColors.muted))
             else Text(active.emoji, fontSize = 21.sp)
             Spacer(Modifier.width(6.dp))
-            Text(active?.label ?: "Love", color = if (active != null) FeedColors.brand else FeedColors.muted,
+            Text(active?.label ?: "Love", color = AppColors.content(if (active != null) FeedColors.brand else FeedColors.muted),
                 fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
         }
         if (interactive) ReactionPicker(picker, active, onSelect = { select(it) })

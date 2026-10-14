@@ -1,5 +1,7 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.darkmode.AppColors
+
 import com.mongosky.app.profile.LocalProfileViewerId
 import com.mongosky.app.profile.profileLink
 import androidx.activity.compose.BackHandler
@@ -155,7 +157,7 @@ fun CreateMediaPostScreen(
     BackHandler(enabled = !leaving, onBack = closeComposer)
 
     Box(
-        modifier = modifier.fillMaxSize().background(Color.White)
+        modifier = modifier.fillMaxSize().background(AppColors.surface(Color.White))
             .safeDrawingPadding().imePadding(),
         contentAlignment = Alignment.TopCenter
     ) {
@@ -256,11 +258,11 @@ private fun ComposerHeader(
     Column {
         Box(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp)) {
             IconButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterStart)) {
-                Icon(Icons.Default.Close, "Close composer", tint = ComposerText)
+                Icon(Icons.Default.Close, "Close composer", tint = AppColors.content(ComposerText))
             }
             Text(
                 text = "Create post",
-                color = ComposerText,
+                color = AppColors.content(ComposerText),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -272,8 +274,8 @@ private fun ComposerHeader(
                 enabled = canPost,
                 modifier = Modifier.align(Alignment.CenterEnd),
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = ComposerGreen,
-                    disabledContentColor = ComposerGreen.copy(alpha = 0.45f)
+                    contentColor = AppColors.content(ComposerGreen),
+                    disabledContentColor = AppColors.content(ComposerGreen.copy(alpha = 0.45f))
                 )
             ) {
                 Text("Post", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
@@ -293,7 +295,7 @@ private fun ComposerAuthor(name: String, profileImageUrl: String?) {
         ProfileAvatar(imageUrl = profileImageUrl, modifier = Modifier.size(44.dp))
         Text(
             text = name.trim().ifBlank { "Mongosky User" },
-            color = Color(0xFF374151),
+            color = AppColors.content(Color(0xFF374151)),
             fontSize = 17.sp,
             fontWeight = FontWeight.ExtraBold,
             maxLines = 2,
@@ -311,7 +313,7 @@ private fun ComposerCaption(caption: String, enabled: Boolean, onChange: (String
         enabled = enabled,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
-        textStyle = TextStyle(color = ComposerText, fontSize = 16.sp, lineHeight = 24.sp),
+        textStyle = TextStyle(color = AppColors.content(ComposerText), fontSize = 16.sp, lineHeight = 24.sp),
         minLines = 3,
         maxLines = 8,
         keyboardOptions = KeyboardOptions(
@@ -322,7 +324,7 @@ private fun ComposerCaption(caption: String, enabled: Boolean, onChange: (String
         decorationBox = { innerField ->
             Box {
                 if (caption.isEmpty()) {
-                    Text("write a caption…", color = ComposerMuted, fontSize = 16.sp)
+                    Text("write a caption…", color = AppColors.content(ComposerMuted), fontSize = 16.sp)
                 }
                 innerField()
             }
@@ -334,14 +336,14 @@ private fun ComposerCaption(caption: String, enabled: Boolean, onChange: (String
 private fun ComposerError(message: String, onDismiss: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(12.dp)).background(Color(0xFFFFF1F2))
+            .clip(RoundedCornerShape(12.dp)).background(AppColors.surface(Color(0xFFFFF1F2)))
             .padding(start = 12.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(message, color = Color(0xFFB91C1C), fontSize = 14.sp, modifier = Modifier.weight(1f))
+        Text(message, color = AppColors.content(Color(0xFFB91C1C)), fontSize = 14.sp, modifier = Modifier.weight(1f))
         IconButton(onClick = onDismiss) {
-            Icon(Icons.Default.Close, "Dismiss error", tint = Color(0xFFB91C1C))
+            Icon(Icons.Default.Close, "Dismiss error", tint = AppColors.content(Color(0xFFB91C1C)))
         }
     }
 }
@@ -355,9 +357,9 @@ private fun ComposerChecking(message: String) {
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(18.dp), color = ComposerGreen, strokeWidth = 2.dp
+            modifier = Modifier.size(18.dp), color = AppColors.content(ComposerGreen), strokeWidth = 2.dp
         )
-        Text(message, color = ComposerMuted, fontSize = 14.sp)
+        Text(message, color = AppColors.content(ComposerMuted), fontSize = 14.sp)
     }
 }
 
@@ -365,20 +367,20 @@ private fun ComposerChecking(message: String) {
 private fun EmptyMediaSelection(enabled: Boolean, onSelect: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth().heightIn(min = 240.dp)
-            .background(ComposerSoft).padding(24.dp),
+            .background(AppColors.surface(ComposerSoft)).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(ComposerImagePlus, null, tint = ComposerMuted, modifier = Modifier.size(40.dp))
+        Icon(ComposerImagePlus, null, tint = AppColors.content(ComposerMuted), modifier = Modifier.size(40.dp))
         Spacer(Modifier.height(12.dp))
-        Text("Choose photos or a video", color = ComposerText, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Text("Choose photos or a video", color = AppColors.content(ComposerText), fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
-        Text("Up to 10 photos or one video", color = ComposerMuted, fontSize = 14.sp)
+        Text("Up to 10 photos or one video", color = AppColors.content(ComposerMuted), fontSize = 14.sp)
         Spacer(Modifier.height(16.dp))
         OutlinedButton(
             onClick = onSelect,
             enabled = enabled,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = ComposerGreen)
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.content(ComposerGreen))
         ) {
             Text("Select media", fontWeight = FontWeight.SemiBold)
         }
@@ -397,20 +399,20 @@ private fun AddMoreMediaButton(count: Int, enabled: Boolean, onClick: () -> Unit
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
         ) {
             Box(
-                modifier = Modifier.size(42.dp).clip(CircleShape).background(ComposerSoft),
+                modifier = Modifier.size(42.dp).clip(CircleShape).background(AppColors.surface(ComposerSoft)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(ComposerImagePlus, null, tint = Color(0xFF374151), modifier = Modifier.size(22.dp))
+                Icon(ComposerImagePlus, null, tint = AppColors.content(Color(0xFF374151)), modifier = Modifier.size(22.dp))
             }
-            Text("Add more", color = Color(0xFF374151), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text("$count/${MediaPostUploadLimits.MAX_IMAGES} selected", color = ComposerMuted, fontSize = 13.sp)
+            Text("Add more", color = AppColors.content(Color(0xFF374151)), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("$count/${MediaPostUploadLimits.MAX_IMAGES} selected", color = AppColors.content(ComposerMuted), fontSize = 13.sp)
         }
     }
 }
 
 @Composable
 private fun ComposerDivider() {
-    Box(Modifier.fillMaxWidth().height(1.dp).background(ComposerBorder))
+    Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(ComposerBorder)))
 }
 
 private val ComposerImagePlus: ImageVector = ImageVector.Builder(

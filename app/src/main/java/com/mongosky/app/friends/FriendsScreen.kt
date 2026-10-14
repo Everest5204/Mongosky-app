@@ -2,6 +2,8 @@
 
 package com.mongosky.app.friends
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,20 +88,20 @@ fun FriendsScreen(
         val padding = if (wide) 20.dp else 14.dp
         val stackTabs = fontScale > 1.3f
         val showTabIcons = maxWidth >= 380.dp && fontScale <= 1.25f
-        Box(Modifier.fillMaxSize().background(if (wide) FriendsColors.canvas else Color.White)
+        Box(Modifier.fillMaxSize().background(AppColors.surface(if (wide) FriendsColors.canvas else Color.White))
             .padding(horizontal = if (wide) 16.dp else 0.dp, vertical = if (wide) 16.dp else 0.dp), contentAlignment = Alignment.TopCenter) {
             Column(Modifier.widthIn(max = 680.dp).fillMaxWidth().fillMaxHeight()
-                .clip(RoundedCornerShape(if (wide) 22.dp else 0.dp)).background(Color.White)) {
+                .clip(RoundedCornerShape(if (wide) 22.dp else 0.dp)).background(AppColors.surface(Color.White))) {
                 Box(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 6.dp, vertical = 8.dp)) {
                     Text("Connections", modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 56.dp),
-                        fontSize = 20.sp, fontWeight = FontWeight.Bold, color = FriendsColors.text,
+                        fontSize = 20.sp, fontWeight = FontWeight.Bold, color = AppColors.content(FriendsColors.text),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                     IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart)) {
-                        Icon(FriendsIcons.back, "Go back", tint = FriendsColors.text)
+                        Icon(FriendsIcons.back, "Go back", tint = AppColors.content(FriendsColors.text))
                     }
                     IconButton(onClick = onRefresh, modifier = Modifier.align(Alignment.CenterEnd),
                         enabled = !page.refreshing && !state.sessionExpired && state.pendingIds.isEmpty()) {
-                        Icon(FriendsIcons.refresh, "Refresh connections", tint = FriendsColors.secondary, modifier = Modifier.size(21.dp))
+                        Icon(FriendsIcons.refresh, "Refresh connections", tint = AppColors.content(FriendsColors.secondary), modifier = Modifier.size(21.dp))
                     }
                 }
                 Row(Modifier.fillMaxWidth().selectableGroup()) {
@@ -114,25 +116,25 @@ fun FriendsScreen(
                             if (stackTabs) {
                                 Column(Modifier.padding(horizontal = 8.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(tab.label, color = foreground, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(tab.label, color = AppColors.content(foreground), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                                     FriendsCountPill(count, state.countsLoaded, selected)
                                 }
                             } else {
                                 Row(Modifier.heightIn(min = 54.dp).padding(horizontal = 8.dp, vertical = 12.dp),
                                     horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
                                     if (showTabIcons) Icon(if (tab == FriendsTab.FOLLOWERS) FriendsIcons.people else FriendsIcons.following,
-                                        null, tint = foreground, modifier = Modifier.size(19.dp))
-                                    Text(tab.label, color = foreground, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                        null, tint = AppColors.content(foreground), modifier = Modifier.size(19.dp))
+                                    Text(tab.label, color = AppColors.content(foreground), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                                     FriendsCountPill(count, state.countsLoaded, selected)
                                 }
                             }
-                            Box(Modifier.fillMaxWidth().height(3.dp).background(if (selected) FriendsColors.brand else Color.Transparent))
+                            Box(Modifier.fillMaxWidth().height(3.dp).background(AppColors.surface(if (selected) FriendsColors.brand else Color.Transparent)))
                         }
                     }
                 }
                 Box(Modifier.fillMaxWidth().height(2.dp)) {
-                    if (page.refreshing && page.loaded) LinearProgressIndicator(Modifier.fillMaxWidth(), color = FriendsColors.brand,
-                        trackColor = FriendsColors.brand.copy(alpha = .06f))
+                    if (page.refreshing && page.loaded) LinearProgressIndicator(Modifier.fillMaxWidth(), color = AppColors.content(FriendsColors.brand),
+                        trackColor = AppColors.surface(FriendsColors.brand.copy(alpha = .06f)))
                 }
                 PullToRefreshBox(isRefreshing = page.refreshing && page.loaded,
                     onRefresh = onRefresh, modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -150,8 +152,8 @@ fun FriendsScreen(
                             else -> {
                                 if (page.error != null) item(key = "refresh-error", contentType = "notice") {
                                     Row(Modifier.fillMaxWidth().padding(horizontal = padding, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Text(page.error, Modifier.weight(1f), fontSize = 12.sp, color = FriendsColors.secondary)
-                                        TextButton(onClick = onRefresh) { Text("Retry", color = FriendsColors.brand) }
+                                        Text(page.error, Modifier.weight(1f), fontSize = 12.sp, color = AppColors.content(FriendsColors.secondary))
+                                        TextButton(onClick = onRefresh) { Text("Retry", color = AppColors.content(FriendsColors.brand)) }
                                     }
                                 }
                                 if (page.users.isEmpty() && !page.hasMore) item(key = "empty", contentType = "state") {
@@ -167,13 +169,13 @@ fun FriendsScreen(
                                 }
                                 if (page.moreError != null) item(key = "more-error", contentType = "notice") {
                                     Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(page.moreError, fontSize = 12.sp, color = FriendsColors.secondary)
-                                        TextButton(onClick = onLoadMore) { Text("Try again", color = FriendsColors.brand) }
+                                        Text(page.moreError, fontSize = 12.sp, color = AppColors.content(FriendsColors.secondary))
+                                        TextButton(onClick = onLoadMore) { Text("Try again", color = AppColors.content(FriendsColors.brand)) }
                                     }
                                 } else if (page.hasMore) item(key = "load-more", contentType = "loader") {
                                     Box(Modifier.fillMaxWidth().height(64.dp), contentAlignment = Alignment.Center) {
-                                        if (page.loadingMore) CircularProgressIndicator(Modifier.size(23.dp), color = FriendsColors.brand, strokeWidth = 2.dp)
-                                        else TextButton(onClick = onLoadMore) { Text("Load more", color = FriendsColors.brand) }
+                                        if (page.loadingMore) CircularProgressIndicator(Modifier.size(23.dp), color = AppColors.content(FriendsColors.brand), strokeWidth = 2.dp)
+                                        else TextButton(onClick = onLoadMore) { Text("Load more", color = AppColors.content(FriendsColors.brand)) }
                                     }
                                 }
                                 item(key = "space", contentType = "space") { Spacer(Modifier.height(16.dp)) }
@@ -189,8 +191,8 @@ fun FriendsScreen(
 
 @Composable
 private fun FriendsCountPill(count: Long, loaded: Boolean, selected: Boolean) {
-    Text(if (loaded) friendsCount(count) else "—", color = if (selected) FriendsColors.brand else FriendsColors.secondary,
+    Text(if (loaded) friendsCount(count) else "—", color = AppColors.content(if (selected) FriendsColors.brand else FriendsColors.secondary),
         fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(if (selected) FriendsColors.brand.copy(alpha = .07f) else Color(0xFFF3F4F6))
+        modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(AppColors.surface(if (selected) FriendsColors.brand.copy(alpha = .07f) else Color(0xFFF3F4F6)))
             .padding(horizontal = 7.dp, vertical = 3.dp).semantics { liveRegion = LiveRegionMode.Polite })
 }

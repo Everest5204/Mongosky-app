@@ -2,6 +2,8 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Build
@@ -25,6 +27,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.mongosky.app.comments.CommentsSheet
 import com.mongosky.app.home.HomeFeedViewModel
+import com.mongosky.app.pinpost.PinnedPostLabel
+import com.mongosky.app.pinpost.ProfilePinEffect
+import com.mongosky.app.pinpost.profilePinPosts
 import com.mongosky.app.profile.userfeed.UserProfileFeedEffects
 import com.mongosky.app.profile.userfeed.UserProfileFeedOverlays
 import com.mongosky.app.profile.userfeed.UserProfileFeedPostItem
@@ -61,6 +66,8 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     var reactionVersion by remember(userId) { mutableStateOf(0L) }
     var started by remember(lifecycleOwner) { mutableStateOf(lifecycleOwner?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) ?: true) }
     val feed = rememberUserProfileFeed(viewModel, actionsModel)
+    ProfilePinEffect(feed.controls.pins, state.userId, active = started && feed.ready && state.profile != null && !state.unavailable && !state.sessionExpired && !actionsModel.uiState.sessionExpired)
+    val displayPosts = remember(state.posts, feed.controls.pins.snapshot, state.userId) { profilePinPosts(state.posts, feed.controls.pins.snapshot, state.userId) }
     UserProfileFeedEffects(feed, state, list,
         active = started && state.profile != null && !state.sessionExpired && !state.unavailable && !actionsModel.uiState.sessionExpired,
         homeExpired = actionsModel.uiState.sessionExpired)
@@ -109,23 +116,23 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     val assets = remember(state.posts, state.tab) { if (state.tab == OwnProfileTab.ALL) emptyList() else
         profileGallery(state.posts, if (state.tab == OwnProfileTab.PHOTOS) FeedMediaType.IMAGE else FeedMediaType.VIDEO) }
     val photos = remember(state.posts) { profileGallery(state.posts, FeedMediaType.IMAGE).map { it.media } }
-    val visibleCount = if (state.tab == OwnProfileTab.ALL) state.posts.size else assets.size
+    val visibleCount = if (state.tab == OwnProfileTab.ALL) displayPosts.size else assets.size
     val available = state.profile != null && !state.unavailable && !state.sessionExpired
 
-    Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White)), contentAlignment = Alignment.TopCenter) {
         BoxWithConstraints(Modifier.widthIn(max = 520.dp).fillMaxSize()) {
             val columns = if (maxWidth < 350.dp) 2 else 3
             val rows = remember(assets, columns) { assets.chunked(columns) }
-            val nearKeys = remember(state.posts, rows, state.tab) {
-                if (state.tab == OwnProfileTab.ALL) state.posts.takeLast(2).map { "post:${it.source}:${it.id}" }.toSet()
+            val nearKeys = remember(displayPosts, rows, state.tab) {
+                if (state.tab == OwnProfileTab.ALL) displayPosts.takeLast(2).map { "post:${it.source}:${it.id}" }.toSet()
                 else rows.takeLast(2).map { "gallery:${it.first().key}" }.toSet()
             }
-            LaunchedEffect(list, state.pageVersion, state.postsLoading, state.hasMore, state.postErrors, available, state.tab) {
+            LaunchedEffect(list, state.pageVersion, state.postsLoading, state.hasMore, state.postErrors, available, state.tab, nearKeys) {
                 if (available && state.hasMore && !state.postsLoading && state.postErrors.isEmpty())
                     snapshotFlow { list.layoutInfo.visibleItemsInfo.any { it.key in nearKeys || it.key == "load_more" } }
                         .distinctUntilChanged().collect { if (it) viewModel.loadMore() }
             }
-            PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = viewModel::refresh) {
+            PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = { viewModel.refresh(); feed.controls.pins.refresh(state.userId, force = true) }) {
                 LazyColumn(state = list, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 20.dp)) {
                     item("profile_header", "header") { UserProfileHeader(state, onBack,
                         onConnections = { viewModel.connections.open(userId, it) }, onFollow = viewModel::toggleFollowing,
@@ -146,7 +153,8 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
                             if (tab != state.tab) { viewModel.selectTab(tab); scope.launch { list.scrollToItem(0) } }
                         } }
                         if (state.tab == OwnProfileTab.ALL) {
-                            items(state.posts, key = { "post:${it.source}:${it.id}" }, contentType = { it.type.name }) { post ->
+                            items(displayPosts, key = { "post:${it.source}:${it.id}" }, contentType = { it.type.name }) { post ->
+                                if (feed.controls.pins.snapshot?.post?.let { it.id == post.id && it.source == post.source } == true) PinnedPostLabel()
                                 UserProfileFeedPostItem(post, state, now, actionsModel, feed,
                                     !state.sessionExpired && !actionsModel.uiState.sessionExpired,
                                     onPhotos = { media, index -> photoViewer = PhotoViewerState(media, index) }, onVideo = { videoViewer = it },
@@ -168,11 +176,11 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
                         if (visibleCount == 0 && !state.postsLoading && state.postErrors.isEmpty()) item("empty", "notice") {
                             Text(if (state.hasMore) "More ${state.tab.label.lowercase()} may be in older posts" else
                                 "No ${if (state.tab == OwnProfileTab.ALL) "posts" else state.tab.label.lowercase()} yet",
-                                color = OwnProfileColors.muted, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
+                                color = AppColors.content(OwnProfileColors.muted), fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.fillMaxWidth().padding(24.dp))
                         }
                         if (state.hasMore && !state.postsLoading) item("load_more", "footer") {
-                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text("Load more", color = OwnProfileColors.brand) } }
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text("Load more", color = AppColors.content(OwnProfileColors.brand)) } }
                         }
                     }
                 }
@@ -183,12 +191,12 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     UserProfileFeedOverlays(feed, enabled = available && !actionsModel.uiState.sessionExpired,
         onCopy = { copyLink("https://mongosky.com/post/${it.id}") })
     OwnProfileConnectionsSheet(viewModel.connections, ::openProfile)
-    if (optionsOpen && available) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = Color.White,
+    if (optionsOpen && available) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = AppColors.surface(Color.White),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
-            Text("Profile options", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = OwnProfileColors.text)
+            Text("Profile options", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = AppColors.content(OwnProfileColors.text))
             TextButton({ optionsOpen = false; copyLink("https://mongosky.com/profile/$userId") }, modifier = Modifier.fillMaxWidth()) {
-                Text("Copy profile link", color = OwnProfileColors.text)
+                Text("Copy profile link", color = AppColors.content(OwnProfileColors.text))
             }
         }
     }

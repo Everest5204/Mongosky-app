@@ -1,5 +1,7 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -42,17 +44,17 @@ internal object OwnProfileIcons {
 
 @Composable
 internal fun OwnProfileSpinner(modifier: Modifier = Modifier, color: Color = OwnProfileColors.brand) {
-    CircularProgressIndicator(modifier.size(24.dp), color = color, strokeWidth = 2.dp)
+    CircularProgressIndicator(modifier.size(24.dp), color = AppColors.content(color), strokeWidth = 2.dp)
 }
 
 @Composable
 internal fun OwnProfileNotice(message: String, action: String, onClick: () -> Unit, enabled: Boolean = true) {
     Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(message, color = OwnProfileColors.muted, fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
-        TextButton(onClick, enabled = enabled) { Text(action, color = OwnProfileColors.brand, fontWeight = FontWeight.SemiBold) }
+        Text(message, color = AppColors.content(OwnProfileColors.muted), fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
+        TextButton(onClick, enabled = enabled) { Text(action, color = AppColors.content(OwnProfileColors.brand), fontWeight = FontWeight.SemiBold) }
     }
 }
 
 @Composable
-internal fun OwnProfileDivider() { Box(Modifier.fillMaxWidth().height(1.dp).background(OwnProfileColors.line)) }
+internal fun OwnProfileDivider() { Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(OwnProfileColors.line))) }

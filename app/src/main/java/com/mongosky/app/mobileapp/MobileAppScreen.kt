@@ -1,5 +1,7 @@
 package com.mongosky.app.mobileapp
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,9 +45,9 @@ internal fun MobileAppScreen(onBack: () -> Unit) {
                                     Spacer(Modifier.height(14.dp))
                                     InformationHeading(MobileAppContent.heroTitle, titleSize)
                                     Spacer(Modifier.height(20.dp))
-                                    Text(MobileAppContent.heroDescription, color = Color(0xFF435366), fontSize = 16.sp, lineHeight = 28.sp, fontWeight = FontWeight.Medium)
+                                    Text(MobileAppContent.heroDescription, color = AppColors.content(Color(0xFF435366)), fontSize = 16.sp, lineHeight = 28.sp, fontWeight = FontWeight.Medium)
                                     Spacer(Modifier.height(15.dp))
-                                    Text(MobileAppContent.heroSupportingText, color = InformationColors.muted, fontSize = 14.sp, lineHeight = 24.sp)
+                                    Text(MobileAppContent.heroSupportingText, color = AppColors.content(InformationColors.muted), fontSize = 14.sp, lineHeight = 24.sp)
                                     Spacer(Modifier.height(24.dp))
                                     MobileAppStatus(MobileAppContent.heroStatusLabel)
                                 }
@@ -62,13 +64,13 @@ internal fun MobileAppScreen(onBack: () -> Unit) {
                                     Spacer(Modifier.height(14.dp))
                                     InformationHeading(MobileAppContent.introductionTitle, if (wide) 36f else 28f)
                                     Spacer(Modifier.height(16.dp))
-                                    Text(MobileAppContent.introductionDescription, color = Color(0xFF526172), fontSize = 15.sp, lineHeight = 26.sp)
+                                    Text(MobileAppContent.introductionDescription, color = AppColors.content(Color(0xFF526172)), fontSize = 15.sp, lineHeight = 26.sp)
                                 }
                             }, right = {
                                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                     MobileAppContent.introductionParagraphs.forEachIndexed { index, text ->
-                                        if (index > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(InformationColors.border))
-                                        Text(text, color = InformationColors.text, fontSize = 14.sp, lineHeight = 24.sp)
+                                        if (index > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(InformationColors.border)))
+                                        Text(text, color = AppColors.content(InformationColors.text), fontSize = 14.sp, lineHeight = 24.sp)
                                     }
                                 }
                             })
@@ -85,9 +87,9 @@ internal fun MobileAppScreen(onBack: () -> Unit) {
                             Spacer(Modifier.height(14.dp))
                             InformationHeading(MobileAppContent.closingTitle, if (wide) 36f else 28f, Color.White, centered = true)
                             Spacer(Modifier.height(18.dp))
-                            Text(MobileAppContent.closingDescription, color = Color.White.copy(alpha = .88f), fontSize = 15.sp, lineHeight = 26.sp, textAlign = TextAlign.Center)
+                            Text(MobileAppContent.closingDescription, color = AppColors.content(Color.White.copy(alpha = .88f)), fontSize = 15.sp, lineHeight = 26.sp, textAlign = TextAlign.Center)
                             Spacer(Modifier.height(13.dp))
-                            Text(MobileAppContent.closingSupportingText, color = Color.White.copy(alpha = .7f), fontSize = 13.sp, lineHeight = 22.sp, textAlign = TextAlign.Center)
+                            Text(MobileAppContent.closingSupportingText, color = AppColors.content(Color.White.copy(alpha = .7f)), fontSize = 13.sp, lineHeight = 22.sp, textAlign = TextAlign.Center)
                             Spacer(Modifier.height(26.dp))
                             InformationBackButton(MobileAppContent.closingBackButtonLabel, onBack, Modifier.widthIn(max = 440.dp).fillMaxWidth())
                         }
@@ -111,13 +113,13 @@ private fun MobileAppPlatformCard(section: MobileAppPlatform, wide: Boolean, lar
                     Spacer(Modifier.height(14.dp))
                     InformationHeading(section.title, if (wide) 36f else 28f)
                     Spacer(Modifier.height(17.dp))
-                    Text(section.description, color = Color(0xFF48586B), fontSize = 16.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold)
+                    Text(section.description, color = AppColors.content(Color(0xFF48586B)), fontSize = 16.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(22.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         section.paragraphs.forEach { paragraph ->
                             Row(Modifier.height(IntrinsicSize.Min)) {
-                                Box(Modifier.width(3.dp).fillMaxHeight().background(accent.copy(alpha = .2f)))
-                                Text(paragraph, color = Color(0xFF5C6878), fontSize = 14.sp, lineHeight = 24.sp, modifier = Modifier.padding(start = 16.dp).weight(1f))
+                                Box(Modifier.width(3.dp).fillMaxHeight().background(AppColors.surface(accent.copy(alpha = .2f))))
+                                Text(paragraph, color = AppColors.content(Color(0xFF5C6878)), fontSize = 14.sp, lineHeight = 24.sp, modifier = Modifier.padding(start = 16.dp).weight(1f))
                             }
                         }
                     }
@@ -133,9 +135,9 @@ private fun MobileAppPlatformCard(section: MobileAppPlatform, wide: Boolean, lar
 @Composable
 private fun MobileAppStatus(label: String, accent: Color = InformationColors.primaryDark) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Box(Modifier.size(22.dp).background(accent.copy(alpha = .1f), CircleShape), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(10.dp).background(accent, CircleShape))
+        Box(Modifier.size(22.dp).background(AppColors.surface(accent.copy(alpha = .1f)), CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(10.dp).background(AppColors.surface(accent), CircleShape))
         }
-        Text(label, color = accent, fontSize = 13.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f, fill = false))
+        Text(label, color = AppColors.content(accent), fontSize = 13.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f, fill = false))
     }
 }

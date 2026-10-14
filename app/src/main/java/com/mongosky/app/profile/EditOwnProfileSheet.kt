@@ -1,6 +1,8 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -31,23 +33,23 @@ internal fun EditOwnProfileSheet(
         if (editor.text != state.bioDraft) editor = editor.copy(text = state.bioDraft,
             selection = TextRange(editor.selection.start.coerceIn(0, state.bioDraft.length), editor.selection.end.coerceIn(0, state.bioDraft.length)))
     }
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Color.White,
+    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppColors.surface(Color.White),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { !state.savingBio })) {
         Column(Modifier.fillMaxWidth().widthIn(max = 520.dp).imePadding().verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Edit Profile", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = OwnProfileColors.text, modifier = Modifier.weight(1f))
-                IconButton(onDismiss, enabled = !state.savingBio) { Icon(FeedIcons.close, "Close editor", tint = OwnProfileColors.text) }
+                Text("Edit Profile", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = AppColors.content(OwnProfileColors.text), modifier = Modifier.weight(1f))
+                IconButton(onDismiss, enabled = !state.savingBio) { Icon(FeedIcons.close, "Close editor", tint = AppColors.content(OwnProfileColors.text)) }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 ProfileAvatar(state.profile?.profileImageUrl, Modifier.size(64.dp))
-                Text(state.profile?.displayName.orEmpty(), fontSize = 17.sp, color = OwnProfileColors.text, fontWeight = FontWeight.Bold)
+                Text(state.profile?.displayName.orEmpty(), fontSize = 17.sp, color = AppColors.content(OwnProfileColors.text), fontWeight = FontWeight.Bold)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton({ onImage(ProfileImageKind.AVATAR) }, enabled = !state.busy && !state.uploadUncertain && !state.sessionExpired,
-                    modifier = Modifier.weight(1f)) { Text("Change photo", color = OwnProfileColors.brand) }
+                    modifier = Modifier.weight(1f)) { Text("Change photo", color = AppColors.content(OwnProfileColors.brand)) }
                 TextButton({ onImage(ProfileImageKind.COVER) }, enabled = !state.busy && !state.uploadUncertain && !state.sessionExpired,
-                    modifier = Modifier.weight(1f)) { Text("Change cover", color = OwnProfileColors.brand) }
+                    modifier = Modifier.weight(1f)) { Text("Change cover", color = AppColors.content(OwnProfileColors.brand)) }
             }
             OutlinedTextField(editor, onValueChange = { proposed ->
                 val limited = ProfileBio.limit(proposed.text)
@@ -58,11 +60,11 @@ internal fun EditOwnProfileSheet(
             }, enabled = !state.busy && !state.sessionExpired, modifier = Modifier.fillMaxWidth(),
                 label = { Text("Bio") }, minLines = 3, maxLines = 5,
                 supportingText = { Text("${ProfileBio.count(editor.text)} / ${ProfileBio.MAX_LENGTH}", modifier = Modifier.fillMaxWidth()) })
-            state.operationError?.let { Text(it, color = OwnProfileColors.brand, fontSize = 14.sp, lineHeight = 21.sp) }
+            state.operationError?.let { Text(it, color = AppColors.content(OwnProfileColors.brand), fontSize = 14.sp, lineHeight = 21.sp) }
             Button(onSave, enabled = !state.busy && !state.sessionExpired && state.profile != null,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = OwnProfileColors.brand, contentColor = Color.White)) {
-                if (state.savingBio) { OwnProfileSpinner(color = Color.White); Spacer(Modifier.width(10.dp)) }
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(OwnProfileColors.brand), contentColor = AppColors.content(Color.White))) {
+                if (state.savingBio) { OwnProfileSpinner(color = AppColors.content(Color.White)); Spacer(Modifier.width(10.dp)) }
                 Text(if (state.savingBio) "Saving…" else "Save", fontWeight = FontWeight.Bold)
             }
         }

@@ -1,5 +1,7 @@
 package com.mongosky.app.home
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -87,7 +89,7 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
                 modifier = Modifier.size(badgeSize))
             if (showFollow) Box(Modifier.weight(1f).fillMaxHeight()
                 .clip(RoundedCornerShape(8.dp))
-                .background(if (shown.following) Color(0xFFF1F5F9) else Color.Transparent)
+                .background(AppColors.surface(if (shown.following) Color(0xFFF1F5F9) else Color.Transparent))
                 .clickable(enabled = enabled && !shown.pending && !shown.following,
                     role = Role.Button, onClickLabel = "Follow $name") {
                     if (onFollow != null) onFollow() else controls.follow(post)
@@ -96,8 +98,8 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
                     if (shown.following) "Following" else "Not following" },
                 contentAlignment = Alignment.Center) {
                 Text(label, fontSize = 14.sp, lineHeight = 18.sp, maxLines = 1, softWrap = false,
-                    fontWeight = FontWeight.Bold, color = if (shown.following) Color(0xFF475569)
-                        else Color(0xFFFF1028).copy(alpha = if (shown.pending) 0.65f else 1f),
+                    fontWeight = FontWeight.Bold, color = AppColors.content(if (shown.following) Color(0xFF475569)
+                        else Color(0xFFFF1028).copy(alpha = if (shown.pending) 0.65f else 1f)),
                     style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
             }
         }
@@ -106,16 +108,16 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         ProfileAvatar(post.author.profileImageUrl, Modifier.size(44.dp).profileLink(post.author.id, post.author))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(title, inlineContent = inline, color = FeedColors.text, fontSize = 15.sp,
+            Text(title, inlineContent = inline, color = AppColors.content(FeedColors.text), fontSize = 15.sp,
                 lineHeight = 20.sp, fontWeight = FontWeight.Bold,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
                 modifier = Modifier.fillMaxWidth().profileLink(post.author.id, post.author))
-            Text("${post.updateLabel} · ${postTimeAgo(post.createdAt, now)}", color = FeedColors.muted,
+            Text("${post.updateLabel} · ${postTimeAgo(post.createdAt, now)}", color = AppColors.content(FeedColors.muted),
                 fontSize = 12.sp, lineHeight = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
         }
         IconButton(onClick = { if (onMenu != null) onMenu() else controls.openMenu(post) }, enabled = enabled, modifier = Modifier.size(48.dp)) {
-            Icon(FeedIcons.more, "Post options", tint = FeedColors.muted, modifier = Modifier.size(22.dp))
+            Icon(FeedIcons.more, "Post options", tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(22.dp))
         }
     }
 }

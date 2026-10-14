@@ -2,6 +2,8 @@
 
 package com.mongosky.app.post
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
@@ -60,10 +62,11 @@ internal fun PhotoViewer(state: PhotoViewerState, onDismiss: () -> Unit) {
     if (state.photos.isEmpty()) return
     val pager = rememberPagerState(initialPage = state.index.coerceIn(state.photos.indices)) { state.photos.size }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Column(Modifier.fillMaxSize().background(Color.White).safeDrawingPadding()) {
+        com.mongosky.app.darkmode.DarkModeSystemBars(forceDark = false)
+        Column(Modifier.fillMaxSize().background(AppColors.surface(Color.White)).safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) { Icon(FeedIcons.close, "Close photos", tint = FeedColors.text) }
-                Text("${pager.currentPage + 1} / ${state.photos.size}", color = FeedColors.muted, fontSize = 14.sp)
+                IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) { Icon(FeedIcons.close, "Close photos", tint = AppColors.content(FeedColors.text)) }
+                Text("${pager.currentPage + 1} / ${state.photos.size}", color = AppColors.content(FeedColors.muted), fontSize = 14.sp)
             }
             FeedDivider()
             HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0,
@@ -82,7 +85,7 @@ internal fun PhotoViewer(state: PhotoViewerState, onDismiss: () -> Unit) {
                     .transformable(state = transform, canPan = { scale > 1f })
                     .pointerInput(index) { detectTapGestures(onDoubleTap = { scale = if (scale > 1f) 1f else 2f; offset = Offset.Zero }) },
                     contentAlignment = Alignment.Center) {
-                    Icon(FeedIcons.image, null, tint = FeedColors.line, modifier = Modifier.size(40.dp))
+                    Icon(FeedIcons.image, null, tint = AppColors.content(FeedColors.line), modifier = Modifier.size(40.dp))
                     AsyncImage(model = state.photos[index].url, contentDescription = "Photo ${index + 1} of ${state.photos.size}",
                         modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = scale, scaleY = scale, translationX = offset.x, translationY = offset.y),
                         contentScale = ContentScale.Fit)

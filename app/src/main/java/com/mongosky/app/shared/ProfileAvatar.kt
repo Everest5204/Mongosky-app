@@ -1,5 +1,7 @@
 package com.mongosky.app.shared
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -41,20 +43,20 @@ fun ProfileAvatar(
         }
     }
     Box(
-        modifier = modifier.clip(CircleShape).background(Color(0xFF07927C)),
+        modifier = modifier.clip(CircleShape).background(AppColors.surface(Color(0xFF07927C))),
         contentAlignment = Alignment.Center
     ) {
         if (fallbackText.isNullOrBlank()) {
             Icon(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
-                tint = Color(0xFFEAFFF7),
+                tint = AppColors.content(Color(0xFFEAFFF7)),
                 modifier = Modifier.size(24.dp)
             )
         } else {
             Text(
                 text = fallbackText,
-                color = Color.White,
+                color = AppColors.content(Color.White),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )

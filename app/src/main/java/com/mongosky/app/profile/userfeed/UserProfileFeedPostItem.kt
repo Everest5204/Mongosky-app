@@ -1,5 +1,7 @@
 package com.mongosky.app.profile.userfeed
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,7 +61,7 @@ internal fun UserProfileFeedPostItem(
                 MediaPostCard(post.post, now, fallback, post.commentsCount, enabled, actions, onPhotos,
                     header = header, footer = footer, previewUrl = preview,
                     singlePhoto = { photo, open -> HomeFeedPhoto(photo, feed.images, enabled, open) })
-            } else Column(Modifier.fillMaxWidth().background(Color.White)) {
+            } else Column(Modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
                 header()
                 PostCaption(post.post.caption)
                 val asset = remember(video, post) { ProfileGalleryAsset(post.key, post.id, video, post.post.caption) }

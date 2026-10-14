@@ -43,7 +43,7 @@ fun TextPostEditor(
 ) {
     val length = TextPostLimits.length(value.text)
     val fontSize = when { length > 260 -> 20; length > 150 -> 28; else -> 36 }.sp
-    val color = if (preset.textColor == "#ffffff") Color.White else Color(0xFF111827)
+    val color = com.mongosky.app.darkmode.AppColors.plainPostText(if (preset.textColor == "#ffffff") Color.White else Color(0xFF111827),preset.background.kind == com.mongosky.app.post.FeedTextBackgroundKind.PLAIN)
     val style = TextStyle(color = color, fontSize = fontSize, lineHeight = fontSize * 1.25f,
         fontWeight = FontWeight.ExtraBold, textAlign = if (length > 260) TextAlign.Start else TextAlign.Center)
     val shape = RoundedCornerShape(20.dp)

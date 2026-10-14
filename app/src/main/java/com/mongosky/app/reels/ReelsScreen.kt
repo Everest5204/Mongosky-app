@@ -1,6 +1,10 @@
 @file:androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
 package com.mongosky.app.reels
 
+import com.mongosky.app.darkmode.AppColors
+
+import com.mongosky.app.saveditems.SavedReelButton
+
 import com.mongosky.app.profile.LocalProfileNavigator
 import com.mongosky.app.profile.ProfileOpenRequest
 import android.content.ActivityNotFoundException
@@ -99,7 +103,7 @@ fun ReelsScreen(viewModel: ReelsViewModel, userId: String?, userName: String, on
         navigateProfile(ProfileOpenRequest(reel.author.id, reel.author))
     }
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF090909)), contentAlignment = Alignment.Center) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(AppColors.surface(Color(0xFF090909))), contentAlignment = Alignment.Center) {
         val large = maxWidth >= 721.dp && maxHeight >= 520.dp
         val width = if (large) minOf(506.dp, (maxHeight - 24.dp) * 0.5625f) else maxWidth
         val height = if (large) minOf(900.dp, maxHeight - 24.dp) else maxHeight
@@ -121,35 +125,36 @@ fun ReelsScreen(viewModel: ReelsViewModel, userId: String?, userName: String, on
             if (rows.isEmpty()) Column(Modifier.align(Alignment.Center).padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (state.loading || !state.initialized && !state.sessionExpired && state.error == null) {
-                    CircularProgressIndicator(Modifier.size(43.dp), color = Color.White, strokeWidth = 3.dp)
-                    Text("Loading Reels...", color = Color.White.copy(alpha = 0.82f), fontSize = 14.sp)
+                    CircularProgressIndicator(Modifier.size(43.dp), color = AppColors.content(Color.White), strokeWidth = 3.dp)
+                    Text("Loading Reels...", color = AppColors.content(Color.White.copy(alpha = 0.82f)), fontSize = 14.sp)
                 } else {
-                    Text(if (state.error == null) "No Reels yet" else "Could not load Reels", color = Color.White,
+                    Text(if (state.error == null) "No Reels yet" else "Could not load Reels", color = AppColors.content(Color.White),
                         fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text(state.error ?: "New videos will appear here.", color = Color.White.copy(alpha = 0.78f), fontSize = 14.sp)
+                    Text(state.error ?: "New videos will appear here.", color = AppColors.content(Color.White.copy(alpha = 0.78f)), fontSize = 14.sp)
                     TextButton(if (state.sessionExpired) onSignInAgain else viewModel::retry) {
-                        Text(if (state.sessionExpired) "Sign in again" else "Refresh", color = Color.White)
+                        Text(if (state.sessionExpired) "Sign in again" else "Refresh", color = AppColors.content(Color.White))
                     }
                 }
             }
             Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 12.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ReelRoundButton(ReelsIcons.back, "Go back", onBack)
-                Text("Reels", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+                Text("Reels", color = AppColors.content(Color.White), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
+                current?.let { SavedReelButton(it.id) }
                 ReelRoundButton(if (muted) ReelsIcons.muted else ReelsIcons.volume,
                     if (muted) "Turn sound on" else "Mute video", { muted = !muted }, iconSize = 22)
             }
             if (state.loadingMore) Row(Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp)
-                .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(30.dp)).padding(10.dp),
+                .background(AppColors.surface(Color.Black.copy(alpha = 0.8f)), RoundedCornerShape(30.dp)).padding(10.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                Text("Loading more...", color = Color.White, fontSize = 12.sp)
+                CircularProgressIndicator(Modifier.size(16.dp), color = AppColors.content(Color.White), strokeWidth = 2.dp)
+                Text("Loading more...", color = AppColors.content(Color.White), fontSize = 12.sp)
             }
             if (rows.isNotEmpty() && state.error != null) Row(Modifier.align(Alignment.BottomCenter).padding(12.dp)
-                .background(Color(0xFFA51B33), RoundedCornerShape(12.dp)).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(state.error, color = Color.White, fontSize = 12.sp, maxLines = 2, modifier = Modifier.weight(1f))
+                .background(AppColors.surface(Color(0xFFA51B33)), RoundedCornerShape(12.dp)).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(state.error, color = AppColors.content(Color.White), fontSize = 12.sp, maxLines = 2, modifier = Modifier.weight(1f))
                 TextButton(if (state.sessionExpired) onSignInAgain else viewModel::retry) {
-                    Text(if (state.sessionExpired) "Sign in" else "Retry", color = Color.White)
+                    Text(if (state.sessionExpired) "Sign in" else "Retry", color = AppColors.content(Color.White))
                 }
             }
             SnackbarHost(snackbar, Modifier.align(Alignment.TopCenter).padding(top = 72.dp))

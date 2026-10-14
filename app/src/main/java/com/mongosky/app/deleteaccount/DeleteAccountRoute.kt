@@ -1,5 +1,7 @@
 package com.mongosky.app.deleteaccount
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -64,7 +66,7 @@ internal fun DeleteAccountRoute(
     val progress = animateFloatAsState(if (entered) 1f else 0f,
         tween(140, easing = FastOutSlowInEasing), label = "Delete account entrance")
     val distance = with(LocalDensity.current) { 16.dp.toPx() }
-    Box(Modifier.fillMaxSize().background(Color.White)) {
+    Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White))) {
         Box(Modifier.fillMaxSize().graphicsLayer { alpha = progress.value; translationX = distance * (1f - progress.value) }) {
             DeleteAccountScreen(state, model::updatePassword,
                 onConfirm = { if (!hostBusy) { runCatching { autofill?.cancel() }; model.openConfirmation() } },

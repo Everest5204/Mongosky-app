@@ -1,5 +1,7 @@
 package com.mongosky.app.edittextpost
 
+import com.mongosky.app.darkmode.AppColors
+
 import com.mongosky.app.editpost.*
 
 import androidx.compose.foundation.background
@@ -36,7 +38,7 @@ import com.mongosky.app.textpost.TextPostPreset
 internal fun EditTextPostComposer(state: EditTextPostState, onText: (String) -> Unit) {
     val centered = state.textStyle == FeedTextStyle.BOLD_CENTER || state.textStyle == FeedTextStyle.NORMAL_CENTER
     val bold = state.textStyle == FeedTextStyle.BOLD_CENTER || state.textStyle == FeedTextStyle.BOLD_LEFT
-    val color = remember(state.textColor) { cssColor(state.textColor, EditPostColors.text) }
+    val color = AppColors.plainPostText(cssColor(state.textColor, EditPostColors.text),state.background.kind == FeedTextBackgroundKind.PLAIN)
     BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         val size = when { state.length > 260 -> (maxWidth.value * 0.046f).coerceIn(18f, 25f)
             state.length > 150 -> (maxWidth.value * 0.065f).coerceIn(24f, 34f)
@@ -47,7 +49,7 @@ internal fun EditTextPostComposer(state: EditTextPostState, onText: (String) -> 
             fontWeight = if (bold) FontWeight.ExtraBold else FontWeight.Medium,
             textAlign = if (centered) TextAlign.Center else TextAlign.Start)
         Box(Modifier.fillMaxWidth().height(height).clip(shape)
-            .then(if (state.background.kind == FeedTextBackgroundKind.PLAIN) Modifier.border(1.dp, EditPostColors.line, shape) else Modifier),
+            .then(if (state.background.kind == FeedTextBackgroundKind.PLAIN) Modifier.border(1.dp, AppColors.outline(EditPostColors.line), shape) else Modifier),
             contentAlignment = Alignment.Center) {
             TextPostBackground(state.background.kind, state.background.value, Modifier.matchParentSize())
             BasicTextField(state.text, onText, enabled = state.editable,

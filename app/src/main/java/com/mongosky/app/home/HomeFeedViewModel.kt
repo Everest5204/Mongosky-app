@@ -1,7 +1,5 @@
 package com.mongosky.app.home
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -97,8 +95,6 @@ class HomeFeedViewModel internal constructor(
         { uiState.sessionExpired }, { sessionVersion }, ::handleSessionFailure)
     internal val controls = HomeFeedController(homeActions, { token }, { scope }, { sessionVersion },
         { uiState.sessionExpired }, ::handleSessionFailure, ::applyEditedPost, ::applyDeletedPost)
-    internal var download by mutableStateOf<HomeDownloadState?>(null)
-        private set
 
     fun startSession() {
         if (sessionJob?.isActive == true) return
@@ -149,7 +145,6 @@ class HomeFeedViewModel internal constructor(
         images.clear(); scrolling = false
         headVersion++; headJob?.cancel(); pendingHead = null
         removedPosts.clear(); editedPosts.clear(); visibleKeys = emptySet()
-        download = null
         pager = FeedPager()
         replacingFeed = false
         uiState = HomeFeedState()
@@ -355,34 +350,6 @@ class HomeFeedViewModel internal constructor(
         if (peopleState?.postId == post.id) closeReactionPeople()
         uiState = uiState.copy(posts = uiState.posts.filterNot { it.key == post.key })
     }
-
-    internal fun requestDownload(post: HomePost) {
-        if (uiState.sessionExpired) return
-        if (download != null) { controls.notify("A download is already in progress."); return }
-        controls.closeMenu()
-        download = HomeDownloadState(post)
-    }
-
-    internal fun completeDownloadPicker(context: Context, uri: Uri?) {
-        val pending = download ?: return
-        if (!pending.choosing) return
-        if (uri == null) { download = null; return }
-        val generation = sessionVersion
-        download = pending.copy(choosing = false)
-        controls.notify("Downloading post…")
-        scope.launch {
-            try {
-                HomeFeedDownloads.write(context.applicationContext, uri, pending.post)
-                ensureActive()
-                if (generation == sessionVersion) controls.notify("Post downloaded")
-            } catch (error: CancellationException) { throw error }
-            catch (_: Exception) {
-                if (generation == sessionVersion) controls.notify("Could not download the post. Please try again.")
-            } finally { if (generation == sessionVersion) download = null }
-        }
-    }
-
-    internal fun cancelDownloadPicker() { if (download?.choosing == true) download = null }
 
     // Public facade keeps existing post callbacks and clients stable.
     fun ensureReaction(post: HomePost) = reactionController.ensureReaction(post)

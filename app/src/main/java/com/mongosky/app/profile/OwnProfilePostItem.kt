@@ -1,5 +1,7 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -45,13 +47,14 @@ internal fun OwnProfilePostItem(
     val comments = actionsModel.commentCounts[post.key] ?: post.commentsCount
     val actions = PostCardActions(onReact = { actionsModel.react(post, it) }, onComments = { actionsModel.openComments(post) },
         onShare = { onShare(post) }, onCopyLink = { onCopy(post) }, onReactionPeople = { actionsModel.openReactionPeople(post) },
-        onRetryReaction = { actionsModel.ensureReaction(post) })
+        onRetryReaction = { actionsModel.ensureReaction(post) },
+        onReport = if (!isSelf && enabled) ({ actionsModel.controls.openReport(post) }) else null)
     when (post) {
         is HomePost.Text -> TextPostCard(post.post, now, reaction, comments, enabled, actions)
         is HomePost.Media -> {
             val video = remember(post) { post.post.media.firstOrNull { it.type == FeedMediaType.VIDEO } }
             if (video == null) MediaPostCard(post.post, now, reaction, comments, enabled, actions, onPhotos)
-            else Column(Modifier.fillMaxWidth().background(Color.White)) {
+            else Column(Modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
                 PostHeader(post.author, post.createdAt, now, actions)
                 PostCaption(post.post.caption)
                 val asset = remember(video, post) { ProfileGalleryAsset(post.key, post.id, video, post.post.caption) }

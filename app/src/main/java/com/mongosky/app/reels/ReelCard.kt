@@ -1,6 +1,8 @@
 @file:androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
 package com.mongosky.app.reels
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
@@ -51,7 +53,7 @@ internal fun ReelCard(
         }
     }
     val loved = (if (love != null) love.reaction else reel.reaction) == PostReaction.LOVE
-    BoxWithConstraints(Modifier.fillMaxSize().background(if (active) Color.Transparent else Color.Black)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(AppColors.surface(if (active) Color.Transparent else Color.Black))) {
         val captionHeight = maxHeight * 0.38f
         val landscape = maxHeight < 480.dp
         val side = if (landscape) 10.dp else 12.dp
@@ -63,18 +65,18 @@ internal fun ReelCard(
                 onDoubleTap = { if (active) { heartKey++; onDoubleLove() } })
         }.semantics { contentDescription = "Video. Tap to pause or play, double tap to love." })
         if (active && (playback == null || playback.buffering) && playback?.error != true) CircularProgressIndicator(
-            Modifier.align(Alignment.Center).size(38.dp), color = Color.White, strokeWidth = 3.dp
+            Modifier.align(Alignment.Center).size(38.dp), color = AppColors.content(Color.White), strokeWidth = 3.dp
         )
         if (active && playback?.manuallyPaused == true && !playback.error) ReelRoundButton(
             ReelsIcons.play, "Play video", onClick = playback::toggle,
             modifier = Modifier.align(Alignment.Center).size(60.dp), iconSize = 28
         )
         if (active && playback?.error == true) Column(
-            Modifier.align(Alignment.Center).padding(24.dp).background(Color.Black.copy(alpha = 0.85f), androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
+            Modifier.align(Alignment.Center).padding(24.dp).background(AppColors.surface(Color.Black.copy(alpha = 0.85f)), androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
                 .padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Could not play this video.", color = Color.White, fontSize = 14.sp)
-            TextButton(playback::retry) { Text("Retry", color = Color.White) }
+            Text("Could not play this video.", color = AppColors.content(Color.White), fontSize = 14.sp)
+            TextButton(playback::retry) { Text("Retry", color = AppColors.content(Color.White)) }
         }
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.3f),
             0.18f to Color.Transparent, 0.42f to Color.Transparent, 0.62f to Color.Black.copy(alpha = 0.2f),
@@ -83,26 +85,26 @@ internal fun ReelCard(
             .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button, onClick = onProfile),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                ProfileAvatar(reel.author.profileImageUrl, Modifier.size(38.dp).border(2.dp, Color.White.copy(alpha = 0.92f), CircleShape))
+                ProfileAvatar(reel.author.profileImageUrl, Modifier.size(38.dp).border(2.dp, AppColors.outline(Color.White.copy(alpha = 0.92f)), CircleShape))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(reel.author.displayName.ifBlank { "Mongosky User" }, color = Color.White,
+                        Text(reel.author.displayName.ifBlank { "Mongosky User" }, color = AppColors.content(Color.White),
                             fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false))
                         if (verified) Icon(ReelsIcons.seal, "Verified", tint = Color.Unspecified,
                             modifier = Modifier.padding(start = 4.dp).size(14.dp))
                     }
-                    if (reel.username.isNotBlank()) Text("@${reel.username}", color = Color.White.copy(alpha = 0.78f),
+                    if (reel.username.isNotBlank()) Text("@${reel.username}", color = AppColors.content(Color.White.copy(alpha = 0.78f)),
                         fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             if (reel.caption.isNotBlank()) {
                 val captionModifier = if (expanded) Modifier.heightIn(max = captionHeight).verticalScroll(rememberScrollState()) else Modifier
-                Text(reel.caption, color = Color.White, fontSize = 13.sp, lineHeight = 19.sp,
+                Text(reel.caption, color = AppColors.content(Color.White), fontSize = 13.sp, lineHeight = 19.sp,
                     maxLines = if (expanded) Int.MAX_VALUE else 2, overflow = TextOverflow.Ellipsis,
                     modifier = captionModifier)
                 if (reel.caption.length > 120 || reel.caption.count { it == '\n' } >= 2) Text(
-                    if (expanded) "less" else "more", color = Color.White.copy(alpha = 0.86f), fontSize = 13.sp,
+                    if (expanded) "less" else "more", color = AppColors.content(Color.White.copy(alpha = 0.86f)), fontSize = 13.sp,
                     fontWeight = FontWeight.Bold, modifier = Modifier.heightIn(min = 32.dp).clickable { expanded = !expanded }.padding(top = 4.dp)
                 )
             }
@@ -113,23 +115,23 @@ internal fun ReelCard(
                 Box(contentAlignment = Alignment.Center) {
                     ReelRoundButton(if (loved) ReelsIcons.filledHeart else ReelsIcons.heart,
                         if (loved) "Remove love" else "Love reel", onLove, enabled = love?.saving != true,
-                        filled = loved, tint = if (loved) Color(0xFFFF3158) else Color.White)
-                    if (love?.saving == true) CircularProgressIndicator(Modifier.size(48.dp), color = Color.White, strokeWidth = 2.dp)
+                        filled = loved, tint = AppColors.content(if (loved) Color(0xFFFF3158) else Color.White))
+                    if (love?.saving == true) CircularProgressIndicator(Modifier.size(48.dp), color = AppColors.content(Color.White), strokeWidth = 2.dp)
                 }
-                Text(compactCount(love?.count ?: reel.likesCount), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(compactCount(love?.count ?: reel.likesCount), color = AppColors.content(Color.White), fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
             ReelAction(ReelsIcons.comment, "Open comments", compactCount(commentCount), onComment)
             ReelAction(ReelsIcons.share, "Share reel", "Share", onShare)
         }
-        if (heart.value > 0f) Icon(ReelsIcons.filledHeart, null, tint = Color(0xFFFF3158),
+        if (heart.value > 0f) Icon(ReelsIcons.filledHeart, null, tint = AppColors.content(Color(0xFFFF3158)),
             modifier = Modifier.align(Alignment.Center).size(104.dp).graphicsLayer {
                 scaleX = heart.value; scaleY = heart.value; alpha = heart.value.coerceAtMost(1f)
             })
         if (active && love?.error != null) Row(Modifier.align(Alignment.TopCenter).padding(top = 76.dp, start = 20.dp, end = 20.dp)
-            .background(Color(0xFFAE1C36), androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).clickable(onClick = onClearError)
+            .background(AppColors.surface(Color(0xFFAE1C36)), androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).clickable(onClick = onClearError)
             .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(love.error, color = Color.White, fontSize = 13.sp, modifier = Modifier.weight(1f))
-            Text(" ×", color = Color.White, fontSize = 22.sp)
+            Text(love.error, color = AppColors.content(Color.White), fontSize = 13.sp, modifier = Modifier.weight(1f))
+            Text(" ×", color = AppColors.content(Color.White), fontSize = 22.sp)
         }
     }
 }
@@ -138,7 +140,7 @@ internal fun ReelCard(
 private fun ReelAction(icon: ImageVector, description: String, label: String, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
         ReelRoundButton(icon, description, onClick)
-        Text(label, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = AppColors.content(Color.White), fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -146,9 +148,9 @@ private fun ReelAction(icon: ImageVector, description: String, label: String, on
 internal fun ReelRoundButton(icon: ImageVector, description: String, onClick: () -> Unit,
     modifier: Modifier = Modifier.size(48.dp), enabled: Boolean = true, filled: Boolean = false,
     tint: Color = Color.White, iconSize: Int = 25) {
-    Box(modifier.clip(CircleShape).background(if (filled) Color.White.copy(alpha = 0.94f) else Color(0xFF1C1C1C).copy(alpha = 0.64f))
-        .border(1.dp, Color.White.copy(alpha = if (filled) 0.96f else 0.24f), CircleShape)
+    Box(modifier.clip(CircleShape).background(AppColors.surface(if (filled) Color.White.copy(alpha = 0.94f) else Color(0xFF1C1C1C).copy(alpha = 0.64f)))
+        .border(1.dp, AppColors.outline(Color.White.copy(alpha = if (filled) 0.96f else 0.24f)), CircleShape)
         .clickable(enabled = enabled, role = Role.Button, onClickLabel = description, onClick = onClick), contentAlignment = Alignment.Center) {
-        Icon(icon, description, tint = tint, modifier = Modifier.size(iconSize.dp))
+        Icon(icon, description, tint = AppColors.content(tint), modifier = Modifier.size(iconSize.dp))
     }
 }

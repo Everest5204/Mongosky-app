@@ -1,5 +1,7 @@
 package com.mongosky.app.notifications
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -53,11 +55,11 @@ internal fun NotificationHost(viewModel:NotificationsViewModel, owner:String?, s
 internal fun NotificationBell(count:Long,enabled:Boolean,onClick:()->Unit) {
     Box {
         IconButton(onClick=onClick,enabled=enabled,modifier=Modifier.size(48.dp)) {
-            Icon(NotificationIcons.bell,"Notifications${if(count>0) ", $count unread" else ""}",Modifier.size(23.dp),tint=NotificationColors.text)
+            Icon(NotificationIcons.bell,"Notifications${if(count>0) ", $count unread" else ""}",Modifier.size(23.dp),tint=AppColors.content(NotificationColors.text))
         }
         if(count>0) Box(Modifier.align(Alignment.TopEnd).padding(top=4.dp,end=2.dp).defaultMinSize(minWidth=17.dp,minHeight=17.dp)
-            .background(Color(0xFFFF3040),CircleShape).padding(horizontal=4.dp),contentAlignment=Alignment.Center) {
-            Text(NotificationPolicy.badge(count),color=Color.White,fontSize=10.sp,lineHeight=15.sp,fontWeight=FontWeight.Bold)
+            .background(AppColors.surface(Color(0xFFFF3040)),CircleShape).padding(horizontal=4.dp),contentAlignment=Alignment.Center) {
+            Text(NotificationPolicy.badge(count),color=AppColors.content(Color.White),fontSize=10.sp,lineHeight=15.sp,fontWeight=FontWeight.Bold)
         }
     }
 }

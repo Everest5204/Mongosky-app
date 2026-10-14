@@ -26,7 +26,8 @@ internal fun homeMenuActions(post: HomePost): List<HomeMenuAction> = buildList {
         add(HomeMenuAction.PIN)
     }
     addAll(listOf(HomeMenuAction.SAVE, HomeMenuAction.COPY, HomeMenuAction.DOWNLOAD,
-        HomeMenuAction.HIDE, HomeMenuAction.REPORT))
+        HomeMenuAction.HIDE))
+    if (!post.isOwn) add(HomeMenuAction.REPORT)
 }
 
 internal val HomePost.isOwn: Boolean get() = when (this) {

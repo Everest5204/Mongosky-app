@@ -1,5 +1,7 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -91,8 +93,8 @@ fun MediaPostUploadCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, UploadBorder)
+        color = AppColors.surface(Color.White),
+        border = BorderStroke(1.dp, AppColors.outline(UploadBorder))
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -110,11 +112,11 @@ fun MediaPostUploadCard(
                 ) {
                     Text(
                         text = title,
-                        color = if (failure == null) {
+                        color = AppColors.content(if (failure == null) {
                             UploadText
                         } else {
                             UploadError
-                        },
+                        }),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.semantics {
@@ -124,7 +126,7 @@ fun MediaPostUploadCard(
 
                     Text(
                         text = mediaLabel(draft),
-                        color = UploadMuted,
+                        color = AppColors.content(UploadMuted),
                         fontSize = 13.sp
                     )
                 }
@@ -133,7 +135,7 @@ fun MediaPostUploadCard(
             if (draft.caption.isNotBlank()) {
                 Text(
                     text = draft.caption,
-                    color = UploadText,
+                    color = AppColors.content(UploadText),
                     fontSize = 14.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -143,7 +145,7 @@ fun MediaPostUploadCard(
             if (failure != null) {
                 Text(
                     text = failure.message,
-                    color = UploadError,
+                    color = AppColors.content(UploadError),
                     fontSize = 14.sp,
                     modifier = Modifier.semantics {
                         liveRegion = LiveRegionMode.Polite
@@ -174,20 +176,20 @@ private fun UploadThumbnail(draft: MediaPostDraft) {
         modifier = Modifier
             .size(64.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF3F4F6)),
+            .background(AppColors.surface(Color(0xFFF3F4F6))),
         contentAlignment = Alignment.Center
     ) {
         if (media?.kind == PostMediaKind.VIDEO) {
             Icon(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = "Selected video",
-                tint = UploadGreen,
+                tint = AppColors.content(UploadGreen),
                 modifier = Modifier.size(30.dp)
             )
         } else if (media != null) {
             Text(
                 text = "Photo",
-                color = UploadMuted,
+                color = AppColors.content(UploadMuted),
                 fontSize = 12.sp
             )
 
@@ -209,15 +211,15 @@ private fun UploadProgress(state: MediaPostUploadState) {
     if (fraction == null) {
         LinearProgressIndicator(
             modifier = Modifier.fillMaxWidth(),
-            color = UploadGreen,
-            trackColor = UploadTrack
+            color = AppColors.content(UploadGreen),
+            trackColor = AppColors.surface(UploadTrack)
         )
     } else {
         LinearProgressIndicator(
             progress = { fraction },
             modifier = Modifier.fillMaxWidth(),
-            color = UploadGreen,
-            trackColor = UploadTrack
+            color = AppColors.content(UploadGreen),
+            trackColor = AppColors.surface(UploadTrack)
         )
     }
 
@@ -243,7 +245,7 @@ private fun UploadProgress(state: MediaPostUploadState) {
 
     Text(
         text = message,
-        color = UploadMuted,
+        color = AppColors.content(UploadMuted),
         fontSize = 13.sp
     )
 }
@@ -296,7 +298,7 @@ private fun UploadFailureActions(
                 Button(
                     onClick = onSignIn,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = UploadGreen
+                        containerColor = AppColors.fill(UploadGreen)
                     )
                 ) {
                     Text("Sign in again")
@@ -307,7 +309,7 @@ private fun UploadFailureActions(
                 OutlinedButton(
                     onClick = onCheckPosts,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = UploadGreen
+                        contentColor = AppColors.content(UploadGreen)
                     )
                 ) {
                     Text(
@@ -329,7 +331,7 @@ private fun UploadFailureActions(
                         onClick = onRetry,
                         enabled = retryIn == 0,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = UploadGreen
+                            containerColor = AppColors.fill(UploadGreen)
                         )
                     ) {
                         Text(
@@ -345,7 +347,7 @@ private fun UploadFailureActions(
                 OutlinedButton(
                     onClick = onEdit,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = UploadGreen
+                        contentColor = AppColors.content(UploadGreen)
                     )
                 ) {
                     Text("Edit post")
@@ -356,7 +358,7 @@ private fun UploadFailureActions(
         TextButton(
             onClick = onDismiss,
             colors = ButtonDefaults.textButtonColors(
-                contentColor = UploadMuted
+                contentColor = AppColors.content(UploadMuted)
             )
         ) {
             Text("Dismiss")

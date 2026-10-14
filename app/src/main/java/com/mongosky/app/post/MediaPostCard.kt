@@ -1,5 +1,9 @@
 package com.mongosky.app.post
 
+import com.mongosky.app.darkmode.AppColors
+
+import com.mongosky.app.saveditems.WarmSavedPostStatus
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,14 +45,15 @@ fun MediaPostCard(post: MediaPost, now: Instant, reaction: PostReactionState, co
     header: (@Composable () -> Unit)? = null, footer: (@Composable () -> Unit)? = null,
     previewUrl: (FeedMedia) -> String = { it.url },
     singlePhoto: (@Composable (FeedMedia, () -> Unit) -> Unit)? = null) {
+    WarmSavedPostStatus(post.id)
     val photos = remember(post.media) { post.media.filter { it.type != FeedMediaType.VIDEO }.sortedBy { it.order } }
     val action = when (post.type) {
         MediaPostType.PROFILE_PHOTO_UPDATE -> "updated profile picture"
         MediaPostType.COVER_PHOTO_UPDATE -> "updated cover photo"
         else -> "shared a post"
     }
-    Column(modifier.fillMaxWidth().background(Color.White)) {
-        if (header != null) header() else PostHeader(post.author, post.createdAt, now, actions, action)
+    Column(modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
+        if (header != null) header() else PostHeader(post.author, post.createdAt, now, actions, action, postId = post.id)
         if (post.type != MediaPostType.PROFILE_PHOTO_UPDATE && post.type != MediaPostType.COVER_PHOTO_UPDATE) {
             PostCaption(post.caption)
         }
@@ -94,13 +99,13 @@ private fun MediaTile(photo: FeedMedia, index: Int, enabled: Boolean, onOpen: (I
     var fallback by remember(photo.url, preview) { mutableStateOf(false) }
     val url = if (fallback) photo.url else preview
     val request = remember(context, url) { ImageRequest.Builder(context.applicationContext).data(url).crossfade(false).build() }
-    Box(modifier.background(FeedColors.soft).clickable(enabled = enabled) { onOpen(index) }, contentAlignment = Alignment.Center) {
-        Icon(FeedIcons.image, null, tint = FeedColors.line, modifier = Modifier.size(36.dp))
+    Box(modifier.background(AppColors.surface(FeedColors.soft)).clickable(enabled = enabled) { onOpen(index) }, contentAlignment = Alignment.Center) {
+        Icon(FeedIcons.image, null, tint = AppColors.content(FeedColors.line), modifier = Modifier.size(36.dp))
         AsyncImage(model = request, contentDescription = "Post photo ${index + 1}", modifier = Modifier.fillMaxSize(),
             contentScale = if (fit) ContentScale.Fit else ContentScale.Crop,
             onError = { if (url != photo.url) fallback = true })
-        if (more > 0) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
-            Text("+$more", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Bold)
+        if (more > 0) Box(Modifier.fillMaxSize().background(AppColors.surface(Color.Black.copy(alpha = 0.5f))), contentAlignment = Alignment.Center) {
+            Text("+$more", color = AppColors.content(Color.White), fontSize = 34.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

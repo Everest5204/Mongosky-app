@@ -1,5 +1,7 @@
 package com.mongosky.app.friends
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -98,7 +100,7 @@ internal fun FriendsPersonRow(
             .clickable(role = Role.Button, onClickLabel = "Open ${user.fullName}'s profile", onClick = onProfile),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             FriendsAvatar(user)
-            Text(name, inlineContent = badge, modifier = Modifier.weight(1f), color = FriendsColors.text,
+            Text(name, inlineContent = badge, modifier = Modifier.weight(1f), color = AppColors.content(FriendsColors.text),
                 fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp,
                 softWrap = true,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
@@ -117,11 +119,11 @@ internal fun FriendsPersonRow(
                             }
                         }, shape = RoundedCornerShape(6.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (user.isFollowing) Color.White else FriendsColors.brand,
-                            contentColor = foreground,
-                            disabledContainerColor = if (user.isFollowing) Color.White else FriendsColors.brand.copy(alpha = .65f),
-                            disabledContentColor = foreground.copy(alpha = .7f)),
-                        border = if (user.isFollowing) BorderStroke(1.dp, FriendsColors.border) else null,
+                            containerColor = AppColors.fill(if (user.isFollowing) Color.White else FriendsColors.brand),
+                            contentColor = AppColors.content(foreground),
+                            disabledContainerColor = AppColors.fill(if (user.isFollowing) Color.White else FriendsColors.brand.copy(alpha = .65f)),
+                            disabledContentColor = AppColors.content(foreground.copy(alpha = .7f))),
+                        border = if (user.isFollowing) BorderStroke(1.dp, AppColors.outline(FriendsColors.border)) else null,
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 4.dp)
                     ) {
                         Text(user.actionLabel, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp, maxLines = 2,
@@ -140,8 +142,8 @@ private fun FriendsAvatar(user: FriendsUser) {
     val request = remember(user.imageUrl, context) {
         user.imageUrl?.let { ImageRequest.Builder(context).data(it).crossfade(false).build() }
     }
-    Box(Modifier.size(40.dp).clip(CircleShape).background(FriendsColors.avatar), contentAlignment = Alignment.Center) {
-        Icon(FriendsIcons.person, null, tint = Color.White, modifier = Modifier.size(22.dp))
+    Box(Modifier.size(40.dp).clip(CircleShape).background(AppColors.surface(FriendsColors.avatar)), contentAlignment = Alignment.Center) {
+        Icon(FriendsIcons.person, null, tint = AppColors.content(Color.White), modifier = Modifier.size(22.dp))
         if (request != null && !failed) AsyncImage(model = request, contentDescription = null,
             modifier = Modifier.size(40.dp), contentScale = ContentScale.Crop, onError = { failed = true })
     }
@@ -153,11 +155,11 @@ internal fun FriendsSkeleton(padding: Dp) {
         repeat(7) {
             Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.size(48.dp).clip(CircleShape).background(FriendsColors.skeleton))
+                Box(Modifier.size(48.dp).clip(CircleShape).background(AppColors.surface(FriendsColors.skeleton)))
                 Box(Modifier.weight(1f)) {
-                    Box(Modifier.fillMaxWidth(.72f).height(14.dp).clip(RoundedCornerShape(5.dp)).background(FriendsColors.skeleton))
+                    Box(Modifier.fillMaxWidth(.72f).height(14.dp).clip(RoundedCornerShape(5.dp)).background(AppColors.surface(FriendsColors.skeleton)))
                 }
-                Box(Modifier.width(104.dp).height(48.dp).clip(RoundedCornerShape(12.dp)).background(FriendsColors.skeleton))
+                Box(Modifier.width(104.dp).height(48.dp).clip(RoundedCornerShape(12.dp)).background(AppColors.surface(FriendsColors.skeleton)))
             }
         }
     }
@@ -168,12 +170,12 @@ internal fun FriendsStatePanel(title: String, message: String, icon: ImageVector
     actionLabel: String? = null, onAction: () -> Unit = {}) {
     Column(modifier.padding(horizontal = 28.dp, vertical = 32.dp), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)) {
-        Box(Modifier.size(64.dp).clip(CircleShape).background(FriendsColors.brand.copy(alpha = .07f)), contentAlignment = Alignment.Center) {
-            Icon(icon, null, Modifier.size(30.dp), tint = FriendsColors.brand)
+        Box(Modifier.size(64.dp).clip(CircleShape).background(AppColors.surface(FriendsColors.brand.copy(alpha = .07f))), contentAlignment = Alignment.Center) {
+            Icon(icon, null, Modifier.size(30.dp), tint = AppColors.content(FriendsColors.brand))
         }
-        Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = FriendsColors.text,
+        Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = AppColors.content(FriendsColors.text),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        Text(message, fontSize = 14.sp, color = FriendsColors.secondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        if (actionLabel != null) TextButton(onClick = onAction) { Text(actionLabel, color = FriendsColors.brand, fontWeight = FontWeight.SemiBold) }
+        Text(message, fontSize = 14.sp, color = AppColors.content(FriendsColors.secondary), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        if (actionLabel != null) TextButton(onClick = onAction) { Text(actionLabel, color = AppColors.content(FriendsColors.brand), fontWeight = FontWeight.SemiBold) }
     }
 }

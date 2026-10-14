@@ -1,5 +1,7 @@
 package com.mongosky.app.signup
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -26,7 +28,7 @@ internal fun SignupPageTransition(forward: Boolean = true, content: @Composable 
     val progress = animateFloatAsState(if (entered) 1f else 0f,
         animationSpec = tween(180, easing = FastOutSlowInEasing), label = "Signup page entrance")
     val distance = with(LocalDensity.current) { 20.dp.toPx() } * if (forward) 1f else -1f
-    Box(Modifier.fillMaxSize().background(Color.White)) {
+    Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White))) {
         Box(Modifier.fillMaxSize().graphicsLayer {
             alpha = progress.value
             translationX = distance * (1f - progress.value)

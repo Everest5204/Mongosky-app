@@ -1,5 +1,7 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -46,7 +48,7 @@ internal fun CommentRow(entry: CommentListEntry.Row, state: CommentsState, contr
         ProfileAvatar(comment.author.profileImageUrl,Modifier.size(avatar)
             .profileLink(comment.author.id,comment.author,beforeOpen=controls::closeComments))
         Column(Modifier.weight(1f)) {
-            Column(Modifier.fillMaxWidth().background(CommentColors.bubble,RoundedCornerShape(if(entry.depth==0) 17.dp else 15.dp))
+            Column(Modifier.fillMaxWidth().background(AppColors.surface(CommentColors.bubble),RoundedCornerShape(if(entry.depth==0) 17.dp else 15.dp))
                 .padding(horizontal=11.dp,vertical=9.dp)) {
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     CommentName(comment,comment.userId in state.verifiedAuthors,controls::closeComments,Modifier.weight(1f))
@@ -57,12 +59,12 @@ internal fun CommentRow(entry: CommentListEntry.Row, state: CommentsState, contr
                     CommentInput(state.inlineDraft,controls::setInlineDraft,"Edit your comment...","Save comment",controls::sendInline,
                         enabled && !controls.writing,sending=state.sendingInline,onCancel=controls::cancelEdit,autoFocus=true,compact=true)
                 } else SelectionContainer {
-                    Text(comment.text,color=CommentColors.body,fontSize=14.sp,lineHeight=20.sp)
+                    Text(comment.text,color=AppColors.content(CommentColors.body),fontSize=14.sp,lineHeight=20.sp)
                 }
             }
             FlowRow(Modifier.fillMaxWidth().padding(start=5.dp,top=5.dp),verticalArrangement=Arrangement.spacedBy(1.dp),
                 horizontalArrangement=Arrangement.spacedBy(4.dp)) {
-                Text(CommentPolicy.timeAgo(comment.createdAt,now),color=CommentColors.time,fontSize=12.sp,
+                Text(CommentPolicy.timeAgo(comment.createdAt,now),color=AppColors.content(CommentColors.time),fontSize=12.sp,
                     modifier=Modifier.padding(vertical=6.dp))
                 CommentMetaAction(if(comment.isLovedByMe) CommentIcons.loved else CommentIcons.heart,
                     if(comment.lovesCount>0) comment.lovesCount.toString() else "Love",
@@ -83,7 +85,7 @@ internal fun CommentRow(entry: CommentListEntry.Row, state: CommentsState, contr
             }
             if (comment.repliesCount>0 || expanded) {
                 Text(if(expanded) "Hide replies" else "View ${comment.repliesCount} ${if(comment.repliesCount==1L) "reply" else "replies"}",
-                    color=Color(0xFF475569),fontSize=12.sp,fontWeight=FontWeight.ExtraBold,
+                    color=AppColors.content(Color(0xFF475569)),fontSize=12.sp,fontWeight=FontWeight.ExtraBold,
                     modifier=Modifier.padding(top=7.dp).clickable(enabled=enabled,role=Role.Button,
                         onClickLabel=if(expanded) "Hide replies" else "View replies") { controls.toggleReplies(comment) }
                         .padding(horizontal=8.dp,vertical=7.dp))
@@ -98,7 +100,7 @@ private fun CommentMetaAction(icon: ImageVector,label: String,description: Strin
         .semantics { stateDescription=if(active) "Active" else "Inactive" }.padding(horizontal=6.dp,vertical=6.dp),
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(4.dp)) {
         val color=if(active) CommentColors.active else CommentColors.muted
-        Icon(icon,null,Modifier.size(15.dp),tint=color)
-        Text(label,color=color,fontSize=12.sp,fontWeight=FontWeight.Bold)
+        Icon(icon,null,Modifier.size(15.dp),tint=AppColors.content(color))
+        Text(label,color=AppColors.content(color),fontSize=12.sp,fontWeight=FontWeight.Bold)
     }
 }

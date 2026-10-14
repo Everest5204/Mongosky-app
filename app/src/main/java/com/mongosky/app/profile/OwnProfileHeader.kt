@@ -1,6 +1,8 @@
 @file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,7 +50,7 @@ internal fun OwnProfileHeader(
         val inset = if (small) 14.dp else 16.dp
         Column {
             Box(Modifier.fillMaxWidth().height(coverHeight).clip(RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp))
-                .background(androidx.compose.ui.graphics.Color(0xFFDDDDDD))) {
+                .background(AppColors.surface(androidx.compose.ui.graphics.Color(0xFFDDDDDD)))) {
                 profile?.coverImageUrl?.let { url ->
                     AsyncImage(url, "Your cover photo", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 }
@@ -56,8 +58,8 @@ internal fun OwnProfileHeader(
                 IconButton(onBack, enabled = backEnabled,
                     modifier = Modifier.align(Alignment.TopStart).padding(start = inset, top = 14.dp)
                         .size(48.dp).clip(CircleShape)
-                        .background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.38f))) {
-                    Icon(OwnProfileIcons.back, "Back", Modifier.size(25.dp), tint = androidx.compose.ui.graphics.Color.White)
+                        .background(AppColors.surface(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.38f)))) {
+                    Icon(OwnProfileIcons.back, "Back", Modifier.size(25.dp), tint = AppColors.content(androidx.compose.ui.graphics.Color.White))
                 }
                 CameraButton("Change cover photo", imageEnabled, { onImage(ProfileImageKind.COVER) },
                     Modifier.align(Alignment.BottomEnd).padding(end = 14.dp, bottom = 16.dp))
@@ -68,7 +70,7 @@ internal fun OwnProfileHeader(
                     horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     BasicText((profile?.displayName?.ifBlank { userName } ?: userName)
                         .replace(Regex("\\s+"), " ").trim(),
-                        style = LocalTextStyle.current.copy(color = OwnProfileColors.text,
+                        style = LocalTextStyle.current.copy(color = AppColors.content(OwnProfileColors.text),
                             fontSize = if (small) 29.sp else 34.sp, fontWeight = FontWeight.Black,
                             lineHeight = 1.2.em, letterSpacing = (-0.5).sp),
                         maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
@@ -85,31 +87,31 @@ internal fun OwnProfileHeader(
                     ProfileStat(profile?.postsCount?.coerceAtLeast(state.posts.size.toLong()), "posts", false) {}
                 }
                 profile?.bio?.takeIf { it.isNotBlank() }?.let {
-                    Text(it, color = OwnProfileColors.text, fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(top = 10.dp))
+                    Text(it, color = AppColors.content(OwnProfileColors.text), fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(top = 10.dp))
                 }
                 Spacer(Modifier.height(20.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Button(onStory, enabled = !state.sessionExpired, modifier = Modifier.weight(1.05f).heightIn(min = 48.dp),
                         shape = RoundedCornerShape(5.dp), contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = OwnProfileColors.brand, contentColor = androidx.compose.ui.graphics.Color.White)) {
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(OwnProfileColors.brand), contentColor = AppColors.content(androidx.compose.ui.graphics.Color.White))) {
                         Icon(OwnProfileIcons.plus, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
                         Text("Add Story", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                     Button(onEdit, enabled = enabled && !state.busy, modifier = Modifier.weight(1.08f).heightIn(min = 48.dp),
                         shape = RoundedCornerShape(5.dp), contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = OwnProfileColors.soft, contentColor = OwnProfileColors.text)) {
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(OwnProfileColors.soft), contentColor = AppColors.content(OwnProfileColors.text))) {
                         Icon(FeedIcons.user, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
                         Text("Edit Profile", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
-                    IconButton(onOptions, modifier = Modifier.size(48.dp).clip(RoundedCornerShape(5.dp)).background(OwnProfileColors.soft)) {
-                        Icon(FeedIcons.more, "Profile options", tint = OwnProfileColors.text)
+                    IconButton(onOptions, modifier = Modifier.size(48.dp).clip(RoundedCornerShape(5.dp)).background(AppColors.surface(OwnProfileColors.soft))) {
+                        Icon(FeedIcons.more, "Profile options", tint = AppColors.content(OwnProfileColors.text))
                     }
                 }
                 Spacer(Modifier.height(28.dp))
             }
         }
         Box(Modifier.padding(start = inset).offset(y = coverHeight - overlap).size(avatarSize)) {
-            Box(Modifier.fillMaxSize().clip(CircleShape).background(androidx.compose.ui.graphics.Color.White).border(5.dp, androidx.compose.ui.graphics.Color.White, CircleShape).padding(5.dp)) {
+            Box(Modifier.fillMaxSize().clip(CircleShape).background(AppColors.surface(androidx.compose.ui.graphics.Color.White)).border(5.dp, AppColors.outline(androidx.compose.ui.graphics.Color.White), CircleShape).padding(5.dp)) {
                 ProfileAvatar(avatar, Modifier.fillMaxSize())
                 if (state.uploading == ProfileImageKind.AVATAR) UploadOverlay()
             }
@@ -124,7 +126,7 @@ private fun ProfileStat(count: Long?, label: String, enabled: Boolean, onClick: 
     Text(buildAnnotatedString {
         withStyle(SpanStyle(fontWeight = FontWeight.Black)) { append(count?.toString() ?: "—") }
         append(" $label")
-    }, color = OwnProfileColors.text, fontSize = 14.sp,
+    }, color = AppColors.content(OwnProfileColors.text), fontSize = 14.sp,
         modifier = (if (enabled) base.clickable(role = Role.Button, onClick = onClick) else base)
             .padding(vertical = 14.dp, horizontal = 3.dp))
 }
@@ -132,14 +134,14 @@ private fun ProfileStat(count: Long?, label: String, enabled: Boolean, onClick: 
 @Composable
 private fun CameraButton(description: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
     IconButton(onClick, enabled = enabled, modifier = modifier.size(48.dp).clip(CircleShape)
-        .background(androidx.compose.ui.graphics.Color.White.copy(alpha = 0.95f)).border(1.dp, OwnProfileColors.line, CircleShape)) {
-        Icon(OwnProfileIcons.camera, description, Modifier.size(21.dp), tint = if (enabled) OwnProfileColors.text else OwnProfileColors.muted)
+        .background(AppColors.surface(androidx.compose.ui.graphics.Color.White.copy(alpha = 0.95f))).border(1.dp, AppColors.outline(OwnProfileColors.line), CircleShape)) {
+        Icon(OwnProfileIcons.camera, description, Modifier.size(21.dp), tint = AppColors.content(if (enabled) OwnProfileColors.text else OwnProfileColors.muted))
     }
 }
 
 @Composable
 private fun UploadOverlay() {
-    Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.35f)), contentAlignment = Alignment.Center) {
-        OwnProfileSpinner(color = androidx.compose.ui.graphics.Color.White)
+    Box(Modifier.fillMaxSize().background(AppColors.surface(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.35f))), contentAlignment = Alignment.Center) {
+        OwnProfileSpinner(color = AppColors.content(androidx.compose.ui.graphics.Color.White))
     }
 }

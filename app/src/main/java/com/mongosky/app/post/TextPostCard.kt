@@ -1,5 +1,9 @@
 package com.mongosky.app.post
 
+import com.mongosky.app.darkmode.AppColors
+
+import com.mongosky.app.saveditems.WarmSavedPostStatus
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -36,14 +40,16 @@ import kotlin.math.sin
 fun TextPostCard(post: TextPost, now: Instant, reaction: PostReactionState, commentsCount: Long,
     enabled: Boolean, actions: PostCardActions, modifier: Modifier = Modifier,
     header: (@Composable () -> Unit)? = null, footer: (@Composable () -> Unit)? = null) {
-    Column(modifier.fillMaxWidth().background(Color.White)) {
-        if (header != null) header() else PostHeader(post.author, post.createdAt, now, actions)
+    WarmSavedPostStatus(post.id)
+    Column(modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
+        if (header != null) header() else PostHeader(post.author, post.createdAt, now, actions, postId = post.id)
         val centered = post.textStyle == FeedTextStyle.BOLD_CENTER || post.textStyle == FeedTextStyle.NORMAL_CENTER
         val bold = post.textStyle == FeedTextStyle.BOLD_CENTER || post.textStyle == FeedTextStyle.BOLD_LEFT
         val length = post.displayText.codePointCount(0, post.displayText.length)
         val fontSize = if (centered) when { length > 260 -> 19; length > 150 -> 24; else -> 30 }
             else when { length > 260 -> 17; length > 150 -> 19; else -> 22 }
-        val textColor = remember(post.textColor) { cssColor(post.textColor, FeedColors.text) }
+        val plainPost = post.textBackground.kind == FeedTextBackgroundKind.PLAIN
+        val textColor = AppColors.plainPostText(cssColor(post.textColor, FeedColors.text),plainPost)
         Box(Modifier.fillMaxWidth().heightIn(min = 300.dp), contentAlignment =
             if (centered) Alignment.Center else Alignment.CenterStart) {
             TextPostBackground(post.textBackground.kind, post.textBackground.value, Modifier.matchParentSize())
@@ -59,7 +65,7 @@ fun TextPostCard(post: TextPost, now: Instant, reaction: PostReactionState, comm
 @Composable
 internal fun TextPostBackground(kind: FeedTextBackgroundKind, value: String, modifier: Modifier) {
     val layers = remember(kind, value) { if (kind == FeedTextBackgroundKind.GRADIENT) parseGradient(value) else emptyList() }
-    Box(modifier.background(if (kind == FeedTextBackgroundKind.SOLID) cssColor(value, Color.White) else Color.White)) {
+    Box(modifier.background(if (kind == FeedTextBackgroundKind.SOLID) cssColor(value, Color.White) else if (kind == FeedTextBackgroundKind.PLAIN) AppColors.surface(Color.White) else Color.White)) {
         if (kind == FeedTextBackgroundKind.IMAGE && value.startsWith("https://")) {
             AsyncImage(model = value, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }

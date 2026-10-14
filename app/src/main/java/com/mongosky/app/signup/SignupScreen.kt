@@ -1,5 +1,7 @@
 package com.mongosky.app.signup
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.app.DatePickerDialog
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -75,7 +77,7 @@ fun SignupScreen(
                     text = "Welcome, $name",
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    color = Color.Black,
+                    color = AppColors.content(Color.Black),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Spacer(Modifier.height(24.dp))
@@ -161,12 +163,12 @@ private fun SignupForm(
                 enabled = false,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
                 shape = SignupPill,
-                border = BorderStroke(1.dp, SignupBorder),
+                border = BorderStroke(1.dp, AppColors.outline(SignupBorder)),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.White,
-                    contentColor = SignupInk,
-                    disabledContainerColor = Color.White,
-                    disabledContentColor = SignupMuted
+                    containerColor = AppColors.surface(Color.White),
+                    contentColor = AppColors.content(SignupInk),
+                    disabledContainerColor = AppColors.surface(Color.White),
+                    disabledContentColor = AppColors.content(SignupMuted)
                 ),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
             ) {
@@ -226,7 +228,7 @@ private fun SignupForm(
                         Icon(
                             imageVector = if (showPassword) SignupEyeOff else SignupEye,
                             contentDescription = if (showPassword) "Hide password" else "Show password",
-                            tint = SignupMuted,
+                            tint = AppColors.content(SignupMuted),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -235,7 +237,7 @@ private fun SignupForm(
             Spacer(Modifier.height(18.dp))
 
             val policyStyles = TextLinkStyles(
-                style = SpanStyle(color = SignupBlue, fontWeight = FontWeight.SemiBold)
+                style = SpanStyle(color = AppColors.content(SignupBlue), fontWeight = FontWeight.SemiBold)
             )
             Row(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(
@@ -254,17 +256,17 @@ private fun SignupForm(
                     Surface(
                         modifier = Modifier.size(24.dp),
                         shape = RoundedCornerShape(6.dp),
-                        color = if (accepted) SignupRed else Color.White,
+                        color = AppColors.surface(if (accepted) SignupRed else Color.White),
                         border = BorderStroke(
                             1.5.dp,
-                            if (accepted) SignupRed else SignupMuted
+                            AppColors.outline(if (accepted) SignupRed else SignupMuted)
                         )
                     ) {
                         if (accepted) {
                             Icon(
                                 imageVector = SignupCheck,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = AppColors.content(Color.White),
                                 modifier = Modifier.padding(3.dp)
                             )
                         }
@@ -287,7 +289,7 @@ private fun SignupForm(
                         append(".")
                     },
                     modifier = Modifier.weight(1f),
-                    color = SignupInk,
+                    color = AppColors.content(SignupInk),
                     fontSize = 14.sp,
                     lineHeight = 21.sp
                 )
@@ -323,7 +325,7 @@ private fun SignupForm(
                     focusManager.clearFocus()
                     val initial = birthday ?: LocalDate.now(ZoneOffset.UTC).minusYears(18)
                     val dialog = DatePickerDialog(
-                        context,
+                        context, com.mongosky.app.darkmode.AppAppearance.dialogTheme,
                         { _, year, month, day ->
                             birthdayEpoch = LocalDate.of(year, month + 1, day).toEpochDay()
                             clearError()
@@ -353,14 +355,14 @@ private fun SignupForm(
                 DropdownMenu(
                     expanded = genderMenu,
                     onDismissRequest = { genderMenu = false },
-                    containerColor = Color.White,
+                    containerColor = AppColors.surface(Color.White),
                     tonalElevation = 0.dp,
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     listOf("male" to "Male", "female" to "Female", "other" to "Other")
                         .forEach { (value, label) ->
                             DropdownMenuItem(
-                                text = { Text(label, color = Color.Black) },
+                                text = { Text(label, color = AppColors.content(Color.Black)) },
                                 onClick = { gender = value; genderMenu = false; clearError() }
                             )
                         }
@@ -373,7 +375,7 @@ private fun SignupForm(
         if (message != null) {
             Text(
                 text = message,
-                color = Color(0xFFD60000),
+                color = AppColors.content(Color(0xFFD60000)),
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(12.dp))
@@ -414,7 +416,7 @@ private fun SignupForm(
                     LinkAnnotation.Clickable(
                         tag = "sign_in",
                         styles = TextLinkStyles(
-                            style = SpanStyle(color = SignupBlue, fontWeight = FontWeight.SemiBold)
+                            style = SpanStyle(color = AppColors.content(SignupBlue), fontWeight = FontWeight.SemiBold)
                         ),
                         linkInteractionListener = { if (!state.loading) onSignIn() }
                     )
@@ -423,7 +425,7 @@ private fun SignupForm(
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                 .padding(vertical = 12.dp),
             textAlign = TextAlign.Center,
-            color = SignupMuted,
+            color = AppColors.content(SignupMuted),
             fontSize = 14.sp,
             lineHeight = 21.sp,
             fontWeight = FontWeight.Normal
@@ -438,7 +440,7 @@ private fun SignupWhitePage(
     backEnabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
+    Surface(modifier = Modifier.fillMaxSize(), color = AppColors.surface(Color.White)) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
             if (onBack != null) SignupBackBar(onBack, backEnabled)
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
@@ -456,7 +458,7 @@ private fun SignupWhitePage(
                             text = "Mongosky",
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
-                            color = Color.Black,
+                            color = AppColors.content(Color.Black),
                             fontSize = 32.sp,
                             lineHeight = 40.sp,
                             fontWeight = FontWeight.Bold,
@@ -467,7 +469,7 @@ private fun SignupWhitePage(
                             text = subtitle,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
-                            color = SignupMuted,
+                            color = AppColors.content(SignupMuted),
                             fontSize = 18.sp,
                             lineHeight = 26.sp,
                             fontWeight = FontWeight.Normal
@@ -486,7 +488,7 @@ internal fun SignupBackBar(onBack: () -> Unit, enabled: Boolean = true) {
     Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack, enabled = enabled, modifier = Modifier.size(48.dp)) {
-            Icon(SignupBack, "Back", tint = SignupInk, modifier = Modifier.size(26.dp))
+            Icon(SignupBack, "Back", tint = AppColors.content(SignupInk), modifier = Modifier.size(26.dp))
         }
     }
 }
@@ -495,7 +497,7 @@ internal fun SignupBackBar(onBack: () -> Unit, enabled: Boolean = true) {
 private fun SignupAccountNotice(name: String) {
     Text("Signed in as $name. Sign in to switch accounts.",
         modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-        color = SignupMuted, fontSize = 13.sp, lineHeight = 19.sp)
+        color = AppColors.content(SignupMuted), fontSize = 13.sp, lineHeight = 19.sp)
     Spacer(Modifier.height(12.dp))
 }
 
@@ -517,8 +519,8 @@ private fun SignupInput(
         modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
         enabled = enabled,
         singleLine = true,
-        placeholder = { Text(placeholder, color = SignupMuted, fontSize = 16.sp) },
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = SignupInk),
+        placeholder = { Text(placeholder, color = AppColors.content(SignupMuted), fontSize = 16.sp) },
+        textStyle = MaterialTheme.typography.bodyLarge.copy(color = AppColors.content(SignupInk)),
         shape = SignupPill,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
@@ -528,16 +530,16 @@ private fun SignupInput(
         },
         trailingIcon = trailingIcon,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            disabledContainerColor = Color.White,
-            focusedBorderColor = SignupBlue,
-            unfocusedBorderColor = SignupBorder,
-            disabledBorderColor = SignupBorder,
+            focusedContainerColor = AppColors.surface(Color.White),
+            unfocusedContainerColor = AppColors.surface(Color.White),
+            disabledContainerColor = AppColors.surface(Color.White),
+            focusedBorderColor = AppColors.outline(SignupBlue),
+            unfocusedBorderColor = AppColors.outline(SignupBorder),
+            disabledBorderColor = AppColors.outline(SignupBorder),
             focusedLeadingIconColor = SignupMuted,
             unfocusedLeadingIconColor = SignupMuted,
             disabledLeadingIconColor = SignupMuted,
-            cursorColor = SignupBlue
+            cursorColor = AppColors.content(SignupBlue)
         )
     )
 }
@@ -555,19 +557,19 @@ private fun SignupChoiceButton(
         enabled = enabled,
         modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
         shape = SignupPill,
-        border = BorderStroke(1.dp, SignupBorder),
+        border = BorderStroke(1.dp, AppColors.outline(SignupBorder)),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.White,
-            contentColor = SignupInk,
-            disabledContainerColor = Color.White,
-            disabledContentColor = SignupMuted
+            containerColor = AppColors.surface(Color.White),
+            contentColor = AppColors.content(SignupInk),
+            disabledContainerColor = AppColors.surface(Color.White),
+            disabledContentColor = AppColors.content(SignupMuted)
         ),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Icon(
             imageVector = leadingIcon,
             contentDescription = null,
-            tint = SignupMuted,
+            tint = AppColors.content(SignupMuted),
             modifier = Modifier.size(22.dp)
         )
         Spacer(Modifier.width(12.dp))
@@ -577,12 +579,12 @@ private fun SignupChoiceButton(
             textAlign = TextAlign.Start,
             fontSize = 16.sp,
             lineHeight = 24.sp,
-            color = if (hasValue) SignupInk else SignupMuted
+            color = AppColors.content(if (hasValue) SignupInk else SignupMuted)
         )
         Icon(
             imageVector = SignupChevron,
             contentDescription = null,
-            tint = SignupMuted,
+            tint = AppColors.content(SignupMuted),
             modifier = Modifier.size(20.dp)
         )
     }
@@ -601,15 +603,15 @@ private fun SignupActionButton(
         modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
         shape = SignupPill,
         colors = ButtonDefaults.buttonColors(
-            containerColor = SignupRed,
-            contentColor = Color.White,
-            disabledContainerColor = SignupRed,
-            disabledContentColor = Color.White
+            containerColor = AppColors.fill(SignupRed),
+            contentColor = AppColors.content(Color.White),
+            disabledContainerColor = AppColors.fill(SignupRed),
+            disabledContentColor = AppColors.content(Color.White)
         ),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
     ) {
         if (loading) {
-            CircularProgressIndicator(Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(20.dp), color = AppColors.content(Color.White), strokeWidth = 2.dp)
             Spacer(Modifier.width(10.dp))
         }
         Text(

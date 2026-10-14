@@ -1,5 +1,7 @@
 package com.mongosky.app.drawer
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,17 +56,17 @@ internal fun DrawerHeader(state: DrawerState, userName: String, profileImageUrl:
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             ProfileAvatar(if (profile == null) profileImageUrl else profile.imageUrl, Modifier.size(54.dp), initial)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(title, inlineContent = inline, modifier = Modifier.fillMaxWidth(), color = DrawerColors.text,
+                Text(title, inlineContent = inline, modifier = Modifier.fillMaxWidth(), color = AppColors.content(DrawerColors.text),
                     fontSize = 20.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold,
                     style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
                 val counts = if (profile == null) "— Following • — Followers"
                     else "${profile.followingCount} Following • ${profile.followersCount} Followers"
-                Text(counts, color = DrawerColors.muted, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
+                Text(counts, color = AppColors.content(DrawerColors.muted), fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
                     style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
             }
         }
         IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
-            Icon(DrawerIcons.close, "Close menu", tint = DrawerColors.text, modifier = Modifier.size(30.dp))
+            Icon(DrawerIcons.close, "Close menu", tint = AppColors.content(DrawerColors.text), modifier = Modifier.size(30.dp))
         }
     }
 }

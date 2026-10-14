@@ -2,6 +2,8 @@
 
 package com.mongosky.app.search
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -66,10 +68,10 @@ fun SearchScreen(
         }
     }
 
-    BoxWithConstraints(modifier.fillMaxSize().background(Color.White).imePadding(), contentAlignment = Alignment.TopCenter) {
+    BoxWithConstraints(modifier.fillMaxSize().background(AppColors.surface(Color.White)).imePadding(), contentAlignment = Alignment.TopCenter) {
         val horizontalPadding = if (maxWidth >= 600.dp) 28.dp else 20.dp
         Column(Modifier.widthIn(max = 900.dp).fillMaxSize()) {
-            Text("Search", color = SearchColors.text, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold,
+            Text("Search", color = AppColors.content(SearchColors.text), fontSize = 30.sp, fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-0.8).sp,
                 modifier = Modifier.padding(start = horizontalPadding, end = horizontalPadding, top = 22.dp, bottom = 16.dp))
             SearchInput(
@@ -112,9 +114,9 @@ fun SearchScreen(
                             item(key = "summary", contentType = "heading") {
                                 Row(Modifier.fillMaxWidth().padding(horizontal = horizontalPadding, vertical = 18.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text("People", color = SearchColors.text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("People", color = AppColors.content(SearchColors.text), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                     Text("${state.users.size} ${if (state.users.size == 1) "result" else "results"}",
-                                        color = SearchColors.secondary, fontSize = 13.sp, fontWeight = FontWeight.Medium,
+                                        color = AppColors.content(SearchColors.secondary), fontSize = 13.sp, fontWeight = FontWeight.Medium,
                                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                                 }
                             }
@@ -122,7 +124,7 @@ fun SearchScreen(
                                 SearchPersonRow(user, horizontalPadding) { keyboard?.hide(); onOpenProfile(user) }
                             }
                             if (state.users.size == SearchPolicy.RESULT_LIMIT) item(key = "limit", contentType = "notice") {
-                                Text("Refine the name for more specific results.", color = SearchColors.muted, fontSize = 12.sp,
+                                Text("Refine the name for more specific results.", color = AppColors.content(SearchColors.muted), fontSize = 12.sp,
                                     modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 16.dp))
                             }
                         }

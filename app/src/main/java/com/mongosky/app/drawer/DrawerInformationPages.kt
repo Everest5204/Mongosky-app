@@ -1,5 +1,7 @@
 package com.mongosky.app.drawer
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -14,8 +16,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.mongosky.app.communityguidelines.CommunityGuidelinesScreen
 import com.mongosky.app.mobileapp.MobileAppScreen
-import com.mongosky.app.myactivity.MyActivityScreen
-import com.mongosky.app.saveditems.SavedItemsScreen
 
 internal object DrawerInformationNavigation {
     val routes = setOf("MOBILE_APP", "GUIDELINES", "SAVED_ITEMS", "MY_ACTIVITY")
@@ -39,13 +39,11 @@ internal fun DrawerInformationPage(route: String, onBack: () -> Unit) {
         LaunchedEffect(Unit) { entered = true }
         val progress = animateFloatAsState(if (entered) 1f else 0f, tween(140, easing = FastOutSlowInEasing), label = "Drawer information page entrance")
         val distance = with(LocalDensity.current) { 16.dp.toPx() }
-        Box(Modifier.fillMaxSize().background(Color(0xFFF4F7F6))) {
+        Box(Modifier.fillMaxSize().background(AppColors.surface(Color(0xFFF4F7F6)))) {
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = progress.value; translationX = distance * (1f - progress.value) }) {
                 when (route) {
                     "MOBILE_APP" -> MobileAppScreen(onBack)
                     "GUIDELINES" -> CommunityGuidelinesScreen(onBack)
-                    "SAVED_ITEMS" -> SavedItemsScreen(onBack)
-                    "MY_ACTIVITY" -> MyActivityScreen(onBack)
                 }
             }
         }

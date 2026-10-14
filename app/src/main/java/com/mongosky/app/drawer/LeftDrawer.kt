@@ -1,5 +1,7 @@
 package com.mongosky.app.drawer
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,17 +41,17 @@ internal fun LeftDrawer(viewModel: DrawerViewModel, userName: String, profileIma
     val preferred = when { screenWidth > 768 -> 380f; screenWidth > 480 -> 340f; else -> 320f }
     val width = preferred.coerceAtMost(screenWidth * 0.92f).dp
     ModalDrawerSheet(modifier = Modifier.width(width).fillMaxHeight(), drawerShape = RoundedCornerShape(0.dp),
-        drawerContainerColor = Color.White, drawerTonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0)) {
+        drawerContainerColor = AppColors.surface(Color.White), drawerTonalElevation = 0.dp, windowInsets = WindowInsets(0, 0, 0, 0)) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             DrawerHeader(state, userName, profileImageUrl, enabled && !state.sessionExpired,
                 onProfile = { onNavigate(DrawerDestination.PROFILE) }, onClose = onClose)
             state.error?.let { message ->
                 Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp)) {
-                    Text(message, color = DrawerColors.muted, fontSize = 13.sp)
+                    Text(message, color = AppColors.content(DrawerColors.muted), fontSize = 13.sp)
                     if (!state.sessionExpired) TextButton(onClick = { viewModel.refresh(force = true) }, enabled = enabled) { Text("Retry") }
                 }
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(DrawerColors.border))
+            Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(DrawerColors.border)))
             Spacer(Modifier.height(10.dp))
             Column(Modifier.selectableGroup()) {
                 DrawerDestination.entries.forEach { item ->

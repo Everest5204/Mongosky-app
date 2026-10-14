@@ -1,5 +1,7 @@
 package com.mongosky.app.reactions
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -59,7 +61,7 @@ internal fun ReactionPicker(picker: ReactionPickerState, active: PostReaction?, 
             }
             .semantics { paneTitle = "Choose reaction" }) {
             Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(64.dp)
-                .shadow(8.dp, RoundedCornerShape(32.dp)).background(Color.White, RoundedCornerShape(32.dp))
+                .shadow(8.dp, RoundedCornerShape(32.dp)).background(AppColors.surface(Color.White), RoundedCornerShape(32.dp))
                 .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 PostReaction.entries.forEach { reaction ->
                     val highlighted = snapshot.hovered == reaction
@@ -83,7 +85,7 @@ internal fun ReactionPicker(picker: ReactionPickerState, active: PostReaction?, 
                                 picker.choose(reaction)?.let { select(it) }; true
                             }
                         }.focusable(), contentAlignment = Alignment.Center) {
-                        if (active == reaction) Box(Modifier.size(38.dp).background(FeedColors.line, CircleShape))
+                        if (active == reaction) Box(Modifier.size(38.dp).background(AppColors.surface(FeedColors.line), CircleShape))
                         // Emoji is a graphic: maintain its dp size while the readable tooltip respects font scaling.
                         Text(reaction.emoji, fontSize = (32f / density.fontScale).sp,
                             modifier = Modifier.graphicsLayer {
@@ -103,9 +105,9 @@ internal fun ReactionPicker(picker: ReactionPickerState, active: PostReaction?, 
 @Composable
 private fun ReactionTooltip(label: String, center: Float) {
     Layout(content = {
-        Text(label, color = Color.White, fontSize = 12.sp, lineHeight = 16.sp,
+        Text(label, color = AppColors.content(Color.White), fontSize = 12.sp, lineHeight = 16.sp,
             fontWeight = FontWeight.SemiBold, maxLines = 1,
-            modifier = Modifier.background(Color(0xE6222222), RoundedCornerShape(14.dp))
+            modifier = Modifier.background(AppColors.surface(Color(0xE6222222)), RoundedCornerShape(14.dp))
                 .padding(horizontal = 9.dp, vertical = 5.dp).clearAndSetSemantics {})
     }, modifier = Modifier.fillMaxWidth().height(48.dp)) { measurables, constraints ->
         val tooltip = measurables.single().measure(constraints.copy(minWidth = 0, minHeight = 0))

@@ -1,5 +1,7 @@
 package com.mongosky.app.deleteaccount
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -52,14 +54,14 @@ internal fun DeleteAccountDialog(
         LaunchedEffect(singleAction) { actionFocus.requestFocus() }
         BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().padding(16.dp), contentAlignment = Alignment.Center) {
             Surface(Modifier.widthIn(max = 384.dp).fillMaxWidth().heightIn(max = maxHeight).semantics { paneTitle = title },
-                shape = RoundedCornerShape(24.dp), color = DeletionColors.white, tonalElevation = 0.dp, shadowElevation = 24.dp) {
+                shape = RoundedCornerShape(24.dp), color = AppColors.surface(DeletionColors.white), tonalElevation = 0.dp, shadowElevation = 24.dp) {
                 Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     val iconColor = if (deleted) DeletionColors.emerald600 else if (busy) DeletionColors.slate500 else DeletionColors.red600
                     Box(Modifier.size(64.dp).background(
-                        if (deleted) DeletionColors.emerald50 else if (busy) DeletionColors.slate50 else DeletionColors.red50,
+                        AppColors.surface(if (deleted) DeletionColors.emerald50 else if (busy) DeletionColors.slate50 else DeletionColors.red50),
                         CircleShape), contentAlignment = Alignment.Center) {
-                        if (busy) CircularProgressIndicator(Modifier.size(32.dp), color = iconColor, strokeWidth = 1.8.dp)
-                        else Icon(DeleteAccountIcons.get(if (deleted) "check" else "trash"), null, tint = iconColor,
+                        if (busy) CircularProgressIndicator(Modifier.size(32.dp), color = AppColors.content(iconColor), strokeWidth = 1.8.dp)
+                        else Icon(DeleteAccountIcons.get(if (deleted) "check" else "trash"), null, tint = AppColors.content(iconColor),
                             modifier = Modifier.size(if (deleted) 34.dp else 30.dp))
                     }
                     Spacer(Modifier.height(16.dp))
@@ -67,7 +69,7 @@ internal fun DeleteAccountDialog(
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(title, textAlign = TextAlign.Center, fontFamily = FontFamily.SansSerif, fontSize = 20.sp,
                             lineHeight = 28.sp, letterSpacing = (-0.5).sp, fontWeight = FontWeight.SemiBold,
-                            color = DeletionColors.slate900, modifier = Modifier.semantics { heading() })
+                            color = AppColors.content(DeletionColors.slate900), modifier = Modifier.semantics { heading() })
                         Spacer(Modifier.height(12.dp))
                         when {
                             state.sessionChanged -> DialogParagraph("The new session has not been changed.", false)
@@ -96,10 +98,10 @@ internal fun DeleteAccountDialog(
                         Button(onClick = { if (state.sessionChanged) onDiscard() else onFinish() }, enabled = !hostBusy,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).focusRequester(actionFocus),
                             shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = if (deleted) DeletionColors.emerald600 else DeletionColors.slate700,
-                                contentColor = DeletionColors.white)) {
+                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(if (deleted) DeletionColors.emerald600 else DeletionColors.slate700),
+                                contentColor = AppColors.content(DeletionColors.white))) {
                             if (hostBusy) {
-                                CircularProgressIndicator(Modifier.size(16.dp), color = DeletionColors.white, strokeWidth = 2.dp)
+                                CircularProgressIndicator(Modifier.size(16.dp), color = AppColors.content(DeletionColors.white), strokeWidth = 2.dp)
                                 Spacer(Modifier.width(8.dp))
                             }
                             Text(if (state.sessionChanged) "Close" else if (state.sessionExpired) "Sign in again" else "Continue",
@@ -109,17 +111,17 @@ internal fun DeleteAccountDialog(
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(onClick = onDiscard, enabled = !hostBusy, modifier = Modifier.weight(1f).heightIn(min = 48.dp).focusRequester(actionFocus),
                                 shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = DeletionColors.slate100, contentColor = DeletionColors.slate700)) {
+                                colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(DeletionColors.slate100), contentColor = AppColors.content(DeletionColors.slate700))) {
                                 Text(if (busy) "Close" else "Discard", fontFamily = FontFamily.SansSerif, fontSize = 14.sp,
                                     lineHeight = 20.sp, fontWeight = FontWeight.SemiBold)
                             }
                             Button(onClick = onDelete, enabled = !state.busy && !hostBusy,
                                 modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(12.dp),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = DeletionColors.red600, contentColor = DeletionColors.white,
-                                    disabledContainerColor = DeletionColors.red600.copy(alpha = 0.6f), disabledContentColor = DeletionColors.white)) {
+                                colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(DeletionColors.red600), contentColor = AppColors.content(DeletionColors.white),
+                                    disabledContainerColor = AppColors.fill(DeletionColors.red600.copy(alpha = 0.6f)), disabledContentColor = AppColors.content(DeletionColors.white))) {
                                 if (busy) {
-                                    CircularProgressIndicator(Modifier.size(16.dp), color = DeletionColors.white, strokeWidth = 2.dp)
+                                    CircularProgressIndicator(Modifier.size(16.dp), color = AppColors.content(DeletionColors.white), strokeWidth = 2.dp)
                                     Spacer(Modifier.width(8.dp))
                                 }
                                 Text(if (state.phase == DeletionPhase.PROCESSING) "Deleting…"
@@ -138,6 +140,6 @@ internal fun DeleteAccountDialog(
 private fun DialogParagraph(text: String, prominent: Boolean) {
     Text(text, textAlign = TextAlign.Center, fontFamily = FontFamily.SansSerif,
         fontSize = if (prominent) 15.sp else 14.sp, lineHeight = 24.sp,
-        color = if (prominent) DeletionColors.slate700 else DeletionColors.slate600)
+        color = AppColors.content(if (prominent) DeletionColors.slate700 else DeletionColors.slate600))
 }
 

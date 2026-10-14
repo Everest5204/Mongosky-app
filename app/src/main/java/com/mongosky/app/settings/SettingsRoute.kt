@@ -1,5 +1,7 @@
 package com.mongosky.app.settings
 
+import com.mongosky.app.darkmode.AppColors
+
 import com.mongosky.app.personaldetails.PersonalDetailsSettingsHost
 
 import com.mongosky.app.deactivateaccount.DeactivateAccountSettingsHost
@@ -26,6 +28,7 @@ internal fun SettingsRoute(
     onDeleteAccount: (() -> Unit)? = null,
     onInformationSelected: (SettingsMenuId) -> Unit
 ) {
+    com.mongosky.app.darkmode.DarkModeSettingsHost { openDarkMode ->
     // Mongosky Personal Details integration v1
     PersonalDetailsSettingsHost { openPersonalDetails ->
         // Mongosky Deactivate Account integration v1
@@ -36,11 +39,12 @@ internal fun SettingsRoute(
                 LaunchedEffect(Unit) { entered = true }
                 val progress = animateFloatAsState(if (entered) 1f else 0f, tween(140, easing = FastOutSlowInEasing), label = "Settings entrance")
                 val distance = with(LocalDensity.current) { 16.dp.toPx() }
-                Box(Modifier.fillMaxSize().background(Color.White)) {
+                Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White))) {
                     Box(Modifier.fillMaxSize().graphicsLayer { alpha = progress.value; translationX = distance * (1f - progress.value) }) {
                         SettingsScreen(onBack = onBack,
                             enabledMenus = buildSet {
                                 add(SettingsMenuId.PERSONAL_DETAILS)
+                                add(SettingsMenuId.DARK_MODE)
                             add(SettingsMenuId.DEACTIVATE_ACCOUNT)
                                 add(SettingsMenuId.HELP_AND_SUPPORT)
                                 addAll(listOf(SettingsMenuId.ABOUT, SettingsMenuId.PRIVACY_POLICY, SettingsMenuId.GET_VERIFIED))
@@ -49,6 +53,7 @@ internal fun SettingsRoute(
                             },
                             onMenuSelected = { item ->
                                 when (item) {
+                                    SettingsMenuId.DARK_MODE -> openDarkMode()
                                     SettingsMenuId.PERSONAL_DETAILS -> openPersonalDetails()
                                 SettingsMenuId.DEACTIVATE_ACCOUNT -> openDeactivateAccount()
                                     SettingsMenuId.HELP_AND_SUPPORT -> openHelpAndSupport()
@@ -62,5 +67,6 @@ internal fun SettingsRoute(
                 }
             }
         }
+    }
     }
 }

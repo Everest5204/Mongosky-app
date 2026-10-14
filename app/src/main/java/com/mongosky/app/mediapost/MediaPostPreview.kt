@@ -1,5 +1,7 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.annotation.OptIn
@@ -123,7 +125,7 @@ fun MediaPostPreview(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(height)
-                    .background(PreviewSoft)
+                    .background(AppColors.surface(PreviewSoft))
                     .clipToBounds()
             ) {
                 when (active.kind) {
@@ -148,7 +150,7 @@ fun MediaPostPreview(
                 ) {
                     Text(
                         text = "${index + 1}/${media.size}",
-                        color = Color.White,
+                        color = AppColors.content(Color.White),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.ExtraBold,
                         modifier = Modifier
@@ -156,7 +158,7 @@ fun MediaPostPreview(
                             .padding(10.dp)
                             .clip(RoundedCornerShape(50))
                             .background(
-                                Color.Black.copy(alpha = 0.6f)
+                                AppColors.surface(Color.Black.copy(alpha = 0.6f))
                             )
                             .padding(
                                 horizontal = 9.dp,
@@ -178,9 +180,9 @@ fun MediaPostPreview(
                             .size(34.dp)
                             .clip(CircleShape)
                             .background(
-                                Color.Black.copy(
+                                AppColors.surface(Color.Black.copy(
                                     alpha = if (enabled) 0.6f else 0.25f
-                                )
+                                ))
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -193,9 +195,9 @@ fun MediaPostPreview(
                             } else {
                                 "Remove photo ${index + 1}"
                             },
-                            tint = Color.White.copy(
+                            tint = AppColors.content(Color.White.copy(
                                 alpha = if (enabled) 1f else 0.5f
-                            ),
+                            )),
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -273,7 +275,7 @@ private fun PhotoPreview(
         if (failed) {
             PreviewMessage(
                 message = "Can't preview this photo. Please select it again.",
-                color = PreviewMuted
+                color = AppColors.content(PreviewMuted)
             )
         }
     }
@@ -302,7 +304,7 @@ private fun PhotoThumbnails(
         Modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(Color(0xFFE5E7EB))
+            .background(AppColors.surface(Color(0xFFE5E7EB)))
     )
 
     LazyRow(
@@ -328,15 +330,15 @@ private fun PhotoThumbnails(
                     .size(62.dp)
                     .border(
                         width = 2.dp,
-                        color = if (index == activeIndex) {
+                        color = AppColors.outline(if (index == activeIndex) {
                             PreviewGreen
                         } else {
                             Color.Transparent
-                        },
+                        }),
                         shape = shape
                     )
                     .clip(shape)
-                    .background(PreviewSoft)
+                    .background(AppColors.surface(PreviewSoft))
                     .selectable(
                         selected = index == activeIndex,
                         enabled = enabled,
@@ -520,7 +522,7 @@ private fun VideoPreview(
         }
     }
 
-    Box(modifier.background(Color.Black)) {
+    Box(modifier.background(AppColors.surface(Color.Black))) {
         ContentFrame(
             player = player,
             modifier = Modifier
@@ -550,7 +552,7 @@ private fun VideoPreview(
             ) {
                 PreviewMessage(
                     message = message,
-                    color = Color.White
+                    color = AppColors.content(Color.White)
                 )
             }
         }
@@ -563,7 +565,7 @@ private fun VideoPreview(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(Color.Black.copy(alpha = 0.7f))
+                .background(AppColors.surface(Color.Black.copy(alpha = 0.7f)))
                 .padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -595,9 +597,9 @@ private fun VideoPreview(
                     } else {
                         "Play video"
                     },
-                    tint = Color.White.copy(
+                    tint = AppColors.content(Color.White.copy(
                         alpha = if (controlsEnabled) 1f else 0.45f
-                    )
+                    ))
                 )
             }
 
@@ -647,7 +649,7 @@ private fun VideoPreview(
                     },
                 colors = SliderDefaults.colors(
                     thumbColor = PreviewGreen,
-                    activeTrackColor = PreviewGreen,
+                    activeTrackColor = AppColors.content(PreviewGreen),
                     inactiveTrackColor = Color.White.copy(
                         alpha = 0.3f
                     )
@@ -661,7 +663,7 @@ private fun VideoPreview(
             Text(
                 text = "${previewTime(shownPosition)} / " +
                         previewTime(state.durationMs),
-                color = Color.White,
+                color = AppColors.content(Color.White),
                 fontSize = 12.sp,
                 maxLines = 1,
                 modifier = Modifier.padding(
@@ -677,7 +679,7 @@ private fun VideoPreview(
 private fun PreviewSpinner() {
     CircularProgressIndicator(
         modifier = Modifier.size(28.dp),
-        color = PreviewGreen,
+        color = AppColors.content(PreviewGreen),
         strokeWidth = 2.5.dp
     )
 }
@@ -689,7 +691,7 @@ private fun PreviewMessage(
 ) {
     Text(
         text = message,
-        color = color,
+        color = AppColors.content(color),
         fontSize = 14.sp,
         textAlign = TextAlign.Center,
         modifier = Modifier.padding(24.dp)

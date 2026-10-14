@@ -2,6 +2,8 @@
 
 package com.mongosky.app.reactions
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -74,7 +76,7 @@ internal fun ReactionPeopleSheet(
         ModalBottomSheet(onDismissRequest = onDismiss,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            dragHandle = null, containerColor = Color.White, tonalElevation = 0.dp,
+            dragHandle = null, containerColor = AppColors.surface(Color.White), tonalElevation = 0.dp,
             scrimColor = ReactionScrim) {
             ReactionPeoplePanel(state, maxHeight, mobile, badgeSize, onDismiss, onFilter, onRetry)
         }
@@ -82,10 +84,10 @@ internal fun ReactionPeopleSheet(
         Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             val window = (LocalView.current.parent as? DialogWindowProvider)?.window
             SideEffect { window?.setDimAmount(0f) }
-            Box(Modifier.fillMaxSize().background(ReactionScrim).clickable(onClick = onDismiss)
+            Box(Modifier.fillMaxSize().background(AppColors.surface(ReactionScrim)).clickable(onClick = onDismiss)
                 .padding(18.dp), contentAlignment = Alignment.Center) {
                 Box(Modifier.widthIn(max = 560.dp).fillMaxWidth().shadow(24.dp, RoundedCornerShape(14.dp), clip = false).clip(RoundedCornerShape(14.dp))
-                    .background(Color.White).pointerInput(Unit) { detectTapGestures(onTap = {}) }) {
+                    .background(AppColors.surface(Color.White)).pointerInput(Unit) { detectTapGestures(onTap = {}) }) {
                     ReactionPeoplePanel(state, maxHeight, mobile, badgeSize, onDismiss, onFilter, onRetry)
                 }
             }
@@ -102,9 +104,9 @@ private fun ReactionPeoplePanel(
         Row(Modifier.fillMaxWidth().heightIn(min = if (mobile) 52.dp else 54.dp)
             .padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Reactions", color = ReactionText, fontSize = 18.sp, fontWeight = FontWeight(850))
+            Text("Reactions", color = AppColors.content(ReactionText), fontSize = 18.sp, fontWeight = FontWeight(850))
             IconButton(onClick = onDismiss, modifier = Modifier.size(38.dp)) {
-                Icon(FeedIcons.close, "Close reactions", tint = ReactionText, modifier = Modifier.size(24.dp))
+                Icon(FeedIcons.close, "Close reactions", tint = AppColors.content(ReactionText), modifier = Modifier.size(24.dp))
             }
         }
         ReactionDivider()
@@ -125,7 +127,7 @@ private fun ReactionPeoplePanel(
             state.error != null -> Column(Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 ReactionListNotice(state.error)
-                TextButton(onClick = onRetry) { Text("Retry", color = ReactionActive) }
+                TextButton(onClick = onRetry) { Text("Retry", color = AppColors.content(ReactionActive)) }
             }
             state.people.isEmpty() -> ReactionListNotice("No reactions found.")
             else -> LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false),
@@ -152,8 +154,8 @@ private fun ReactionFilterTab(
             if (selected) drawRect(ReactionActive, topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - 3.dp.toPx()),
                 size = androidx.compose.ui.geometry.Size(size.width, 3.dp.toPx()))
         }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-        Text(reaction?.emoji ?: "All", color = color, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
-        Text(count.toString(), color = color, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
+        Text(reaction?.emoji ?: "All", color = AppColors.content(color), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+        Text(count.toString(), color = AppColors.content(color), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
     }
 }
 
@@ -168,9 +170,9 @@ private fun ReactionPersonRow(
         .padding(horizontal = if (mobile) 14.dp else 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(13.dp)) {
         Box(Modifier.size(46.dp)) {
-            Box(Modifier.fillMaxSize().clip(CircleShape).background(Color(0xFF07927C)),
+            Box(Modifier.fillMaxSize().clip(CircleShape).background(AppColors.surface(Color(0xFF07927C))),
                 contentAlignment = Alignment.Center) {
-                Icon(ReactionPeopleIcons.user, null, tint = Color(0xFFEAFFF7), modifier = Modifier.size(22.dp))
+                Icon(ReactionPeopleIcons.user, null, tint = AppColors.content(Color(0xFFEAFFF7)), modifier = Modifier.size(22.dp))
                 person.author.profileImageUrl?.takeIf { it.isNotBlank() }?.let { url ->
                     AsyncImage(model = url, contentDescription = null, modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop)
@@ -178,14 +180,14 @@ private fun ReactionPersonRow(
             }
             Box(Modifier.align(Alignment.BottomEnd).offset(x = 3.dp, y = 3.dp).size(21.dp)
                 .drawBehind { drawCircle(Color.White, radius = size.minDimension / 2 + 2.dp.toPx()) }
-                .background(Color.White, CircleShape),
+                .background(AppColors.surface(Color.White), CircleShape),
                 contentAlignment = Alignment.Center) {
                 Text(person.reaction.emoji, fontSize = 14.sp, lineHeight = 17.sp)
             }
         }
         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(3.6.dp)) {
-            Text(name, modifier = Modifier.weight(1f, fill = false), color = ReactionText,
+            Text(name, modifier = Modifier.weight(1f, fill = false), color = AppColors.content(ReactionText),
                 fontSize = if (mobile) 15.sp else 16.sp, fontWeight = FontWeight(850),
                 lineHeight = if (mobile) 18.sp else 19.2.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (verified) Icon(ReactionPeopleIcons.seal, "Verified account", tint = Color.Unspecified,
@@ -197,12 +199,12 @@ private fun ReactionPersonRow(
 @Composable
 private fun ReactionListNotice(text: String) {
     Text(text, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 36.dp),
-        color = ReactionMuted, fontSize = 14.sp, fontWeight = FontWeight(650),
+        color = AppColors.content(ReactionMuted), fontSize = 14.sp, fontWeight = FontWeight(650),
         textAlign = androidx.compose.ui.text.style.TextAlign.Center)
 }
 
 @Composable
-private fun ReactionDivider() { Box(Modifier.fillMaxWidth().height(1.dp).background(ReactionLine)) }
+private fun ReactionDivider() { Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(ReactionLine))) }
 
 private object ReactionPeopleIcons {
     val user by lazy { ImageVector.Builder("User", 24.dp, 24.dp, 24f, 24f).apply {

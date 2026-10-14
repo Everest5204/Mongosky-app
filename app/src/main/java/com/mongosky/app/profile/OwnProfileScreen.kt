@@ -2,6 +2,8 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.ContextWrapper
@@ -31,6 +33,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.mongosky.app.comments.CommentsSheet
 import com.mongosky.app.home.HomeFeedViewModel
+import com.mongosky.app.pinpost.PinnedPostLabel
+import com.mongosky.app.pinpost.ProfilePinEffect
+import com.mongosky.app.pinpost.profilePinPosts
 import com.mongosky.app.post.FeedMediaType
 import com.mongosky.app.post.HomePost
 import com.mongosky.app.post.PhotoViewer
@@ -67,6 +72,8 @@ fun OwnProfileScreen(
     var now by remember { mutableStateOf(Instant.now()) }
     var started by remember(lifecycleOwner) { mutableStateOf(lifecycleOwner?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.STARTED) ?: true) }
     val feed = rememberOwnProfileFeed(viewModel, actionsModel)
+    ProfilePinEffect(feed.controls.pins, state.ownerId, active = started && feed.ready && !signingOut && !state.sessionExpired && !actionsModel.uiState.sessionExpired)
+    val displayPosts = remember(state.posts, feed.controls.pins.snapshot, state.ownerId) { profilePinPosts(state.posts, feed.controls.pins.snapshot, state.ownerId) }
     OwnProfileFeedEffects(feed, state, list,
         active = started && !signingOut && !state.sessionExpired && !actionsModel.uiState.sessionExpired,
         signingOut = signingOut)
@@ -134,14 +141,14 @@ fun OwnProfileScreen(
             if (state.tab == OwnProfileTab.PHOTOS) FeedMediaType.IMAGE else FeedMediaType.VIDEO)
     }
     val photos = remember(state.posts) { profileGallery(state.posts, FeedMediaType.IMAGE).map { it.media } }
-    val visibleCount = if (state.tab == OwnProfileTab.ALL) state.posts.size else assets.size
+    val visibleCount = if (state.tab == OwnProfileTab.ALL) displayPosts.size else assets.size
 
-    Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White)), contentAlignment = Alignment.TopCenter) {
         BoxWithConstraints(Modifier.widthIn(max = 520.dp).fillMaxSize()) {
             val columns = if (maxWidth < 350.dp) 2 else 3
             val galleryRows = remember(assets, columns) { assets.chunked(columns) }
-            val nearKeys = remember(state.posts, state.tab, galleryRows) {
-                if (state.tab == OwnProfileTab.ALL) state.posts.takeLast(2).map { "post:${it.source}:${it.id}" }.toSet()
+            val nearKeys = remember(displayPosts, state.tab, galleryRows) {
+                if (state.tab == OwnProfileTab.ALL) displayPosts.takeLast(2).map { "post:${it.source}:${it.id}" }.toSet()
                 else galleryRows.takeLast(2).map { "gallery:${it.first().key}" }.toSet()
             }
             LaunchedEffect(list, state.tab, nearKeys, state.postPageVersion, state.postsLoading,
@@ -152,7 +159,7 @@ fun OwnProfileScreen(
                         if (it) viewModel.loadMore()
                     }
             }
-            PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = viewModel::refresh, modifier = Modifier.fillMaxSize()) {
+            PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = { viewModel.refresh(); feed.controls.pins.refresh(state.ownerId, force = true) }, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(state = list, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 20.dp)) {
                     item("profile_header", "header") {
                         OwnProfileHeader(state, userName, profileImageUrl, ::chooseImage,
@@ -176,7 +183,8 @@ fun OwnProfileScreen(
                         if (tab != state.tab) { viewModel.selectTab(tab); scope.launch { list.scrollToItem(0) } }
                     } }
                     if (state.tab == OwnProfileTab.ALL) {
-                        items(state.posts, key = { "post:${it.source}:${it.id}" }, contentType = { it.type.name }) { post ->
+                        items(displayPosts, key = { "post:${it.source}:${it.id}" }, contentType = { it.type.name }) { post ->
+                            if (feed.controls.pins.snapshot?.post?.let { it.id == post.id && it.source == post.source } == true) PinnedPostLabel()
                             OwnProfileFeedPostItem(post, state.profile, now, actionsModel, feed,
                                 !state.sessionExpired && !actionsModel.uiState.sessionExpired && !signingOut,
                                 onPhotos = { media, index -> photoViewer = PhotoViewerState(media, index) },
@@ -203,13 +211,13 @@ fun OwnProfileScreen(
                         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(if (state.hasMore) "More ${state.tab.label.lowercase()} may be in older posts" else "No ${if (state.tab == OwnProfileTab.ALL) "posts" else state.tab.label.lowercase()} yet",
-                                color = OwnProfileColors.muted, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                color = AppColors.content(OwnProfileColors.muted), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Text(if (state.tab == OwnProfileTab.ALL) "Share your moments with the world." else "Your ${state.tab.label.lowercase()} will appear here.",
-                                color = OwnProfileColors.muted, fontSize = 14.sp)
+                                color = AppColors.content(OwnProfileColors.muted), fontSize = 14.sp)
                         }
                     }
                     if (state.canLoadMore && !state.postsLoading && !state.sessionExpired) item("load_more", "footer") {
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text("Load more", color = OwnProfileColors.brand) } }
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text("Load more", color = AppColors.content(OwnProfileColors.brand)) } }
                     }
                 }
             }
@@ -218,13 +226,13 @@ fun OwnProfileScreen(
     }
     if (state.editorOpen) EditOwnProfileSheet(state, viewModel::updateBio, { viewModel.saveBio() }, ::chooseImage, viewModel::closeEditor)
     OwnProfileConnectionsSheet(viewModel.connections, ::openProfile)
-    if (optionsOpen) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = Color.White,
+    if (optionsOpen) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = AppColors.surface(Color.White),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Profile options", color = OwnProfileColors.text, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            TextButton(::copyProfile, enabled = state.ownerId.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Copy profile link", color = OwnProfileColors.text) }
+            Text("Profile options", color = AppColors.content(OwnProfileColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            TextButton(::copyProfile, enabled = state.ownerId.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Copy profile link", color = AppColors.content(OwnProfileColors.text)) }
             TextButton({ optionsOpen = false; onSignOut() }, enabled = !signingOut, modifier = Modifier.fillMaxWidth()) {
-                if (signingOut) OwnProfileSpinner() else Text("Sign out", color = OwnProfileColors.brand)
+                if (signingOut) OwnProfileSpinner() else Text("Sign out", color = AppColors.content(OwnProfileColors.brand))
             }
         }
     }

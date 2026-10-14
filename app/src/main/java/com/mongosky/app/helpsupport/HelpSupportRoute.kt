@@ -1,5 +1,7 @@
 package com.mongosky.app.helpsupport
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -88,20 +90,20 @@ internal fun HelpSupportRoute(onBack: () -> Unit) {
         SnackbarHost(snackbar, Modifier.align(androidx.compose.ui.Alignment.BottomCenter).imePadding().padding(12.dp))
     }
     if (clearConfirm) AlertDialog(onDismissRequest = { clearConfirm = false },
-        containerColor = HelpSupportColors.background, title = { Text("Clear this draft?") },
+        containerColor = AppColors.surface(HelpSupportColors.background), title = { Text("Clear this draft?") },
         text = { Text("The summary and details you wrote will be removed.") },
         confirmButton = { TextButton(onClick = {
             summary = ""; description = ""; includeAppInfo = false; attempted = false; clearConfirm = false
-        }) { Text("Clear draft", color = HelpSupportColors.brand) } },
+        }) { Text("Clear draft", color = AppColors.content(HelpSupportColors.brand)) } },
         dismissButton = { TextButton(onClick = { clearConfirm = false }) { Text("Keep draft") } })
     if (emailUnavailable) AlertDialog(onDismissRequest = { emailUnavailable = false },
-        containerColor = HelpSupportColors.background, title = { Text("Email app unavailable") },
+        containerColor = AppColors.surface(HelpSupportColors.background), title = { Text("Email app unavailable") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Open or set up an email app, or copy our address and contact us from another device. Your draft is saved here.")
                 SelectionContainer { Text(HelpSupportContent.CONTACT_EMAIL) }
             }
         },
-        confirmButton = { TextButton(onClick = { copyEmail(); emailUnavailable = false }) { Text("Copy email", color = HelpSupportColors.brand) } },
+        confirmButton = { TextButton(onClick = { copyEmail(); emailUnavailable = false }) { Text("Copy email", color = AppColors.content(HelpSupportColors.brand)) } },
         dismissButton = { TextButton(onClick = { emailUnavailable = false }) { Text("Close") } })
 }

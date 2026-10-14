@@ -7,7 +7,5 @@ import androidx.compose.runtime.Composable
 fun MongoskyTheme(
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        content = content
-    )
+    com.mongosky.app.darkmode.DarkModeTheme(content)
 }

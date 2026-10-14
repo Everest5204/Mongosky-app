@@ -24,3 +24,9 @@ secrets.properties
 *backups/
 *Backups/
 .personal-details-backups/
+.report-post-backups/
+.pin-post-backups/
+.download-post-backups/
+.my-activity-backups/
+.saved-items-backups/
+.dark-mode-backups/

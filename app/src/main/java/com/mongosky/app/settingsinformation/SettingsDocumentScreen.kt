@@ -1,5 +1,7 @@
 package com.mongosky.app.settingsinformation
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -47,18 +49,18 @@ internal fun SettingsDocumentScreen(
     art: (String) -> SettingsArt,
     onBack: () -> Unit
 ) {
-    BoxWithConstraints(Modifier.fillMaxSize().background(Color.White)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(AppColors.surface(Color.White))) {
         val wide = maxWidth >= 768.dp
         val horizontal = if (wide) 28.dp else if (maxWidth <= 420.dp) 17.dp else 20.dp
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.widthIn(max = 980.dp).fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center) {
                 Text(document.title, Modifier.fillMaxWidth().padding(horizontal = 48.dp, vertical = 14.dp).semantics { heading() },
-                    color = documentInk, fontFamily = FontFamily.SansSerif,
+                    color = AppColors.content(documentInk), fontFamily = FontFamily.SansSerif,
                     fontSize = if (wide) 20.sp else 18.sp, fontWeight = FontWeight.ExtraBold,
                     lineHeight = 25.sp, textAlign = TextAlign.Center)
                 IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart).size(48.dp)) {
-                    Icon(documentBack, contentDescription = "Back", tint = documentInk, modifier = Modifier.size(22.dp))
+                    Icon(documentBack, contentDescription = "Back", tint = AppColors.content(documentInk), modifier = Modifier.size(22.dp))
                 }
             }
             LazyColumn(Modifier.widthIn(max = 880.dp).fillMaxWidth().weight(1f),
@@ -67,13 +69,13 @@ internal fun SettingsDocumentScreen(
                 item(key = "introduction", contentType = "introduction") {
                     Column {
                         document.lastUpdated?.let {
-                            Text(it, color = Color(0xFF667085), fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold,
+                            Text(it, color = AppColors.content(Color(0xFF667085)), fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.SansSerif)
                             Spacer(Modifier.height(18.dp))
                         }
                         DocumentParagraphs(document.paragraphs, wide)
                         Spacer(Modifier.height(if (wide) 34.dp else 28.dp))
-                        HorizontalDivider(color = documentBorder)
+                        HorizontalDivider(color = AppColors.outline(documentBorder))
                     }
                 }
                 items(document.blocks, key = { it.id }, contentType = {
@@ -93,7 +95,7 @@ internal fun SettingsDocumentScreen(
 private fun DocumentParagraphs(paragraphs: List<String>, wide: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         paragraphs.forEach {
-            Text(it, color = documentBody, fontFamily = FontFamily.SansSerif,
+            Text(it, color = AppColors.content(documentBody), fontFamily = FontFamily.SansSerif,
                 fontSize = if (wide) 17.sp else 16.sp, lineHeight = if (wide) 30.6.sp else 28.sp)
         }
     }
@@ -103,7 +105,7 @@ private fun DocumentParagraphs(paragraphs: List<String>, wide: Boolean) {
 private fun DocumentSection(section: SettingsDocumentBlock.Section, wide: Boolean) {
     Column {
         Column(Modifier.padding(vertical = if (wide) 34.dp else 29.dp)) {
-            Text(section.title, Modifier.semantics { heading() }, color = documentInk,
+            Text(section.title, Modifier.semantics { heading() }, color = AppColors.content(documentInk),
                 fontFamily = FontFamily.SansSerif, fontSize = if (wide) 25.sp else 21.sp,
                 fontWeight = FontWeight.ExtraBold, lineHeight = if (wide) 32.5.sp else 27.3.sp)
             Spacer(Modifier.height(17.dp))
@@ -113,21 +115,21 @@ private fun DocumentSection(section: SettingsDocumentBlock.Section, wide: Boolea
                 Column(verticalArrangement = Arrangement.spacedBy(13.dp)) {
                     section.points.forEach { point ->
                         Row {
-                            Text("•", Modifier.width(25.dp), color = Color(0xFF00866B),
+                            Text("•", Modifier.width(25.dp), color = AppColors.content(Color(0xFF00866B)),
                                 fontSize = if (wide) 18.sp else 17.sp, lineHeight = if (wide) 29.75.sp else 28.sp)
                             Text(buildAnnotatedString {
-                                withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = Color(0xFF17202D))) {
+                                withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = AppColors.content(Color(0xFF17202D)))) {
                                     append(point.label); append(": ")
                                 }
                                 append(point.text)
-                            }, color = documentBody, fontFamily = FontFamily.SansSerif,
+                            }, color = AppColors.content(documentBody), fontFamily = FontFamily.SansSerif,
                                 fontSize = if (wide) 17.sp else 16.sp, lineHeight = if (wide) 29.75.sp else 28.sp)
                         }
                     }
                 }
             }
         }
-        HorizontalDivider(color = documentBorder)
+        HorizontalDivider(color = AppColors.outline(documentBorder))
     }
 }
 
@@ -139,8 +141,8 @@ private fun DocumentArtCard(block: SettingsDocumentBlock.Illustration, art: Sett
         else if (reversed) listOf(Color.White, Color(0xFFF1FAF8))
         else listOf(Color(0xFFEFFBF7), Color.White)
     BoxWithConstraints(Modifier.padding(vertical = if (wide) 38.dp else 30.dp).fillMaxWidth()
-        .border(1.dp, if (future) Color(0xFFCDDFE8) else Color(0xFFCCE9E2), RoundedCornerShape(if (wide) 24.dp else 20.dp))
-        .background(Brush.linearGradient(gradient), RoundedCornerShape(if (wide) 24.dp else 20.dp))
+        .border(1.dp, AppColors.outline(if (future) Color(0xFFCDDFE8) else Color(0xFFCCE9E2)), RoundedCornerShape(if (wide) 24.dp else 20.dp))
+        .background(Brush.linearGradient(AppColors.surfaces(gradient)), RoundedCornerShape(if (wide) 24.dp else 20.dp))
         .padding(horizontal = if (wide) 32.dp else 17.dp, vertical = if (wide) 30.dp else 24.dp)) {
         val sideBySide = maxWidth >= 650.dp && LocalDensity.current.fontScale <= 1.2f
         if (sideBySide) {
@@ -161,10 +163,10 @@ private fun DocumentArtCard(block: SettingsDocumentBlock.Illustration, art: Sett
 @Composable
 private fun DocumentArtCopy(block: SettingsDocumentBlock.Illustration, modifier: Modifier, align: TextAlign, wide: Boolean) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(block.title, Modifier.fillMaxWidth().semantics { heading() }, color = documentInk,
+        Text(block.title, Modifier.fillMaxWidth().semantics { heading() }, color = AppColors.content(documentInk),
             fontFamily = FontFamily.SansSerif, fontSize = if (wide) 25.sp else 21.sp,
             fontWeight = FontWeight.ExtraBold, lineHeight = if (wide) 32.5.sp else 27.3.sp, textAlign = align)
-        Text(block.description, Modifier.fillMaxWidth(), color = Color(0xFF475467),
+        Text(block.description, Modifier.fillMaxWidth(), color = AppColors.content(Color(0xFF475467)),
             fontFamily = FontFamily.SansSerif, fontSize = if (wide) 16.sp else 15.sp,
             fontWeight = FontWeight.Medium, lineHeight = if (wide) 27.2.sp else 25.5.sp, textAlign = align)
     }

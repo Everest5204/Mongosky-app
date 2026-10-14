@@ -1,5 +1,7 @@
 package com.mongosky.app.editpost
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,19 +41,19 @@ internal fun EditPostHeader(state: EditPostState, onClose: () -> Unit, onSave: (
     Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.width(80.dp)) {
             IconButton(onClose, enabled = !state.saving, modifier = Modifier.size(48.dp)) {
-                Icon(FeedIcons.close, "Close edit post", tint = EditPostColors.text, modifier = Modifier.size(24.dp))
+                Icon(FeedIcons.close, "Close edit post", tint = AppColors.content(EditPostColors.text), modifier = Modifier.size(24.dp))
             }
         }
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            Text("Edit post", color = EditPostColors.text, fontSize = 19.sp, fontWeight = FontWeight.ExtraBold,
+            Text("Edit post", color = AppColors.content(EditPostColors.text), fontSize = 19.sp, fontWeight = FontWeight.ExtraBold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         TextButton(onSave, enabled = state.valid, modifier = Modifier.width(80.dp).heightIn(min = 48.dp),
             contentPadding = PaddingValues(horizontal = 4.dp),
-            colors = ButtonDefaults.textButtonColors(contentColor = EditPostColors.green,
-                disabledContentColor = EditPostColors.green.copy(alpha = 0.36f))) {
+            colors = ButtonDefaults.textButtonColors(contentColor = AppColors.content(EditPostColors.green),
+                disabledContentColor = AppColors.content(EditPostColors.green.copy(alpha = 0.36f)))) {
             if (state.saving) {
-                CircularProgressIndicator(Modifier.size(14.dp), color = EditPostColors.green, strokeWidth = 2.dp)
+                CircularProgressIndicator(Modifier.size(14.dp), color = AppColors.content(EditPostColors.green), strokeWidth = 2.dp)
                 Spacer(Modifier.width(5.dp))
             }
             Text(if (state.saving) "Saving…" else "Save", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold,
@@ -66,7 +68,7 @@ internal fun EditPostAuthor(state: EditPostState, isText: Boolean) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ProfileAvatar(state.post.author.profileImageUrl, Modifier.size(if (isText) 42.dp else 47.dp))
         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(state.post.author.displayName.ifBlank { "Mongosky User" }, color = Color(0xFF273449),
+            Text(state.post.author.displayName.ifBlank { "Mongosky User" }, color = AppColors.content(Color(0xFF273449)),
                 fontSize = if (isText) 16.sp else 17.sp, fontWeight = FontWeight.ExtraBold,
                 maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
             if (state.verified) Icon(HomeFeedIcons.verified, "Verified account", tint = Color.Unspecified, modifier = Modifier.size(17.dp))
@@ -78,12 +80,12 @@ internal fun EditPostAuthor(state: EditPostState, isText: Boolean) {
 internal fun EditPostError(state: EditPostState, onReload: () -> Unit, onSave: () -> Unit) {
     val message = state.error ?: return
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
-        .background(Color(0xFFFEF2F2), RoundedCornerShape(12.dp)).padding(12.dp)
+        .background(AppColors.surface(Color(0xFFFEF2F2)), RoundedCornerShape(12.dp)).padding(12.dp)
         .semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(message, color = Color(0xFFB91C1C), fontSize = 13.sp, lineHeight = 19.sp)
+        Text(message, color = AppColors.content(Color(0xFFB91C1C)), fontSize = 13.sp, lineHeight = 19.sp)
         if (state.needsReload || state.valid) TextButton(if (state.needsReload) onReload else onSave,
             enabled = !state.busy, contentPadding = PaddingValues(horizontal = 4.dp)) {
-            Text(if (state.needsReload) "Reload latest post" else "Try again", color = Color(0xFFB91C1C), fontWeight = FontWeight.Bold)
+            Text(if (state.needsReload) "Reload latest post" else "Try again", color = AppColors.content(Color(0xFFB91C1C)), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -109,8 +111,8 @@ internal fun EditPostDiscardConfirmation(state: EditPostState, onKeep: () -> Uni
             title = { Text(if (state.reloadRequested) "Reload latest post?" else "Discard changes?") },
             text = { Text("Your unsaved changes will be discarded.") },
             confirmButton = { TextButton({ onDiscard(state.reloadRequested) }) {
-                Text(if (state.reloadRequested) "Reload" else "Discard", color = EditPostColors.error)
+                Text(if (state.reloadRequested) "Reload" else "Discard", color = AppColors.content(EditPostColors.error))
             } },
-            dismissButton = { TextButton(onKeep) { Text("Keep editing", color = EditPostColors.text) } },
-            containerColor = Color.White)
+            dismissButton = { TextButton(onKeep) { Text("Keep editing", color = AppColors.content(EditPostColors.text)) } },
+            containerColor = AppColors.surface(Color.White))
 }

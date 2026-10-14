@@ -1,5 +1,7 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -34,7 +36,7 @@ internal fun CommentName(comment: PostComment, verified: Boolean, onOpen: () -> 
         Icon(CommentIcons.verified,"Verified account",Modifier.size(size),tint=Color.Unspecified)
     })
     Text(label, inlineContent = inline, fontSize = 13.sp, lineHeight = 17.sp, fontWeight = FontWeight.ExtraBold,
-        color = CommentColors.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
+        color = AppColors.content(CommentColors.text), maxLines = 1, overflow = TextOverflow.Ellipsis,
         style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
         modifier = modifier.profileLink(comment.author.id,comment.author,beforeOpen=onOpen))
 }

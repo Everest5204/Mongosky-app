@@ -1,5 +1,7 @@
 package com.mongosky.app.shared
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -58,22 +60,22 @@ internal fun InformationPageFrame(
     content: @Composable ColumnScope.() -> Unit
 ) {
     BackHandler(onBack = onBack)
-    Column(Modifier.fillMaxSize().background(background)) {
-        Surface(color = Color.White, shadowElevation = 2.dp) {
+    Column(Modifier.fillMaxSize().background(AppColors.surface(background))) {
+        Surface(color = AppColors.surface(Color.White), shadowElevation = 2.dp) {
             Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                    Icon(InformationIcons.back, contentDescription = "Return to previous page", tint = InformationColors.heading, modifier = Modifier.size(22.dp))
+                    Icon(InformationIcons.back, contentDescription = "Return to previous page", tint = AppColors.content(InformationColors.heading), modifier = Modifier.size(22.dp))
                 }
                 Box(Modifier.weight(1f).heightIn(min = 48.dp).then(if (onTitleClick != null)
                     Modifier.clip(RoundedCornerShape(10.dp)).clickable(onClick = onTitleClick) else Modifier), contentAlignment = Alignment.Center) {
-                    Text(title, color = InformationColors.heading, fontFamily = FontFamily.SansSerif,
+                    Text(title, color = AppColors.content(InformationColors.heading), fontFamily = FontFamily.SansSerif,
                         fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center,
                         modifier = Modifier.semantics { heading() })
                 }
                 Spacer(Modifier.width(48.dp))
             }
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFE5E7EB)))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(Color(0xFFE5E7EB))))
         content()
     }
 }
@@ -84,7 +86,7 @@ internal fun InformationComingSoon(title: String, message: String, onBack: () ->
             val availableHeight = maxHeight
             Box(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = availableHeight)
                 .padding(horizontal = 20.dp, vertical = 30.dp), contentAlignment = Alignment.Center) {
-                Text(message, color = InformationColors.text, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                Text(message, color = AppColors.content(InformationColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold,
                     lineHeight = 31.sp, textAlign = TextAlign.Center, fontFamily = FontFamily.SansSerif,
                     modifier = Modifier.widthIn(max = 560.dp))
             }
@@ -98,29 +100,29 @@ internal fun InformationCard(
     content: @Composable BoxScope.() -> Unit
 ) {
     val shape = RoundedCornerShape(radius)
-    Surface(modifier, color = Color.Transparent, shape = shape,
-        border = border?.let { BorderStroke(1.dp, it) }, shadowElevation = 3.dp) {
-        Box(Modifier.background(Brush.linearGradient(colors)), content = content)
+    Surface(modifier, color = AppColors.surface(Color.Transparent), shape = shape,
+        border = border?.let { BorderStroke(1.dp, AppColors.outline(it)) }, shadowElevation = 3.dp) {
+        Box(Modifier.background(Brush.linearGradient(AppColors.surfaces(colors))), content = content)
     }
 }
 @Composable
 internal fun InformationHeading(text: String, size: Float = 26f, color: Color = InformationColors.heading, centered: Boolean = false) {
-    Text(text, color = color, fontSize = size.sp, lineHeight = (size * 1.18f).sp, letterSpacing = (-size * .04f).sp,
+    Text(text, color = AppColors.content(color), fontSize = size.sp, lineHeight = (size * 1.18f).sp, letterSpacing = (-size * .04f).sp,
         fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Black, textAlign = if (centered) TextAlign.Center else TextAlign.Start,
         modifier = Modifier.semantics { heading() })
 }
 @Composable
 internal fun InformationBadge(text: String, background: Color = Color(0xFFE9F7F3), color: Color = InformationColors.primaryDark, icon: Boolean = false) {
-    Row(Modifier.clip(RoundedCornerShape(100.dp)).background(background).padding(horizontal = 11.dp, vertical = 7.dp),
+    Row(Modifier.clip(RoundedCornerShape(100.dp)).background(AppColors.surface(background)).padding(horizontal = 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (icon) Icon(InformationIcons.shield, null, tint = color, modifier = Modifier.size(20.dp))
-        Text(text, color = color, fontSize = 10.sp, lineHeight = 14.sp, letterSpacing = .9.sp,
+        if (icon) Icon(InformationIcons.shield, null, tint = AppColors.content(color), modifier = Modifier.size(20.dp))
+        Text(text, color = AppColors.content(color), fontSize = 10.sp, lineHeight = 14.sp, letterSpacing = .9.sp,
             fontWeight = FontWeight.Black, fontFamily = FontFamily.SansSerif)
     }
 }
 @Composable
 internal fun InformationBackButton(label: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = InformationColors.primaryDark),
+    Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(Color.White), contentColor = AppColors.content(InformationColors.primaryDark)),
         shape = RoundedCornerShape(13.dp), modifier = modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
         Icon(InformationIcons.back, null, modifier = Modifier.size(19.dp))
         Spacer(Modifier.width(8.dp))

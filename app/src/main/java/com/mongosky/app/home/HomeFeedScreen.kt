@@ -3,11 +3,12 @@
 
 package com.mongosky.app.home
 
+import com.mongosky.app.darkmode.AppColors
+
 import android.content.ActivityNotFoundException
+import com.mongosky.app.downloadpost.rememberGalleryDownloadActions
 import android.content.Intent
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,6 +67,8 @@ import com.mongosky.app.post.TextPostCard
 import com.mongosky.app.reactions.PostReactionState
 import com.mongosky.app.reactions.ReactionPeopleSheet
 import com.mongosky.app.reactions.ReactionSummary
+import com.mongosky.app.reportpost.PostReportSheet
+import com.mongosky.app.pinpost.PinPostDialog
 import com.mongosky.app.reels.Reel
 import com.mongosky.app.reels.ReelsPreviewRefreshEffect
 import com.mongosky.app.reels.ReelsPreviewSection
@@ -103,25 +106,7 @@ fun HomeFeedScreen(
     var now by remember { mutableStateOf(Instant.now()) }
     var photoViewer by remember { mutableStateOf<PhotoViewerState?>(null) }
     var handledTopRequest by rememberSaveable { mutableStateOf(0) }
-    var launchedDownloadKey by rememberSaveable { mutableStateOf<String?>(null) }
-    val downloadPicker = rememberLauncherForActivityResult(object : ActivityResultContracts.CreateDocument("*/*") {
-        override fun createIntent(context: android.content.Context, input: String): Intent =
-            super.createIntent(context, input).setType(viewModel.download?.mimeType ?: "application/octet-stream")
-    }) { uri ->
-        launchedDownloadKey = null
-        viewModel.completeDownloadPicker(context, uri)
-    }
-    val download = viewModel.download
-    LaunchedEffect(download?.post?.key, download?.choosing) {
-        if (download?.choosing == true && launchedDownloadKey != download.post.key) {
-            launchedDownloadKey = download.post.key
-            try { downloadPicker.launch(download.fileName) }
-            catch (_: ActivityNotFoundException) {
-                launchedDownloadKey = null; viewModel.cancelDownloadPicker()
-                controls.notify("No file picker is available.")
-            }
-        }
-    }
+    val galleryDownloads = rememberGalleryDownloadActions()
     LaunchedEffect(controls) { controls.notices.collect { snackbar.showSnackbar(it) } }
     HomeFeedEffects(viewModel, listState)
     val preview = reelsPreviewViewModel.state
@@ -170,7 +155,7 @@ fun HomeFeedScreen(
         photoViewer = PhotoViewerState(photos, index)
     } }
 
-    Box(Modifier.fillMaxSize().background(Color.White), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White)), contentAlignment = Alignment.TopCenter) {
         PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = viewModel::refresh,
             modifier = Modifier.fillMaxSize().widthIn(max = 680.dp)) {
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
@@ -194,7 +179,7 @@ fun HomeFeedScreen(
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         TextButton(onClick = { viewModel.refresh(); scope.launch { listState.scrollToItem(0) } }) {
                             Text("${state.newPostsCount} new ${if (state.newPostsCount == 1) "post" else "posts"}",
-                                color = FeedColors.brand, fontWeight = FontWeight.SemiBold)
+                                color = AppColors.content(FeedColors.brand), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -224,8 +209,8 @@ fun HomeFeedScreen(
                     item(key = "empty_feed", contentType = "notice") {
                         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 60.dp),
                             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("No posts yet", color = FeedColors.text, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text("New posts will appear here.", color = FeedColors.muted, fontSize = 14.sp)
+                            Text("No posts yet", color = AppColors.content(FeedColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text("New posts will appear here.", color = AppColors.content(FeedColors.muted), fontSize = 14.sp)
                             TextButton(onClick = viewModel::refresh) { Text("Refresh") }
                         }
                     }
@@ -235,8 +220,8 @@ fun HomeFeedScreen(
                         Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
                             when {
                                 state.loading -> FeedSpinner()
-                                state.hasMore -> TextButton(onClick = viewModel::loadMore) { Text("Load more", color = FeedColors.muted, fontSize = 14.sp) }
-                                else -> Text("You're all caught up", color = FeedColors.muted, fontSize = 13.sp)
+                                state.hasMore -> TextButton(onClick = viewModel::loadMore) { Text("Load more", color = AppColors.content(FeedColors.muted), fontSize = 14.sp) }
+                                else -> Text("You're all caught up", color = AppColors.content(FeedColors.muted), fontSize = 13.sp)
                             }
                         }
                     }
@@ -254,16 +239,20 @@ fun HomeFeedScreen(
     photoViewer?.let { PhotoViewer(it) { photoViewer = null } }
     if (!state.sessionExpired) {
         controls.menu?.let { post ->
-            HomePostMenu(post, controls::closeMenu) { action -> when (action) {
+            HomePostMenu(post, controls::closeMenu, pins = controls.pins) { action -> when (action) {
                 HomeMenuAction.COPY -> { controls.closeMenu(); copyPost(post) }
-                HomeMenuAction.DOWNLOAD -> viewModel.requestDownload(post)
+                HomeMenuAction.DOWNLOAD -> { controls.closeMenu(); galleryDownloads.download(post) }
                 HomeMenuAction.EDIT -> controls.openEditor(post)
                 HomeMenuAction.DELETE -> controls.openDelete(post)
+                HomeMenuAction.REPORT -> controls.openReport(post)
+                HomeMenuAction.PIN -> controls.openPin(post)
                 else -> controls.unavailable(action)
             } }
         }
         controls.editor?.let { HomePostEditor(it, controls) }
         controls.deletion?.let { HomeDeleteDialog(it, controls::closeDelete, controls::confirmDelete) }
+        PostReportSheet(controls.reports)
+        PinPostDialog(controls.pins)
     }
 }
 

@@ -1,5 +1,7 @@
 package com.mongosky.app.textpost
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,8 +54,8 @@ fun TextPostBackgroundPicker(
     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp),
             horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Background", color = Color(0xFF020617), fontWeight = FontWeight.Bold, fontSize = 15.sp)
-            Text(remaining.toString(), color = if (remaining < 60) Color(0xFFE11D48) else Color(0xFF64748B),
+            Text("Background", color = AppColors.content(Color(0xFF020617)), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(remaining.toString(), color = AppColors.content(if (remaining < 60) Color(0xFFE11D48) else Color(0xFF64748B)),
                 fontWeight = FontWeight.Bold, fontSize = 14.sp,
                 modifier = Modifier.semantics { contentDescription = "$remaining characters remaining" })
         }
@@ -66,13 +68,13 @@ fun TextPostBackgroundPicker(
                 val active = preset == selected
                 val shape = RoundedCornerShape(13.dp)
                 Box(Modifier.size(48.dp).clip(shape)
-                    .border(if (active) 3.dp else 1.dp, if (active) Color(0xFF16A34A) else Color(0xFFE5E7EB), shape)
+                    .border(if (active) 3.dp else 1.dp, AppColors.outline(if (active) Color(0xFF16A34A) else Color(0xFFE5E7EB)), shape)
                     .selectable(active, enabled = enabled, role = Role.RadioButton, onClick = { onSelect(preset) })
                     .semantics { contentDescription = preset.label }, Alignment.Center) {
                     TextPostBackground(preset.background.kind, preset.background.value, Modifier.matchParentSize())
                     if (active) Icon(Icons.Default.Check, null,
-                        tint = if (preset.textColor == "#ffffff") Color.White else Color(0xFF111827))
-                    else if (preset == TextPostPreset.NONE) Text("Aa", color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
+                        tint = AppColors.plainPostText(if (preset.textColor == "#ffffff") Color.White else Color(0xFF111827),preset.background.kind == com.mongosky.app.post.FeedTextBackgroundKind.PLAIN))
+                    else if (preset == TextPostPreset.NONE) Text("Aa", color = AppColors.content(Color(0xFF64748B)), fontWeight = FontWeight.Bold)
                 }
             }
             item(key = "more") {
@@ -81,7 +83,7 @@ fun TextPostBackgroundPicker(
                 }
             }
             item(key = "emoji") {
-                IconButton(onClick = onEmoji, enabled = enabled) { Icon(Icons.Default.Face, "Add emoji", tint = Color(0xFFF97316)) }
+                IconButton(onClick = onEmoji, enabled = enabled) { Icon(Icons.Default.Face, "Add emoji", tint = AppColors.content(Color(0xFFF97316))) }
             }
         }
     }

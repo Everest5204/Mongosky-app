@@ -1,5 +1,7 @@
 package com.mongosky.app.settings
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -43,7 +45,7 @@ internal fun SettingsScreen(
         val phone = maxWidth <= 600.dp
         val compact = maxWidth <= 360.dp
         val tablet = maxWidth >= 768.dp
-        Column(Modifier.fillMaxSize().background(if (phone) Color.White else Color(0xFFF5F7F6))) {
+        Column(Modifier.fillMaxSize().background(AppColors.surface(if (phone) Color.White else Color(0xFFF5F7F6)))) {
             SettingsHeader(onBack, tablet, compact)
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                 Surface(
@@ -52,8 +54,8 @@ internal fun SettingsScreen(
                             end = if (phone) 0.dp else if (tablet) 24.dp else 18.dp,
                             top = if (phone) 0.dp else if (tablet) 32.dp else 24.dp,
                             bottom = if (phone) 0.dp else if (tablet) 48.dp else 40.dp),
-                    color = Color.White, shape = RoundedCornerShape(if (phone) 0.dp else 18.dp),
-                    border = if (phone) null else BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                    color = AppColors.surface(Color.White), shape = RoundedCornerShape(if (phone) 0.dp else 18.dp),
+                    border = if (phone) null else BorderStroke(1.dp, AppColors.outline(Color(0xFFE5E7EB))),
                     shadowElevation = if (phone) 0.dp else 5.dp
                 ) {
                     LazyColumn(state = scroll, modifier = Modifier.fillMaxWidth(),
@@ -74,13 +76,13 @@ internal fun SettingsScreen(
 }
 @Composable
 private fun SettingsHeader(onBack: () -> Unit, tablet: Boolean, compact: Boolean) {
-    Surface(color = Color.White, tonalElevation = 0.dp, shadowElevation = 0.dp) {
+    Surface(color = AppColors.surface(Color.White), tonalElevation = 0.dp, shadowElevation = 0.dp) {
         Row(Modifier.fillMaxWidth().heightIn(min = if (tablet) 68.dp else 64.dp)
             .padding(horizontal = if (compact) 10.dp else if (tablet) 24.dp else 14.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                Icon(SettingsIcons.back, "Return to previous page", tint = Heading, modifier = Modifier.size(22.dp))
+                Icon(SettingsIcons.back, "Return to previous page", tint = AppColors.content(Heading), modifier = Modifier.size(22.dp))
             }
-            Text("Settings", color = Heading, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.ExtraBold,
+            Text("Settings", color = AppColors.content(Heading), fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.ExtraBold,
                 fontSize = if (tablet) 20.sp else 18.sp, lineHeight = 24.sp, textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f).semantics { heading() })
             Spacer(Modifier.width(48.dp))
@@ -100,11 +102,11 @@ private fun SettingsMenuRow(item: SettingsMenuItem, enabled: Boolean, compact: B
         horizontalArrangement = Arrangement.spacedBy(if (tablet) 18.dp else if (phone) 16.dp else 17.dp)
     ) {
         Box(Modifier.size(27.dp), contentAlignment = Alignment.Center) {
-            Icon(SettingsIcons.forMenu(item.id), null, tint = color, modifier = Modifier.size(23.dp))
+            Icon(SettingsIcons.forMenu(item.id), null, tint = AppColors.content(color), modifier = Modifier.size(23.dp))
         }
-        Text(item.label, color = color, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold,
+        Text(item.label, color = AppColors.content(color), fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold,
             fontSize = if (phone) 16.sp else if (tablet) 18.sp else 17.sp,
             lineHeight = if (phone) 22.sp else 24.sp, modifier = Modifier.weight(1f))
-        Icon(SettingsIcons.chevron, null, tint = Color(0xFF667085), modifier = Modifier.size(21.dp))
+        Icon(SettingsIcons.chevron, null, tint = AppColors.content(Color(0xFF667085)), modifier = Modifier.size(21.dp))
     }
 }

@@ -2,6 +2,8 @@
 
 package com.mongosky.app.helpsupport
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,7 +49,7 @@ internal fun HelpSupportContactScreen(
             }
         }
     }
-    BoxWithConstraints(Modifier.fillMaxSize().background(HelpSupportColors.background).imePadding()) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(AppColors.surface(HelpSupportColors.background)).imePadding()) {
         val side = if (maxWidth < 360.dp) 16.dp else 20.dp
         Column(Modifier.widthIn(max = 680.dp).fillMaxWidth().align(Alignment.TopCenter)) {
             HelpSupportHeader(if (draft.reason == SupportReason.FEEDBACK) "Send feedback" else "Contact support", onBack)
@@ -58,7 +60,7 @@ internal fun HelpSupportContactScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         HelpSectionTitle("Tell us how we can help")
                         Text("Your message will open as an email draft. You can review it and add screenshots before sending.",
-                            color = HelpSupportColors.muted, fontSize = 14.sp, lineHeight = 22.sp)
+                            color = AppColors.content(HelpSupportColors.muted), fontSize = 14.sp, lineHeight = 22.sp)
                     }
                 }
                 item(key = "reason") {
@@ -68,8 +70,8 @@ internal fun HelpSupportContactScreen(
                             items(SupportReason.entries, key = { it.name }) { reason ->
                                 FilterChip(selected = draft.reason == reason, enabled = !openingEmail,
                                     onClick = { onDraft(draft.copy(reason = reason)) }, label = { Text(reason.label) },
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = HelpSupportColors.softBrand,
-                                        selectedLabelColor = HelpSupportColors.brand), modifier = Modifier.heightIn(min = 48.dp))
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppColors.surface(HelpSupportColors.softBrand),
+                                        selectedLabelColor = AppColors.content(HelpSupportColors.brand)), modifier = Modifier.heightIn(min = 48.dp))
                             }
                         }
                     }
@@ -97,7 +99,7 @@ internal fun HelpSupportContactScreen(
                         colors = supportFieldColors())
                 }
                 item(key = "privacy") {
-                    Text("Please don't include passwords or verification codes.", color = HelpSupportColors.muted,
+                    Text("Please don't include passwords or verification codes.", color = AppColors.content(HelpSupportColors.muted),
                         fontSize = 13.sp, lineHeight = 20.sp)
                 }
                 item(key = "app-info") {
@@ -108,9 +110,9 @@ internal fun HelpSupportContactScreen(
                         Checkbox(checked = draft.includeAppInfo, onCheckedChange = null, enabled = !openingEmail,
                             colors = CheckboxDefaults.colors(checkedColor = HelpSupportColors.brand))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("Include app and Android versions", color = HelpSupportColors.text,
+                            Text("Include app and Android versions", color = AppColors.content(HelpSupportColors.text),
                                 fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Medium)
-                            Text("Optional. These details can help us investigate.", color = HelpSupportColors.muted,
+                            Text("Optional. These details can help us investigate.", color = AppColors.content(HelpSupportColors.muted),
                                 fontSize = 12.sp, lineHeight = 19.sp)
                         }
                     }
@@ -119,24 +121,24 @@ internal fun HelpSupportContactScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Button(onClick = { focus.clearFocus(); onOpenEmail() }, enabled = !openingEmail,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = HelpSupportColors.brand)) {
+                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(HelpSupportColors.brand))) {
                             Icon(HelpSupportIcons.mail, null, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(10.dp))
                             Text("Continue to email", fontWeight = FontWeight.SemiBold)
                         }
                         Text("Your draft stays here when you go back or return from your email app.",
-                            color = HelpSupportColors.muted, fontSize = 12.sp, lineHeight = 19.sp)
+                            color = AppColors.content(HelpSupportColors.muted), fontSize = 12.sp, lineHeight = 19.sp)
                         TextButton(onClick = onClearDraft, enabled = !openingEmail && (draft.summary.isNotBlank() || draft.description.isNotBlank())) {
-                            Text("Clear draft", color = HelpSupportColors.muted)
+                            Text("Clear draft", color = AppColors.content(HelpSupportColors.muted))
                         }
                     }
                 }
                 item(key = "contact-email") {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(HelpSupportContent.CONTACT_EMAIL, Modifier.weight(1f), color = HelpSupportColors.muted,
+                        Text(HelpSupportContent.CONTACT_EMAIL, Modifier.weight(1f), color = AppColors.content(HelpSupportColors.muted),
                             fontSize = 13.sp, lineHeight = 20.sp)
                         IconButton(onClick = onCopyEmail, modifier = Modifier.size(48.dp)) {
-                            Icon(HelpSupportIcons.copy, "Copy support email", modifier = Modifier.size(20.dp), tint = HelpSupportColors.muted)
+                            Icon(HelpSupportIcons.copy, "Copy support email", modifier = Modifier.size(20.dp), tint = AppColors.content(HelpSupportColors.muted))
                         }
                     }
                 }
@@ -147,5 +149,5 @@ internal fun HelpSupportContactScreen(
 
 @Composable
 private fun supportFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = HelpSupportColors.brand, focusedLabelColor = HelpSupportColors.brand,
-    cursorColor = HelpSupportColors.brand)
+    focusedBorderColor = AppColors.outline(HelpSupportColors.brand), focusedLabelColor = HelpSupportColors.brand,
+    cursorColor = AppColors.content(HelpSupportColors.brand))

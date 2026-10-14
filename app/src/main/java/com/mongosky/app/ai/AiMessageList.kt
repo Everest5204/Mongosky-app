@@ -1,5 +1,7 @@
 package com.mongosky.app.ai
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.scrollBy
@@ -53,9 +55,9 @@ internal fun AiMessageList(state:AiState,colors:AiColors,followRequest:Int,modif
         val phone=maxWidth<600.dp
         when {
             state.messagesLoading && state.messages.isEmpty() -> CircularProgressIndicator(
-                Modifier.size(24.dp).align(Alignment.Center),color=colors.muted,strokeWidth=2.dp)
+                Modifier.size(24.dp).align(Alignment.Center),color=AppColors.content(colors.muted),strokeWidth=2.dp)
             state.messages.isEmpty() -> Text("How can I help you?",fontSize=if(phone) 29.sp else 34.sp,
-                lineHeight=40.sp,fontWeight=FontWeight.Light,color=colors.muted,
+                lineHeight=40.sp,fontWeight=FontWeight.Light,color=AppColors.content(colors.muted),
                 modifier=Modifier.align(Alignment.Center).padding(20.dp))
             else -> LazyColumn(state=list,modifier=Modifier.fillMaxSize(),contentPadding=PaddingValues(
                 start=if(phone) 14.dp else 30.dp,end=if(phone) 14.dp else 30.dp,
@@ -74,12 +76,12 @@ private fun AiMessageRow(message:AiMessage,colors:AiColors,phone:Boolean) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
     val maximum=maxWidth*(if(phone) .84f else .78f)
     Row(Modifier.fillMaxWidth(),horizontalArrangement=if(user) Arrangement.End else Arrangement.Start) {
-        Column((if(user) Modifier.widthIn(max=maximum) else Modifier.fillMaxWidth()).then(if(user) Modifier.background(colors.user,
+        Column((if(user) Modifier.widthIn(max=maximum) else Modifier.fillMaxWidth()).then(if(user) Modifier.background(AppColors.surface(colors.user),
             RoundedCornerShape(topStart=18.dp,topEnd=18.dp,bottomEnd=5.dp,bottomStart=18.dp)).padding(horizontal=16.dp,vertical=11.dp)
             else Modifier.padding(end=if(phone) 24.dp else 38.dp))) {
             if(!user && message.content.isEmpty() && message.delivery==AiDelivery.STREAMING) AiTyping(colors)
-            else SelectionContainer { Text(message.content,color=colors.text,fontSize=16.sp,lineHeight=26.sp) }
-            if(message.delivery==AiDelivery.INTERRUPTED) Text("Response interrupted",color=colors.muted,fontSize=12.sp,modifier=Modifier.padding(top=7.dp))
+            else SelectionContainer { Text(message.content,color=AppColors.content(colors.text),fontSize=16.sp,lineHeight=26.sp) }
+            if(message.delivery==AiDelivery.INTERRUPTED) Text("Response interrupted",color=AppColors.content(colors.muted),fontSize=12.sp,modifier=Modifier.padding(top=7.dp))
         }
     }
     }
@@ -93,7 +95,7 @@ private fun AiTyping(colors:AiColors) {
         repeat(3) { index ->
             val alpha by transition.animateFloat(.3f,.95f,infiniteRepeatable(tween(550),RepeatMode.Reverse,
                 initialStartOffset=StartOffset(index*180)),label="Typing dot $index")
-            Box(Modifier.size(6.dp).background(colors.muted.copy(alpha=alpha),RoundedCornerShape(50)))
+            Box(Modifier.size(6.dp).background(AppColors.surface(colors.muted.copy(alpha=alpha)),RoundedCornerShape(50)))
         }
     }
 }

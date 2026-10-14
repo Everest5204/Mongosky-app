@@ -1,5 +1,7 @@
 package com.mongosky.app.edittextpost
 
+import com.mongosky.app.darkmode.AppColors
+
 import com.mongosky.app.editpost.*
 
 import androidx.compose.foundation.background
@@ -22,11 +24,11 @@ internal fun EditTextPostScreen(state: EditTextPostState, controls: EditTextPost
     val keyboard = LocalSoftwareKeyboardController.current
     Dialog(onDismissRequest = controls::requestClose, properties = DialogProperties(
         usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnClickOutside = false)) {
-        Box(Modifier.fillMaxSize().background(Color.White).safeDrawingPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
+        Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White)).safeDrawingPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
             Column(Modifier.widthIn(max = 480.dp).fillMaxSize()) {
                 EditPostHeader(state, controls::requestClose) { keyboard?.hide(); controls.save() }
                 if (state.loading || state.selecting || state.saving) LinearProgressIndicator(
-                    Modifier.fillMaxWidth().height(2.dp), color = EditPostColors.green, trackColor = Color(0xFFF0FDF4))
+                    Modifier.fillMaxWidth().height(2.dp), color = AppColors.content(EditPostColors.green), trackColor = AppColors.surface(Color(0xFFF0FDF4)))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                     EditPostError(state, controls::reload, controls::save)
                     EditPostAuthor(state, isText = true)

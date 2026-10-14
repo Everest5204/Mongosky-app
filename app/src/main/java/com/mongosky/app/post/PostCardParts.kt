@@ -2,6 +2,10 @@
 
 package com.mongosky.app.post
 
+import com.mongosky.app.darkmode.AppColors
+
+import com.mongosky.app.saveditems.SavedDropdownAction
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -73,30 +77,35 @@ data class PostCardActions(
     val onShare: () -> Unit,
     val onCopyLink: () -> Unit,
     val onReactionPeople: () -> Unit,
-    val onRetryReaction: () -> Unit
+    val onRetryReaction: () -> Unit,
+    val onReport: (() -> Unit)? = null
 )
 
 @Composable
-internal fun PostHeader(author: FeedAuthor, createdAt: Instant, now: Instant, actions: PostCardActions, action: String = "shared a post") {
+internal fun PostHeader(author: FeedAuthor, createdAt: Instant, now: Instant, actions: PostCardActions, action: String = "shared a post", postId: String? = null) {
     var menuOpen by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         PostAvatar(author, Modifier.size(44.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(author.displayName.ifBlank { "Mongosky User" }, color = FeedColors.text, fontSize = 15.sp,
+            Text(author.displayName.ifBlank { "Mongosky User" }, color = AppColors.content(FeedColors.text), fontSize = 15.sp,
                 fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.profileLink(author.id, author))
-            Text("$action · ${postTimeAgo(createdAt, now)}", color = FeedColors.muted, fontSize = 12.sp,
+            Text("$action · ${postTimeAgo(createdAt, now)}", color = AppColors.content(FeedColors.muted), fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Box {
             IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(48.dp)) {
-                Icon(FeedIcons.more, "Post options", tint = FeedColors.muted, modifier = Modifier.size(22.dp))
+                Icon(FeedIcons.more, "Post options", tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(22.dp))
             }
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false },
-                shape = RoundedCornerShape(16.dp), containerColor = Color.White, tonalElevation = 0.dp) {
+                shape = RoundedCornerShape(16.dp), containerColor = AppColors.surface(Color.White), tonalElevation = 0.dp) {
+                postId?.let { SavedDropdownAction(it) { menuOpen = false } }
                 DropdownMenuItem(text = { Text("Copy link", fontSize = 15.sp) }, onClick = { menuOpen = false; actions.onCopyLink() })
                 DropdownMenuItem(text = { Text("Share", fontSize = 15.sp) }, onClick = { menuOpen = false; actions.onShare() })
+                actions.onReport?.let { report ->
+                    DropdownMenuItem(text = { Text("Report", fontSize = 15.sp) }, onClick = { menuOpen = false; report() })
+                }
             }
         }
     }
@@ -104,8 +113,8 @@ internal fun PostHeader(author: FeedAuthor, createdAt: Instant, now: Instant, ac
 
 @Composable
 internal fun PostAvatar(author: FeedAuthor, modifier: Modifier = Modifier.size(40.dp)) {
-    Box(modifier.clip(CircleShape).profileLink(author.id, author).background(Color(0xFF07927C)), contentAlignment = Alignment.Center) {
-        Icon(FeedIcons.user, null, tint = Color(0xFFEAFFF7), modifier = Modifier.size(24.dp))
+    Box(modifier.clip(CircleShape).profileLink(author.id, author).background(AppColors.surface(Color(0xFF07927C))), contentAlignment = Alignment.Center) {
+        Icon(FeedIcons.user, null, tint = AppColors.content(Color(0xFFEAFFF7)), modifier = Modifier.size(24.dp))
         author.profileImageUrl?.takeIf { it.isNotBlank() }?.let { url ->
             AsyncImage(model = url, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
@@ -115,7 +124,7 @@ internal fun PostAvatar(author: FeedAuthor, modifier: Modifier = Modifier.size(4
 @Composable
 internal fun PostFooter(state: PostReactionState, commentsCount: Long, enabled: Boolean, actions: PostCardActions) {
     val summary = state.summary
-    Column(Modifier.fillMaxWidth().background(Color.White)) {
+    Column(Modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
         FeedDivider()
         if (summary.total > 0) {
             ReactionSummaryRow(summary, enabled, actions.onReactionPeople)
@@ -128,7 +137,7 @@ internal fun PostFooter(state: PostReactionState, commentsCount: Long, enabled: 
         }
         if (state.error != null) {
             Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(state.error, color = FeedColors.muted, fontSize = 12.sp, lineHeight = 17.sp, modifier = Modifier.weight(1f))
+                Text(state.error, color = AppColors.content(FeedColors.muted), fontSize = 12.sp, lineHeight = 17.sp, modifier = Modifier.weight(1f))
                 TextButton(onClick = actions.onRetryReaction, enabled = enabled && !state.loading && !state.saving) { Text("Retry", fontSize = 13.sp) }
             }
         }
@@ -140,15 +149,15 @@ private fun FooterButton(icon: ImageVector, label: String, description: String, 
     Row(modifier.height(54.dp).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
         .semantics { contentDescription = description }.padding(horizontal = 3.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-        Icon(icon, null, tint = FeedColors.muted, modifier = Modifier.size(21.dp))
+        Icon(icon, null, tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(21.dp))
         Spacer(Modifier.width(6.dp))
-        Text(label, color = FeedColors.muted, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+        Text(label, color = AppColors.content(FeedColors.muted), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
-internal fun FeedDivider() { Box(Modifier.fillMaxWidth().height(1.dp).background(FeedColors.line)) }
+internal fun FeedDivider() { Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(FeedColors.line))) }
 
 @Composable
 internal fun PostCaption(caption: String) {
@@ -156,11 +165,11 @@ internal fun PostCaption(caption: String) {
     var expanded by rememberSaveable(caption) { mutableStateOf(false) }
     var overflow by remember(caption) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 10.dp)) {
-        Text(caption, color = FeedColors.text, fontSize = 15.sp, lineHeight = 22.sp,
+        Text(caption, color = AppColors.content(FeedColors.text), fontSize = 15.sp, lineHeight = 22.sp,
             maxLines = if (expanded) Int.MAX_VALUE else 5, overflow = TextOverflow.Ellipsis,
             onTextLayout = { if (!expanded) overflow = it.hasVisualOverflow })
         if (expanded || overflow) {
-            Text(if (expanded) "See less" else "See more", color = FeedColors.muted, fontSize = 14.sp,
+            Text(if (expanded) "See less" else "See more", color = AppColors.content(FeedColors.muted), fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(RoundedCornerShape(6.dp))
                     .clickable { expanded = !expanded }.padding(vertical = 8.dp))
         }

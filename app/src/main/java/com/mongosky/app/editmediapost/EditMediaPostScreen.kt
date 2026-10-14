@@ -1,5 +1,7 @@
 package com.mongosky.app.editmediapost
 
+import com.mongosky.app.darkmode.AppColors
+
 import com.mongosky.app.editpost.*
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -49,11 +51,11 @@ internal fun EditMediaPostScreen(state: EditMediaPostState, controls: EditMediaP
     }
     Dialog(onDismissRequest = controls::requestClose, properties = DialogProperties(
         usePlatformDefaultWidth = false, decorFitsSystemWindows = false, dismissOnClickOutside = false)) {
-        Box(Modifier.fillMaxSize().background(Color.White).safeDrawingPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
+        Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White)).safeDrawingPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
             Column(Modifier.widthIn(max = 580.dp).fillMaxSize()) {
                 EditPostHeader(state, controls::requestClose) { keyboard?.hide(); controls.save(files) }
                 if (state.loading || state.selecting || state.saving) LinearProgressIndicator(
-                    Modifier.fillMaxWidth().height(2.dp), color = EditPostColors.green, trackColor = Color(0xFFF0FDF4))
+                    Modifier.fillMaxWidth().height(2.dp), color = AppColors.content(EditPostColors.green), trackColor = AppColors.surface(Color(0xFFF0FDF4)))
                 Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 20.dp)) {
                     EditPostAuthor(state, isText = false)
                     EditMediaPostEditor(state, controls::text, controls::removeMedia, openPicker)

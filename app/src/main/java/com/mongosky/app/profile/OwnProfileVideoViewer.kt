@@ -1,5 +1,7 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -87,17 +89,18 @@ internal fun OwnProfileVideoViewer(asset: ProfileGalleryAsset, onDismiss: () -> 
         }
     }
     Dialog(onDismiss, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Column(Modifier.fillMaxSize().background(Color.Black).safeDrawingPadding()) {
+        com.mongosky.app.darkmode.DarkModeSystemBars(forceDark = true)
+        Column(Modifier.fillMaxSize().background(AppColors.surface(Color.Black)).safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onDismiss) { Icon(FeedIcons.close, "Close video", tint = Color.White) }
-                Text(asset.caption.ifBlank { "Video" }, color = Color.White, maxLines = 2, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                IconButton(onDismiss) { Icon(FeedIcons.close, "Close video", tint = AppColors.content(Color.White)) }
+                Text(asset.caption.ifBlank { "Video" }, color = AppColors.content(Color.White), maxLines = 2, fontSize = 15.sp, modifier = Modifier.weight(1f))
             }
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 ContentFrame(player, Modifier.fillMaxSize(), surfaceType = SURFACE_TYPE_TEXTURE_VIEW, contentScale = ContentScale.Fit)
-                if (buffering) OwnProfileSpinner(color = Color.White)
+                if (buffering) OwnProfileSpinner(color = AppColors.content(Color.White))
                 if (error) Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Could not play this video.", color = Color.White, modifier = Modifier.padding(16.dp))
-                    TextButton({ error = false; player.prepare() }) { Text("Retry", color = Color.White) }
+                    Text("Could not play this video.", color = AppColors.content(Color.White), modifier = Modifier.padding(16.dp))
+                    TextButton({ error = false; player.prepare() }) { Text("Retry", color = AppColors.content(Color.White)) }
                 }
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -106,14 +109,14 @@ internal fun OwnProfileVideoViewer(asset: ProfileGalleryAsset, onDismiss: () -> 
                     player.play()
                 } }, enabled = started && !error) {
                     Icon(if (playRequested) OwnProfileIcons.pause else OwnProfileIcons.play,
-                        if (playRequested) "Pause" else "Play", tint = Color.White)
+                        if (playRequested) "Pause" else "Play", tint = AppColors.content(Color.White))
                 }
                 Slider(value = seeking ?: if (duration > 0) (position.toDouble() / duration).toFloat().coerceIn(0f, 1f) else 0f,
                     onValueChange = { seeking = it }, onValueChangeFinished = {
                         seeking?.let { player.seekTo((it * duration).toLong().coerceIn(0L, duration)) }; seeking = null
                     }, enabled = started && !error && duration > 0, modifier = Modifier.weight(1f),
-                    colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = OwnProfileColors.brand))
-                Text("${videoTime(position)} / ${videoTime(duration)}", color = Color.White, fontSize = 12.sp,
+                    colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = AppColors.content(OwnProfileColors.brand)))
+                Text("${videoTime(position)} / ${videoTime(duration)}", color = AppColors.content(Color.White), fontSize = 12.sp,
                     modifier = Modifier.padding(start = 8.dp, end = 4.dp))
             }
         }

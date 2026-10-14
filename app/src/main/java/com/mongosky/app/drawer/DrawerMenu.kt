@@ -1,5 +1,7 @@
 package com.mongosky.app.drawer
 
+import com.mongosky.app.darkmode.AppColors
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -34,12 +36,12 @@ internal fun DrawerMenuItem(item: DrawerDestination, selectedRouteName: String, 
     val selected = item.routeName != null && item.routeName == selectedRouteName
     val color = if (item == DrawerDestination.SIGN_OUT) DrawerColors.signOut else DrawerColors.text
     Row(Modifier.fillMaxWidth().heightIn(min = 60.dp)
-        .background(if (selected) DrawerColors.selected else Color.White)
+        .background(AppColors.surface(if (selected) DrawerColors.selected else Color.White))
         .selectable(selected = selected, enabled = enabled, role = Role.Button, onClick = onClick)
         .padding(horizontal = 22.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-        Icon(DrawerIcons.forDestination(item), null, tint = color, modifier = Modifier.size(24.dp))
-        Text(item.label, color = color, fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold,
+        Icon(DrawerIcons.forDestination(item), null, tint = AppColors.content(color), modifier = Modifier.size(24.dp))
+        Text(item.label, color = AppColors.content(color), fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold,
             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
     }
 }
