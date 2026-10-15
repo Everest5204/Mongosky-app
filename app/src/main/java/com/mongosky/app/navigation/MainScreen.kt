@@ -3,6 +3,8 @@
 package com.mongosky.app.navigation
 
 import com.mongosky.app.darkmode.AppColors
+import com.mongosky.app.darkmode.DarkModeNavigation
+import com.mongosky.app.darkmode.DarkModeRoute
 
 import com.mongosky.app.saveditems.SavedItemsRoute
 import com.mongosky.app.saveditems.SavedItemsViewModel
@@ -409,7 +411,7 @@ fun MainScreen(
     AiHost(aiViewModel, identity = sessionKey, signingOut = signingOut, active = route == MainRoute.AI)
     val isPostComposer = route == MainRoute.MEDIA_POST || route == MainRoute.TEXT_POST
     val isSignupPage = route == MainRoute.SIGNUP
-    val isSettingsPage = route == MainRoute.SETTINGS
+    val isSettingsPage = route == MainRoute.SETTINGS || DarkModeNavigation.owns(route.name)
     val isSettingsInformationPage = SettingsInformationNavigation.owns(route.name)
     val isDeleteAccountPage = route == MainRoute.DELETE_ACCOUNT
     val isPasswordSection = ChangePasswordNavigation.owns(route.name)
@@ -672,17 +674,25 @@ fun MainScreen(
                     }
                 } else if (isSettingsPage) {
                     contentState.SaveableStateProvider(entry) {
-                        SettingsRoute(onBack = {
-                            if (!signingOut) backStack = SettingsNavigation.back(backStack, entry)
-                        }, onInformationSelected = { menu ->
-                            SettingsInformationNavigation.destination(menu)?.let { destination ->
-                                if (!signingOut) backStack = SettingsInformationNavigation.open(backStack, destination)
-                            }
-                        }, onChangePassword = {
-                            if (!signingOut) backStack = ChangePasswordNavigation.open(backStack)
-                        }, onDeleteAccount = {
-                            if (!signingOut) backStack = DeleteAccountNavigation.open(backStack)
-                        })
+                        if (DarkModeNavigation.owns(route.name)) {
+                            DarkModeRoute(onBack = {
+                                if (!signingOut) backStack = DarkModeNavigation.back(backStack, entry)
+                            })
+                        } else {
+                            SettingsRoute(onBack = {
+                                if (!signingOut) backStack = SettingsNavigation.back(backStack, entry)
+                            }, onInformationSelected = { menu ->
+                                SettingsInformationNavigation.destination(menu)?.let { destination ->
+                                    if (!signingOut) backStack = SettingsInformationNavigation.open(backStack, destination)
+                                }
+                            }, onChangePassword = {
+                                if (!signingOut) backStack = ChangePasswordNavigation.open(backStack)
+                            }, onDeleteAccount = {
+                                if (!signingOut) backStack = DeleteAccountNavigation.open(backStack)
+                            }, onDarkMode = {
+                                if (!signingOut) backStack = DarkModeNavigation.open(backStack)
+                            })
+                        }
                     }
                 } else if (route == MainRoute.MY_ACTIVITY) {
                     contentState.SaveableStateProvider(entry) {
@@ -1174,7 +1184,7 @@ private enum class MainRoute(val title: String) {
     HOME("Home"), REELS("Reels"), FRIENDS("Friends"), PROFILE("Profile"), USER_PROFILE("Profile"),
     SEARCH("Search"), NOTIFICATIONS("Notifications"), TEXT_POST("Text post"),
     MEDIA_POST("Media post"), CREATE_REEL("Reels"), STORY("Story"), AI("AI"),
-    MY_ACTIVITY("My Activity"), SAVED_ITEMS("Saved Items"), SETTINGS("Settings"),
+    MY_ACTIVITY("My Activity"), SAVED_ITEMS("Saved Items"), SETTINGS("Settings"), DARK_MODE("Dark Mode"),
     GUIDELINES("Community Guidelines"), CHANGE_NAME("Change name"),
     CHANGE_PASSWORD("Change password"), CHANGE_PASSWORD_RESET("Forgot password"),
     DELETE_ACCOUNT("Delete Account"),

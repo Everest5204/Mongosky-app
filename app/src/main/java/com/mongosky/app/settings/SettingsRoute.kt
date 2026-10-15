@@ -26,9 +26,9 @@ internal fun SettingsRoute(
     onBack: () -> Unit,
     onChangePassword: (() -> Unit)? = null,
     onDeleteAccount: (() -> Unit)? = null,
-    onInformationSelected: (SettingsMenuId) -> Unit
+    onInformationSelected: (SettingsMenuId) -> Unit,
+    onDarkMode: (() -> Unit)? = null
 ) {
-    com.mongosky.app.darkmode.DarkModeSettingsHost { openDarkMode ->
     // Mongosky Personal Details integration v1
     PersonalDetailsSettingsHost { openPersonalDetails ->
         // Mongosky Deactivate Account integration v1
@@ -44,8 +44,8 @@ internal fun SettingsRoute(
                         SettingsScreen(onBack = onBack,
                             enabledMenus = buildSet {
                                 add(SettingsMenuId.PERSONAL_DETAILS)
-                                add(SettingsMenuId.DARK_MODE)
-                            add(SettingsMenuId.DEACTIVATE_ACCOUNT)
+                                if (onDarkMode != null) add(SettingsMenuId.DARK_MODE)
+                                add(SettingsMenuId.DEACTIVATE_ACCOUNT)
                                 add(SettingsMenuId.HELP_AND_SUPPORT)
                                 addAll(listOf(SettingsMenuId.ABOUT, SettingsMenuId.PRIVACY_POLICY, SettingsMenuId.GET_VERIFIED))
                                 if (onChangePassword != null) add(SettingsMenuId.CHANGE_PASSWORD)
@@ -53,9 +53,9 @@ internal fun SettingsRoute(
                             },
                             onMenuSelected = { item ->
                                 when (item) {
-                                    SettingsMenuId.DARK_MODE -> openDarkMode()
+                                    SettingsMenuId.DARK_MODE -> onDarkMode?.invoke()
                                     SettingsMenuId.PERSONAL_DETAILS -> openPersonalDetails()
-                                SettingsMenuId.DEACTIVATE_ACCOUNT -> openDeactivateAccount()
+                                    SettingsMenuId.DEACTIVATE_ACCOUNT -> openDeactivateAccount()
                                     SettingsMenuId.HELP_AND_SUPPORT -> openHelpAndSupport()
                                     SettingsMenuId.CHANGE_PASSWORD -> onChangePassword?.invoke()
                                     SettingsMenuId.DELETE_ACCOUNT -> onDeleteAccount?.invoke()
@@ -67,6 +67,5 @@ internal fun SettingsRoute(
                 }
             }
         }
-    }
     }
 }

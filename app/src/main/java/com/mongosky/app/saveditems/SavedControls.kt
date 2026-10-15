@@ -1,8 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.mongosky.app.saveditems
 
-import com.mongosky.app.darkmode.AppColors
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -16,10 +14,6 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
 internal val LocalSavedItems = staticCompositionLocalOf<SavedItemsViewModel?> { null }
-internal val SavedGreen = Color(0xFF07927C)
-internal val SavedBackground = Color(0xFFF4F7F6)
-internal val SavedText = Color(0xFF172B28)
-internal val SavedMuted = Color(0xFF647570)
 
 @Composable private fun savedControl(postId: String,tag: String,revalidate: Boolean = true): Pair<SavedItemsViewModel?,SavedCell> {
     val model = LocalSavedItems.current
@@ -56,6 +50,7 @@ private fun canOpenSavedMenu(model: SavedItemsViewModel?,cell: SavedCell) = mode
 
 /** One save action shared by Home and both profile menus. Background I/O has no menu loading UI. */
 @Composable internal fun SavedMenuAction(postId: String,onDismiss: () -> Unit,sheet: SheetState? = null) {
+    val colors = rememberSavedUiColors()
     val (model,cell) = savedControl(postId,"post-menu",revalidate = false)
     val epoch = model?.generation ?: -1
     val scope = rememberCoroutineScope()
@@ -68,17 +63,18 @@ private fun canOpenSavedMenu(model: SavedItemsViewModel?,cell: SavedCell) = mode
         scope.launch { sheet?.hide();onDismiss() }
     }).padding(horizontal = 20.dp,vertical = 12.dp),verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.spacedBy(18.dp)) {
         Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,null,
-            tint = AppColors.content(if (cell.status?.saved == true) SavedGreen else SavedText),modifier = Modifier.size(23.dp))
-        Text(savedPostMenuLabel(cell),fontSize = 16.sp,color = AppColors.content(if (enabled) SavedText else SavedMuted))
+            tint = if (cell.status?.saved == true) colors.accent else colors.text,modifier = Modifier.size(23.dp))
+        Text(savedPostMenuLabel(cell),fontSize = 16.sp,color = if (enabled) colors.text else colors.muted)
     }
 }
 
 /** Default styled post cards, including the My Activity and Saved post detail. */
 @Composable internal fun SavedDropdownAction(postId: String,onDismiss: () -> Unit) {
+    val colors = rememberSavedUiColors()
     val (model,cell) = savedControl(postId,"post-dropdown",revalidate = false)
     val epoch = model?.generation ?: -1
     DropdownMenuItem(text = { Text(savedPostMenuLabel(cell)) },leadingIcon = {
-        Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,null,tint = AppColors.content(SavedGreen))
+        Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,null,tint = colors.accent)
     },enabled = canOpenSavedMenu(model,cell),onClick = {
         if (model?.ready == false) model.retrySession()
         else model?.setFromMenu(postId,cell.status?.saved != true,epoch)
@@ -92,9 +88,9 @@ private fun canOpenSavedMenu(model: SavedItemsViewModel?,cell: SavedCell) = mode
     IconButton(onClick = { if (model?.ready == false) model.retrySession() else if (cell.error != null) model?.ensureStatus(postId,true) else model?.toggle(postId,epoch) },
         enabled = canUse(model,cell),
         modifier = Modifier.size(48.dp)) {
-        if (waiting(model,cell) || model?.ready == true && cell.status == null && cell.error == null) CircularProgressIndicator(Modifier.size(20.dp),strokeWidth = 2.dp,color = AppColors.content(Color.White))
+        if (waiting(model,cell) || model?.ready == true && cell.status == null && cell.error == null) CircularProgressIndicator(Modifier.size(20.dp),strokeWidth = 2.dp,color = Color.White)
         else Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,label(model,cell),
-            tint = AppColors.content(if (cell.status?.saved == true) Color(0xFF6CE5B7) else Color.White),modifier = Modifier.size(25.dp))
+            tint = if (cell.status?.saved == true) Color(0xFF6CE5B7) else Color.White,modifier = Modifier.size(25.dp))
     }
 }
 

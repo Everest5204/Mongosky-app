@@ -30,12 +30,34 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
+/** Light mode is pure white; dark mode follows the app's existing dark palette. */
+private val DarkModePageColors = lightColorScheme(
+    primary = Color(0xFFE60023),
+    onPrimary = Color.White,
+    primaryContainer = Color.White,
+    onPrimaryContainer = Color(0xFFE60023),
+    background = Color.White,
+    onBackground = Color(0xFF111827),
+    surface = Color.White,
+    onSurface = Color(0xFF111827),
+    surfaceVariant = Color.White,
+    onSurfaceVariant = Color(0xFF667085),
+    outlineVariant = Color(0xFFE5E7EB),
+    surfaceTint = Color.White,
+)
+
 @Composable internal fun DarkModeScreen(onBack: () -> Unit) {
+    MaterialTheme(colorScheme = if (AppAppearance.isDark) AppColors.DarkScheme else DarkModePageColors) {
+        DarkModePageContent(onBack)
+    }
+}
+
+@Composable private fun DarkModePageContent(onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     val colors = MaterialTheme.colorScheme;val selected = AppAppearance.mode
     val notices = remember { SnackbarHostState() };val scope = rememberCoroutineScope()
     fun choose(mode: AppearanceMode) { if (!AppAppearance.select(mode)) scope.launch { notices.showSnackbar("Could not save appearance. Please try again.") } }
-    Scaffold(containerColor = colors.background,snackbarHost = { SnackbarHost(notices) },topBar = {
+    Scaffold(modifier = Modifier.testTag("dark-mode-page"),containerColor = colors.background,snackbarHost = { SnackbarHost(notices) },topBar = {
         TopAppBar(title = { Text("Dark Mode",fontWeight = FontWeight.SemiBold,fontSize = 20.sp,modifier = Modifier.semantics { heading() }) },
             navigationIcon = { IconButton(onBack) { Icon(DarkModeIcons.back,"Back to settings") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface))
@@ -67,7 +89,9 @@ import kotlinx.coroutines.launch
                 Text(title,color = colors.onSurface,fontWeight = FontWeight.SemiBold,fontSize = 16.sp)
                 Text(subtitle,color = colors.onSurfaceVariant,fontSize = 12.sp,lineHeight = 18.sp)
             }
-            Switch(checked = active,onCheckedChange = { checked -> onChoose(mode.fromSwitch(checked)) },modifier = Modifier.testTag("appearance-${mode.stored}"))
+            Switch(checked = active,onCheckedChange = { checked -> onChoose(mode.fromSwitch(checked)) },
+                colors = SwitchDefaults.colors(checkedTrackColor = DarkModePageColors.primary,checkedThumbColor = Color.White,checkedBorderColor = DarkModePageColors.primary),
+                modifier = Modifier.testTag("appearance-${mode.stored}"))
         }
     }
 }

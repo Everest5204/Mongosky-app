@@ -1,8 +1,6 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.mongosky.app.saveditems
 
-import com.mongosky.app.darkmode.AppColors
-
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -30,6 +28,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** Small pages in a bounded LazyColumn; original media is loaded only after opening a post. */
 @Composable internal fun SavedItemsScreen(model: SavedItemsViewModel,enabled: Boolean,onBack: () -> Unit,onSignInAgain: () -> Unit) {
+    val colors = rememberSavedUiColors()
     val epoch = model.generation;val state = model.state;val list = rememberLazyListState();val keyboard = LocalSoftwareKeyboardController.current
     val canAct = enabled && model.ready && !model.sessionExpired
     BackHandler(state.target == null) { if (enabled) onBack() }
@@ -41,29 +40,29 @@ import kotlinx.coroutines.flow.distinctUntilChanged
         snapshotFlow { list.layoutInfo.visibleItemsInfo.mapNotNull { it.key as? String }.filter { it in itemIds }.take(12).toSet() }
             .distinctUntilChanged().collect(model::visible)
     }
-    Scaffold(containerColor = AppColors.surface(SavedBackground),topBar = {
+    Scaffold(containerColor = colors.background,topBar = {
         TopAppBar(title = { Text("Saved Items",fontSize = 21.sp,fontWeight = FontWeight.SemiBold) },
             navigationIcon = { IconButton(onBack,enabled = enabled) { Icon(SavedIcons.back,"Back") } },
             actions = { IconButton(model::refresh,enabled = canAct && !state.loading && !state.refreshing) { Icon(SavedIcons.refresh,"Refresh saved items") } },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = AppColors.surface(Color.White),titleContentColor = AppColors.content(SavedText)))
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface,titleContentColor = colors.text))
     }) { inset -> Box(Modifier.fillMaxSize().padding(inset).imePadding(),contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 680.dp).fillMaxWidth()) {
-            Column(Modifier.fillMaxWidth().background(AppColors.surface(Color.White)).padding(horizontal = 16.dp)) {
+            Column(Modifier.fillMaxWidth().background(colors.surface).padding(horizontal = 16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Icon(SavedIcons.lock,null,tint = AppColors.content(SavedMuted),modifier = Modifier.size(14.dp))
-                    Text("Your saves are private",fontSize = 12.sp,color = AppColors.content(SavedMuted))
+                    Icon(SavedIcons.lock,null,tint = colors.muted,modifier = Modifier.size(14.dp))
+                    Text("Your saves are private",fontSize = 12.sp,color = colors.muted)
                 }
                 OutlinedTextField(state.searchDraft,model::search,enabled = canAct,modifier = Modifier.fillMaxWidth().padding(top = 12.dp).testTag("saved-search"),
                     singleLine = true,placeholder = { Text("Search saved posts",fontSize = 14.sp) },leadingIcon = { Icon(SavedIcons.search,null,modifier = Modifier.size(21.dp)) },
                     trailingIcon = { if (state.searchDraft.isNotEmpty()) IconButton({ model.search("") }) { Icon(SavedIcons.close,"Clear search",modifier = Modifier.size(20.dp)) } },
                     shape = RoundedCornerShape(15.dp),keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppColors.outline(SavedGreen),unfocusedBorderColor = AppColors.outline(Color(0xFFDDE8E2))))
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = colors.accent,unfocusedBorderColor = colors.searchBorder))
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp),horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SavedKind.entries.forEach { kind -> FilterChip(state.filter.kind == kind,{ keyboard?.hide();model.select(kind) },enabled = canAct,label = { Text(kind.label) },
-                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppColors.surface(Color(0xFFE0F3EB)),selectedLabelColor = AppColors.content(SavedGreen))) }
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = colors.selectedContainer,selectedLabelColor = colors.selectedText)) }
                 }
             }
-            if (state.updatesAvailable && !model.sessionExpired) TextButton(model::refresh,enabled = canAct,modifier = Modifier.fillMaxWidth()) { Text("Saved items updated · Tap to refresh",color = AppColors.content(SavedGreen)) }
+            if (state.updatesAvailable && !model.sessionExpired) TextButton(model::refresh,enabled = canAct,modifier = Modifier.fillMaxWidth()) { Text("Saved items updated · Tap to refresh",color = colors.accent) }
             PullToRefreshBox(state.refreshing,onRefresh = { if (canAct) model.refresh() },modifier = Modifier.weight(1f)) {
                 LazyColumn(state = list,modifier = Modifier.fillMaxSize().testTag("saved-list"),contentPadding = PaddingValues(16.dp),verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     when {
@@ -81,10 +80,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
                                 SavedItemRow(item,canAct,state.targetLoading == item.postId,model.cell(item.postId).saving,{ model.open(item,epoch) },{ model.remove(item,epoch) })
                             }
                             item("pagination") { when {
-                                state.loadingMore -> Box(Modifier.fillMaxWidth().padding(18.dp),contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp),color = AppColors.content(SavedGreen),strokeWidth = 2.dp) }
+                                state.loadingMore -> Box(Modifier.fillMaxWidth().padding(18.dp),contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp),color = colors.accent,strokeWidth = 2.dp) }
                                 state.pageError != null -> SavedMessage("Couldn't load more",state.pageError,if (state.hasMore) "Try again" else "Refresh",if (state.hasMore) model::loadMore else model::refresh)
-                                state.hasMore -> { LaunchedEffect(state.items.lastOrNull()?.postId,state.filter,canAct) { if (canAct) model.loadMore() };TextButton(model::loadMore,enabled = canAct,modifier = Modifier.fillMaxWidth()) { Text("Load more",color = AppColors.content(SavedGreen)) } }
-                                state.items.isNotEmpty() -> Text("No more saved items",fontSize = 12.sp,color = AppColors.content(SavedMuted),textAlign = androidx.compose.ui.text.style.TextAlign.Center,modifier = Modifier.fillMaxWidth().padding(18.dp))
+                                state.hasMore -> { LaunchedEffect(state.items.lastOrNull()?.postId,state.filter,canAct) { if (canAct) model.loadMore() };TextButton(model::loadMore,enabled = canAct,modifier = Modifier.fillMaxWidth()) { Text("Load more",color = colors.accent) } }
+                                state.items.isNotEmpty() -> Text("No more saved items",fontSize = 12.sp,color = colors.muted,textAlign = androidx.compose.ui.text.style.TextAlign.Center,modifier = Modifier.fillMaxWidth().padding(18.dp))
                             } }
                         }
                     }
