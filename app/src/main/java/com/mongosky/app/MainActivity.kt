@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     modelClass.isAssignableFrom(SignupViewModel::class.java) -> {
-                        SignupViewModel() as T
+                        SignupViewModel(commitSession = loginViewModel::acceptCreatedAccount) as T
                     }
 
                     modelClass.isAssignableFrom(PasswordResetViewModel::class.java) -> {

@@ -294,10 +294,6 @@ fun MainScreen(
         ViewModelProvider(owner, OwnProfileViewModel.Factory(activity.applicationContext))
             .get("MongoskyOwnProfile", OwnProfileViewModel::class.java)
     }
-    val drawerSignupViewModel = remember(owner) {
-        ViewModelProvider(owner, SignupViewModel.Factory())
-            .get("MongoskyDrawerSignup", SignupViewModel::class.java)
-    }
     val drawerViewModel = remember(owner) {
         ViewModelProvider(owner, DrawerViewModel.Factory(friendsTokenStore::read))
             .get("MongoskyLeftDrawer", DrawerViewModel::class.java)
@@ -356,6 +352,11 @@ fun MainScreen(
             }
         }
         ViewModelProvider(owner, factory).get("MongoskyDrawerLogin", LoginViewModel::class.java)
+    }
+    val drawerSignupViewModel = remember(owner, drawerLoginViewModel) {
+        ViewModelProvider(owner, SignupViewModel.Factory { confirmed ->
+            drawerLoginViewModel.acceptCreatedAccount(confirmed)
+        }).get("MongoskyDrawerSignup", SignupViewModel::class.java)
     }
     LaunchedEffect(reelsViewModel, userId, signingOut) {
         if (!signingOut) { reelsViewModel.enter(userId); reelsPreviewViewModel.enter(userId) }

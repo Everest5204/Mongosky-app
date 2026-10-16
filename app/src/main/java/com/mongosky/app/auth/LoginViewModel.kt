@@ -154,7 +154,7 @@ class LoginViewModel internal constructor(
                 } else {
                     withContext(NonCancellable) {
                         try { tokenStore.save(result) }
-                        catch (_: Exception) { throw LoginException("Could not save your session. Please retry.") }
+                        catch (error: Exception) { throw LoginException("Could not save your session. Please retry.", LoginFailure.STORAGE, cause = error) }
                         showSignedIn(result)
                     }
                 }
@@ -163,6 +163,17 @@ class LoginViewModel internal constructor(
             catch (_: IOException) { if (attempt == generation) showLoginError("Could not connect. Check your internet.") }
             catch (_: Exception) { if (attempt == generation) showLoginError("Unable to sign in. Please try again.") }
         }
+    }
+
+    /** Signup already returned an authenticated account; never send its password through a second login. */
+    internal suspend fun acceptCreatedAccount(result: AuthSession) {
+        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+        if (!viewModelScope.isActive || uiState.loading || uiState.checkingSession ||
+            uiState.restoreError != null || !validAuthToken(result.token) || result.userId.isBlank()) {
+            throw LoginException("Could not start your session. Please retry.")
+        }
+        if (commitSession != null) commitSession.invoke(result)
+        else commitAuthenticatedSession(result) {}
     }
 
     /** Cancel old feature requests before the token changes; publish disk and memory together. */
@@ -182,7 +193,7 @@ class LoginViewModel internal constructor(
                 uiState = previousState
                 lastVerifiedAtNanos = 0L
                 validateSessionInBackground()
-                throw LoginException("Could not save your session. Please retry.")
+                throw LoginException("Could not save your session. Please retry.", LoginFailure.STORAGE)
             }
             // A cancelled form cannot revert memory after the new token has been stored.
             showSignedIn(result)

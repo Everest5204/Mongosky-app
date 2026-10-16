@@ -22,7 +22,7 @@ class TokenStore(context: Context) {
     private val sessionFile = File(context.applicationContext.noBackupFilesDir, "auth_session")
     private val tokenFile = AtomicFile(sessionFile)
 
-    /** Applies to the next successful save; this method performs no disk I/O. */
+    /** Legacy token-only preference. Verified mobile account sessions are always durable. */
     fun setRememberMeForNextLogin(rememberMe: Boolean) {
         synchronized(lock) {
             rememberNextLogin = rememberMe
@@ -32,13 +32,13 @@ class TokenStore(context: Context) {
     suspend fun save(token: String) = saveRecord(SavedLoginSession(token))
 
     internal suspend fun saveSession(account: AuthSession) =
-        saveRecord(SavedLoginSession(account.token, account))
+        saveRecord(SavedLoginSession(account.token, account), durableAccount = true)
 
-    private suspend fun saveRecord(saved: SavedLoginSession) = withContext(Dispatchers.IO) {
+    private suspend fun saveRecord(saved: SavedLoginSession, durableAccount: Boolean = false) = withContext(Dispatchers.IO) {
         require(saved.token.isNotBlank()) { "Token must not be empty." }
 
         synchronized(lock) {
-            if (!rememberNextLogin) {
+            if (!durableAccount && !rememberNextLogin) {
                 // Every TokenStore instance can read this session in the current
                 // process. No token file remains for a later process to restore.
                 deleteSavedSession()

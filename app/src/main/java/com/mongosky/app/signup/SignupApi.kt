@@ -1,11 +1,11 @@
 package com.mongosky.app.signup
 
 import com.mongosky.app.auth.AuthSession
+import com.mongosky.app.auth.AuthHttp
 import com.mongosky.app.auth.AuthValidation
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +31,7 @@ fun interface SignupDataSource {
 /** A pooled, asynchronous request. Registration is never automatically replayed. */
 class SignupApi(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    client: OkHttpClient = SHARED_CLIENT,
+    client: OkHttpClient = AuthHttp.SHARED_CLIENT,
     private val endpoint: String = "https://api.mongosky.com/api/auth/signup"
 ) : SignupDataSource {
     private val client = client.newBuilder().retryOnConnectionFailure(false)
@@ -106,8 +106,5 @@ class SignupApi(
     private companion object {
         const val MAX_RESPONSE_BYTES = 65_536
         const val UNCERTAIN = "Could not confirm account creation. Try signing in before creating it again."
-        val SHARED_CLIENT = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS).writeTimeout(20, TimeUnit.SECONDS)
-            .callTimeout(35, TimeUnit.SECONDS).build()
     }
 }

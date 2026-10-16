@@ -81,7 +81,8 @@ fun AuthEntryScreen(
         if (leaving == SignupPage.RESET) resetViewModel?.reset()
     }
 
-    val canShowChildPage = !loginState.loading && !loginState.checkingSession &&
+    // Saving a newly created account must keep its current form until Home replaces this host.
+    val canShowChildPage = !loginState.checkingSession &&
         loginState.restoreError == null && loginState.signedInName == null
     val entry = navigation.current
     val page = if (canShowChildPage && (entry.page != SignupPage.RESET || resetViewModel != null))
@@ -101,7 +102,6 @@ fun AuthEntryScreen(
                         onBack = ::goBack,
                         onSignIn = { if (canOpenChildPage()) move(navigation.openSignIn()) },
                         showBackButton = true,
-                        onCreatedBack = ::goBack,
                         signedInAs = signedInAs
                     )
                     SignupPage.RESET -> {

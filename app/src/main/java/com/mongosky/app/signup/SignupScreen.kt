@@ -16,7 +16,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mongosky.app.R
 import com.mongosky.app.auth.AuthValidation
@@ -30,7 +29,6 @@ fun SignupScreen(
     onBack: () -> Unit,
     onSignIn: () -> Unit,
     showBackButton: Boolean = false,
-    onCreatedBack: () -> Unit = onSignIn,
     signedInAs: String? = null
 ) {
     // Each native document has its own scroll state; Back restores the whole form.
@@ -44,25 +42,9 @@ fun SignupScreen(
                 SignupDocumentScreen(openDocument, onBack = { document = null })
             }
         } else pages.SaveableStateProvider("signup-form") {
-            val name = viewModel.uiState.createdName
-            if (name != null) {
-                BackHandler(onBack = onCreatedBack)
-                SignupWhitePage(
-                    subtitle = stringResource(R.string.signup_account_created),
-                    onBack = if (showBackButton) onCreatedBack else null
-                ) {
-                    Text(stringResource(R.string.signup_welcome, name),
-                        modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-                        color = AppColors.content(SignupInk), style = MaterialTheme.typography.bodyLarge)
-                    Spacer(Modifier.height(24.dp))
-                    signedInAs?.let { SignupAccountNotice(it) }
-                    SignupActionButton(stringResource(R.string.signup_sign_in), onSignIn)
-                    SignupLanguageChooser()
-                }
-            } else {
-                SignupForm(viewModel, onBack, onSignIn, showBackButton, signedInAs,
-                    onOpenDocument = { document = it.key })
-            }
+            // Session publication is owned by the auth host: no account-created/sign-in route exists here.
+            SignupForm(viewModel, onBack, onSignIn, showBackButton, signedInAs,
+                onOpenDocument = { document = it.key })
         }
     }
 }
@@ -93,8 +75,8 @@ private fun SignupForm(
     val password = viewModel.passwordDraft
     val birthday = SignupBirthday(month, day, year)
 
-    LaunchedEffect(password, step, state.loading) {
-        if (step == 2 && password.isEmpty() && !state.loading) step = 1
+    LaunchedEffect(password, step, state.loading, state.sessionCommitted) {
+        if (step == 2 && password.isEmpty() && !state.loading && !state.sessionCommitted) step = 1
     }
     fun clearError() { localError = null; viewModel.clearError() }
     fun updateBirthday(next: SignupBirthday) {
