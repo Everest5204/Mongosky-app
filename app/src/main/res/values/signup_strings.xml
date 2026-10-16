@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signup_create_account">Create a new account</string>
+    <string name="signup_complete_profile">Complete your profile</string>
+    <string name="signup_account_created">Account created</string>
+    <string name="signup_welcome">Welcome, %1$s</string>
+    <string name="signup_google">Continue with Google</string>
+    <string name="signup_email_phone">Email or Phone</string>
+    <string name="signup_password">Password</string>
+    <string name="signup_first_name">First name</string>
+    <string name="signup_last_name">Last name</string>
+    <string name="signup_gender">Gender</string>
+    <string name="signup_male">Male</string>
+    <string name="signup_female">Female</string>
+    <string name="signup_other">Other</string>
+    <string name="signup_birthdate">Date of birth</string>
+    <string name="signup_month">Month</string>
+    <string name="signup_day">Day</string>
+    <string name="signup_year">Year</string>
+    <string name="signup_cancel">Cancel</string>
+    <string name="signup_policy_prefix">"I agree to the "</string>
+    <string name="signup_privacy">Privacy Policy</string>
+    <string name="signup_policy_middle">" and have read "</string>
+    <string name="signup_about">About Us</string>
+    <string name="signup_policy_suffix">.</string>
+    <string name="signup_continue">Continue</string>
+    <string name="signup_create_button">Create account</string>
+    <string name="signup_creating_account">Creating account…</string>
+    <string name="signup_already_account">Already have an account?</string>
+    <string name="signup_sign_in">Sign In</string>
+    <string name="signup_signed_in_notice">Signed in as %1$s. Sign in to switch accounts.</string>
+    <string name="signup_language_failure">Could not save language. Please try again.</string>
+    <string-array name="signup_months">
+        <item>January</item><item>February</item><item>March</item><item>April</item>
+        <item>May</item><item>June</item><item>July</item><item>August</item>
+        <item>September</item><item>October</item><item>November</item><item>December</item>
+    </string-array>
+</resources>

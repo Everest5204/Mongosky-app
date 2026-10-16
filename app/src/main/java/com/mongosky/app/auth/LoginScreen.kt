@@ -20,6 +20,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -73,7 +76,10 @@ fun LoginScreen(
     val tokenStore = remember(context) { TokenStore(context) }
 
     var emailOrPhone by rememberSaveable { mutableStateOf("") }
-    var rememberMe by rememberSaveable { mutableStateOf(true) }
+    // A new group drops the old automatic tick while restoring explicit user choices.
+    var rememberMe by key("login-remember-me-explicit-choice") {
+        rememberSaveable { mutableStateOf(false) }
+    }
     // Passwords remain in memory and are excluded from saved state.
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
@@ -218,7 +224,7 @@ fun LoginScreen(
                             imeAction = ImeAction.Next
                         )
                     )
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(12.dp))
                     LoginInput(
                         value = password,
                         onValueChange = { password = it; edited() },
@@ -241,7 +247,7 @@ fun LoginScreen(
                                 Icon(
                                     imageVector = if (showPassword) LoginEyeOff else LoginEye,
                                     contentDescription = appDescription(if (showPassword) "Hide password" else "Show password"),
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(22.dp),
                                     tint = AppColors.content(LoginMuted)
                                 )
                             }
@@ -269,7 +275,7 @@ fun LoginScreen(
                         loading = state.loading,
                         onClick = submit
                     )
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text(
                         text = buildAnnotatedString {
                             append(appText("Do not have an account?  "))
@@ -309,7 +315,7 @@ private fun LoginPage(subtitle: String, content: @Composable ColumnScope.() -> U
             val viewportHeight = maxHeight
             Column(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
-                    .heightIn(min = viewportHeight).padding(horizontal = 24.dp, vertical = 40.dp),
+                    .heightIn(min = viewportHeight).padding(horizontal = 24.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -319,10 +325,10 @@ private fun LoginPage(subtitle: String, content: @Composable ColumnScope.() -> U
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = AppColors.content(Color.Black),
-                        fontSize = 32.sp,
-                        lineHeight = 40.sp,
+                        fontSize = 30.sp,
+                        lineHeight = 38.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.8).sp
+                        letterSpacing = (-0.7).sp
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -330,11 +336,11 @@ private fun LoginPage(subtitle: String, content: @Composable ColumnScope.() -> U
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = AppColors.content(LoginMuted),
-                        fontSize = 18.sp,
-                        lineHeight = 26.sp,
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
                         fontWeight = FontWeight.Normal
                     )
-                    Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(26.dp))
                     content()
                 }
             }
@@ -358,7 +364,7 @@ private fun LoginInput(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp).semantics {
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(LoginPill).semantics {
             contentType = autofillType
         },
         enabled = enabled,
@@ -370,11 +376,11 @@ private fun LoginInput(
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
         leadingIcon = {
-            Icon(leadingIcon, contentDescription = null, modifier = Modifier.size(22.dp))
+            Icon(leadingIcon, contentDescription = null, modifier = Modifier.size(20.dp), tint = AppColors.content(LoginMuted))
         },
         trailingIcon = trailingIcon,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = AppColors.surface(Color.White),
+            focusedContainerColor = AppColors.surface(Color(0xFFF5F6F8)),
             unfocusedContainerColor = AppColors.surface(Color.White),
             disabledContainerColor = AppColors.surface(Color.White),
             focusedBorderColor = AppColors.outline(LoginBlue),
@@ -393,7 +399,7 @@ private fun LoginActionButton(label: String, loading: Boolean = false, onClick: 
     Button(
         onClick = onClick,
         enabled = !loading,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
         shape = LoginPill,
         colors = ButtonDefaults.buttonColors(
             containerColor = AppColors.fill(LoginRed),
@@ -401,15 +407,15 @@ private fun LoginActionButton(label: String, loading: Boolean = false, onClick: 
             disabledContainerColor = AppColors.fill(LoginRed),
             disabledContentColor = AppColors.content(Color.White)
         ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
     ) {
         if (loading) {
-            CircularProgressIndicator(Modifier.size(20.dp), color = AppColors.content(Color.White), strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(18.dp), color = AppColors.content(Color.White), strokeWidth = 2.dp)
             Spacer(Modifier.width(10.dp))
         }
         Text(
             appText(label),
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             lineHeight = 24.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
@@ -434,16 +440,16 @@ private fun LoginGoogleButton() {
     OutlinedButton(
         onClick = {},
         enabled = false,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
         shape = LoginPill,
         border = BorderStroke(1.dp, AppColors.outline(LoginBorder)),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = AppColors.surface(Color.White),
             contentColor = AppColors.content(LoginInk),
             disabledContainerColor = AppColors.surface(Color.White),
-            disabledContentColor = AppColors.content(LoginInk)
+            disabledContentColor = AppColors.content(LoginMuted)
         ),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -453,14 +459,14 @@ private fun LoginGoogleButton() {
             Image(
                 imageVector = LoginGoogleLogo,
                 contentDescription = null,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(22.dp).alpha(.55f)
             )
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(12.dp))
             Text(
                 text = appText("Continue with Google"),
                 modifier = Modifier.weight(1f, fill = false),
                 textAlign = TextAlign.Center,
-                fontSize = 17.sp,
+                fontSize = 16.sp,
                 lineHeight = 24.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -552,22 +558,12 @@ private fun LoginRememberOption(
         ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            modifier = Modifier.size(24.dp),
-            shape = RoundedCornerShape(6.dp),
-            color = AppColors.surface(if (checked) LoginRed else Color.White),
-            border = BorderStroke(1.5.dp, AppColors.outline(if (checked) LoginRed else LoginMuted))
-        ) {
-            if (checked) {
-                Icon(
-                    imageVector = LoginCheck,
-                    contentDescription = null,
-                    tint = AppColors.content(Color.White),
-                    modifier = Modifier.padding(3.dp)
-                )
-            }
+        Box(Modifier.width(28.dp).heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) {
+            Checkbox(checked, onCheckedChange = null, enabled = enabled,
+                modifier = Modifier.size(20.dp).scale(.8f),
+                colors = CheckboxDefaults.colors(checkedColor = AppColors.fill(LoginRed),
+                    uncheckedColor = AppColors.content(LoginMuted), checkmarkColor = AppColors.content(Color.White)))
         }
-        Spacer(Modifier.width(8.dp))
         Text(appText("Remember me"), color = AppColors.content(LoginInk), fontSize = 14.sp, lineHeight = 21.sp)
     }
 }

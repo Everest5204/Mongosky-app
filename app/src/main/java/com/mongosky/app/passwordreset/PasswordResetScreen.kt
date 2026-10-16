@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -276,7 +277,7 @@ fun PasswordResetScreen(
                         onToggle = { showPassword = !showPassword },
                         imeAction = ImeAction.Next
                     )
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(12.dp))
                     ResetPasswordInput(
                         value = confirmation,
                         onValueChange = {
@@ -342,7 +343,7 @@ private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> U
             val viewportHeight = maxHeight
             Column(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
-                    .heightIn(min = viewportHeight).padding(horizontal = 24.dp, vertical = 40.dp),
+                    .heightIn(min = viewportHeight).padding(horizontal = 24.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -353,10 +354,10 @@ private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> U
                         textAlign = TextAlign.Center,
                         color = AppColors.content(Color.Black),
                         fontFamily = FontFamily.SansSerif,
-                        fontSize = 32.sp,
-                        lineHeight = 40.sp,
+                        fontSize = 30.sp,
+                        lineHeight = 38.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.8).sp
+                        letterSpacing = (-0.7).sp
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
@@ -367,11 +368,11 @@ private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> U
                         textAlign = TextAlign.Center,
                         color = AppColors.content(ResetMuted),
                         fontFamily = FontFamily.SansSerif,
-                        fontSize = 18.sp,
-                        lineHeight = 26.sp,
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
                         fontWeight = FontWeight.Normal
                     )
-                    Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(26.dp))
                     content()
                 }
             }
@@ -425,8 +426,8 @@ private fun ResetInput(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp).semantics {
-            contentDescription = placeholder
+        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(ResetPill).semantics {
+            contentDescription = appText(placeholder)
             if (autofillType != null) contentType = autofillType
         },
         enabled = enabled,
@@ -443,9 +444,9 @@ private fun ResetInput(
         },
         textStyle = MaterialTheme.typography.bodyLarge.copy(
             color = AppColors.content(ResetInk),
-            fontSize = if (codeField) 22.sp else 16.sp,
-            lineHeight = if (codeField) 28.sp else 24.sp,
-            letterSpacing = if (codeField) 4.sp else 0.sp,
+            fontSize = if (codeField) 20.sp else 16.sp,
+            lineHeight = 24.sp,
+            letterSpacing = if (codeField) 3.sp else 0.sp,
             textAlign = if (codeField) TextAlign.Center else TextAlign.Start,
             fontWeight = if (codeField) FontWeight.SemiBold else FontWeight.Normal
         ),
@@ -454,11 +455,11 @@ private fun ResetInput(
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
         leadingIcon = leadingIcon?.let { icon ->
-            { Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp)) }
+            { Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = AppColors.content(ResetMuted)) }
         },
         trailingIcon = trailingIcon,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = AppColors.surface(Color.White),
+            focusedContainerColor = AppColors.surface(Color(0xFFF5F6F8)),
             unfocusedContainerColor = AppColors.surface(Color.White),
             disabledContainerColor = AppColors.surface(Color.White),
             focusedBorderColor = AppColors.outline(ResetBlue),
@@ -504,7 +505,7 @@ private fun ResetPasswordInput(
                 Icon(
                     imageVector = if (visible) ResetEyeOff else ResetEye,
                     contentDescription = appDescription(if (visible) "Hide password" else "Show password"),
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(22.dp),
                     tint = AppColors.content(ResetMuted)
                 )
             }
@@ -522,7 +523,7 @@ private fun ResetActionButton(
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
         shape = ResetPill,
         colors = ButtonDefaults.buttonColors(
             containerColor = AppColors.fill(ResetRed),
@@ -530,11 +531,11 @@ private fun ResetActionButton(
             disabledContainerColor = AppColors.fill(if (loading) ResetRed else ResetRed.copy(alpha = 0.45f)),
             disabledContentColor = AppColors.content(Color.White)
         ),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
     ) {
         if (loading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(18.dp),
                 color = AppColors.content(Color.White),
                 strokeWidth = 2.dp
             )
@@ -542,7 +543,7 @@ private fun ResetActionButton(
         }
         Text(
             text = appText(label),
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             lineHeight = 24.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signup_create_account">নতুন অ্যাকাউন্ট তৈরি করুন</string>
+    <string name="signup_complete_profile">আপনার প্রোফাইল সম্পূর্ণ করুন</string>
+    <string name="signup_account_created">অ্যাকাউন্ট তৈরি হয়েছে</string>
+    <string name="signup_welcome">স্বাগতম, %1$s</string>
+    <string name="signup_google">গুগল দিয়ে এগিয়ে যান</string>
+    <string name="signup_email_phone">ইমেইল অথবা ফোন</string>
+    <string name="signup_password">পাসওয়ার্ড</string>
+    <string name="signup_first_name">নামের প্রথম অংশ</string>
+    <string name="signup_last_name">নামের শেষ অংশ</string>
+    <string name="signup_gender">লিঙ্গ</string>
+    <string name="signup_male">পুরুষ</string>
+    <string name="signup_female">নারী</string>
+    <string name="signup_other">অন্যান্য</string>
+    <string name="signup_birthdate">জন্মতারিখ</string>
+    <string name="signup_month">মাস</string>
+    <string name="signup_day">দিন</string>
+    <string name="signup_year">বছর</string>
+    <string name="signup_cancel">বাতিল</string>
+    <string name="signup_policy_prefix">"আমি "</string>
+    <string name="signup_privacy">গোপনীয়তা নীতি</string>
+    <string name="signup_policy_middle">" মেনে নিচ্ছি এবং "</string>
+    <string name="signup_about">আমাদের সম্পর্কে</string>
+    <string name="signup_policy_suffix">" পড়েছি।"</string>
+    <string name="signup_continue">এগিয়ে যান</string>
+    <string name="signup_create_button">অ্যাকাউন্ট তৈরি করুন</string>
+    <string name="signup_creating_account">অ্যাকাউন্ট তৈরি হচ্ছে…</string>
+    <string name="signup_already_account">আগে থেকেই অ্যাকাউন্ট আছে?</string>
+    <string name="signup_sign_in">সাইন ইন</string>
+    <string name="signup_signed_in_notice">%1$s হিসেবে সাইন ইন করা আছে। অ্যাকাউন্ট বদলাতে সাইন ইন করুন।</string>
+    <string name="signup_language_failure">ভাষা সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।</string>
+    <string-array name="signup_months">
+        <item>জানুয়ারি</item><item>ফেব্রুয়ারি</item><item>মার্চ</item><item>এপ্রিল</item>
+        <item>মে</item><item>জুন</item><item>জুলাই</item><item>আগস্ট</item>
+        <item>সেপ্টেম্বর</item><item>অক্টোবর</item><item>নভেম্বর</item><item>ডিসেম্বর</item>
+    </string-array>
+</resources>

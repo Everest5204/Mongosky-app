@@ -3,7 +3,6 @@ package com.mongosky.app.auth
 import com.mongosky.app.signup.SignupRequest
 import java.time.DateTimeException
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 object AuthValidation {
 
@@ -88,7 +87,7 @@ object AuthValidation {
             return "Enter a valid date of birth."
         }
 
-        val today = LocalDate.now(ZoneOffset.UTC)
+        val today = LocalDate.now()
 
         if (birthDate.isAfter(today)) {
             return "Your date of birth cannot be in the future."
