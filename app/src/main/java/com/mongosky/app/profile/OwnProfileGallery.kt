@@ -1,5 +1,8 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -38,13 +41,13 @@ internal fun ProfileGalleryTile(asset: ProfileGalleryAsset, onOpen: () -> Unit, 
     val video = asset.media.type == FeedMediaType.VIDEO
     Box(modifier.background(AppColors.surface(OwnProfileColors.soft)).clickable(role = Role.Button, onClick = onOpen), contentAlignment = Alignment.Center) {
         Icon(if (video) OwnProfileIcons.play else FeedIcons.image, null, tint = AppColors.content(OwnProfileColors.muted), modifier = Modifier.size(30.dp))
-        asset.thumbnail?.let { AsyncImage(it, if (video) "Video preview" else "Profile photo", Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
+        asset.thumbnail?.let { AsyncImage(it, appDescription(if (video) "Video preview" else "Profile photo"), Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
         if (video) {
             Box(Modifier.fillMaxSize().background(AppColors.surface(Color.Black.copy(alpha = 0.15f))), contentAlignment = Alignment.Center) {
-                Icon(OwnProfileIcons.play, "Play video", tint = AppColors.content(Color.White), modifier = Modifier.size(30.dp))
+                Icon(OwnProfileIcons.play, appDescription("Play video"), tint = AppColors.content(Color.White), modifier = Modifier.size(30.dp))
             }
             asset.caption.takeIf { it.isNotBlank() }?.let {
-                Text(it, color = AppColors.content(Color.White), fontSize = 12.sp, maxLines = 2,
+                Text(appText(it), color = AppColors.content(Color.White), fontSize = 12.sp, maxLines = 2,
                     modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().background(AppColors.surface(Color.Black.copy(alpha = 0.45f))).padding(8.dp))
             }
         }

@@ -1,5 +1,7 @@
 package com.mongosky.app.textpost
 
+import com.mongosky.app.language.appText
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -60,7 +62,7 @@ fun TextPostEditor(
                 .heightIn(max = height - 48.dp).focusRequester(focusRequester),
             decorationBox = { field ->
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    if (value.text.isEmpty()) Text(placeholder, style = style.copy(color = color.copy(alpha = 0.55f)))
+                    if (value.text.isEmpty()) Text(appText(placeholder), style = style.copy(color = color.copy(alpha = 0.55f)))
                     field()
                 }
             }

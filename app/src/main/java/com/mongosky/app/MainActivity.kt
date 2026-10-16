@@ -17,8 +17,16 @@ import com.mongosky.app.passwordreset.PasswordResetViewModel
 import com.mongosky.app.signup.SignupViewModel
 import com.mongosky.app.theme.MongoskyTheme
 import com.mongosky.app.downloadpost.PostDownloadHost
+import com.mongosky.app.session.deferSessionEntry
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var loginViewModel: LoginViewModel
+
+    override fun onStart() {
+        super.onStart()
+        if (::loginViewModel.isInitialized) loginViewModel.validateSessionInBackground()
+    }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -27,6 +35,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.mongosky.app.language.AppLanguage.initialize(applicationContext)
         com.mongosky.app.darkmode.AppAppearance.prepareStartup(this)
         super.onCreate(savedInstanceState)
         NotificationSystem.receiveIntent(applicationContext, intent)
@@ -60,38 +69,42 @@ class MainActivity : ComponentActivity() {
         }
 
         val provider = ViewModelProvider(this, factory)
-        val loginViewModel = provider[LoginViewModel::class.java]
+        loginViewModel = provider[LoginViewModel::class.java]
         val signupViewModel = provider[SignupViewModel::class.java]
         val passwordResetViewModel = provider[PasswordResetViewModel::class.java]
 
-        setContent {
-            MongoskyTheme {
-                val state = loginViewModel.uiState
-                val userName = state.signedInName
-                LaunchedEffect(userName, state.checkingSession, state.restoreError) {
-                    if (userName == null && !state.checkingSession && state.restoreError == null) NotificationSystem.clear(applicationContext)
-                }
+        deferSessionEntry { loginViewModel.uiState.checkingSession }
 
-                if (userName != null) {
-                    PostDownloadHost()
-                    key(state.signedInUserId, state.sessionRevision) {
-                        MainScreen(
-                            userName = userName,
-                            signingOut = state.loading,
-                            error = state.error,
-                            onSignOut = loginViewModel::signOut,
+        setContent {
+            com.mongosky.app.language.LanguageProvider {
+                MongoskyTheme {
+                    val state = loginViewModel.uiState
+                    val userName = state.signedInName
+                    LaunchedEffect(userName, state.checkingSession, state.restoreError) {
+                        if (userName == null && !state.checkingSession && state.restoreError == null) NotificationSystem.clear(applicationContext)
+                    }
+
+                    if (userName != null) {
+                        PostDownloadHost()
+                        key(state.signedInUserId, state.sessionRevision) {
+                            MainScreen(
+                                userName = userName,
+                                signingOut = state.loading,
+                                error = state.error,
+                                onSignOut = loginViewModel::signOut,
+                                loginViewModel = loginViewModel,
+                                userId = state.signedInUserId,
+                                profileImageUrl = state.signedInProfileImageUrl,
+                                onRefreshProfile = loginViewModel::refreshProfile
+                            )
+                        }
+                    } else if (!state.checkingSession) {
+                        AuthEntryScreen(
                             loginViewModel = loginViewModel,
-                            userId = state.signedInUserId,
-                            profileImageUrl = state.signedInProfileImageUrl,
-                            onRefreshProfile = loginViewModel::refreshProfile
+                            signupViewModel = signupViewModel,
+                            passwordResetViewModel = passwordResetViewModel
                         )
                     }
-                } else {
-                    AuthEntryScreen(
-                        loginViewModel = loginViewModel,
-                        signupViewModel = signupViewModel,
-                        passwordResetViewModel = passwordResetViewModel
-                    )
                 }
             }
         }

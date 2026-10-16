@@ -1,5 +1,7 @@
 package com.mongosky.app.shared
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.layout.*
@@ -22,10 +24,10 @@ internal fun FeedSpinner() { CircularProgressIndicator(modifier = Modifier.size(
 @Composable
 internal fun FeedNotice(message: String, action: String, onClick: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(message, color = AppColors.content(FeedColors.muted), fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
+        Text(appText(message), color = AppColors.content(FeedColors.muted), fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(10.dp))
         Button(onClick = onClick, colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(FeedColors.brand), contentColor = AppColors.content(Color.White))) {
-            Text(action, fontSize = 14.sp)
+            Text(appText(action), fontSize = 14.sp)
         }
     }
 }

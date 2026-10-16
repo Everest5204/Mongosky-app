@@ -1,6 +1,9 @@
 @file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -52,14 +55,14 @@ internal fun OwnProfileHeader(
             Box(Modifier.fillMaxWidth().height(coverHeight).clip(RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp))
                 .background(AppColors.surface(androidx.compose.ui.graphics.Color(0xFFDDDDDD)))) {
                 profile?.coverImageUrl?.let { url ->
-                    AsyncImage(url, "Your cover photo", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    AsyncImage(url, appDescription("Your cover photo"), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 }
                 if (state.uploading == ProfileImageKind.COVER) UploadOverlay()
                 IconButton(onBack, enabled = backEnabled,
                     modifier = Modifier.align(Alignment.TopStart).padding(start = inset, top = 14.dp)
                         .size(48.dp).clip(CircleShape)
                         .background(AppColors.surface(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.38f)))) {
-                    Icon(OwnProfileIcons.back, "Back", Modifier.size(25.dp), tint = AppColors.content(androidx.compose.ui.graphics.Color.White))
+                    Icon(OwnProfileIcons.back, appDescription("Back"), Modifier.size(25.dp), tint = AppColors.content(androidx.compose.ui.graphics.Color.White))
                 }
                 CameraButton("Change cover photo", imageEnabled, { onImage(ProfileImageKind.COVER) },
                     Modifier.align(Alignment.BottomEnd).padding(end = 14.dp, bottom = 16.dp))
@@ -77,7 +80,7 @@ internal fun OwnProfileHeader(
                         autoSize = TextAutoSize.StepBased(minFontSize = 16.sp,
                             maxFontSize = if (small) 29.sp else 34.sp, stepSize = 0.5.sp),
                         modifier = Modifier.weight(1f, fill = false))
-                    if (state.verified) Icon(OwnProfileIcons.verified, "Verified account",
+                    if (state.verified) Icon(OwnProfileIcons.verified, appDescription("Verified account"),
                         Modifier.size(if (small) 19.dp else 21.dp), tint = androidx.compose.ui.graphics.Color.Unspecified)
                 }
                 Spacer(Modifier.height(10.dp))
@@ -95,16 +98,16 @@ internal fun OwnProfileHeader(
                         shape = RoundedCornerShape(5.dp), contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(OwnProfileColors.brand), contentColor = AppColors.content(androidx.compose.ui.graphics.Color.White))) {
                         Icon(OwnProfileIcons.plus, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
-                        Text("Add Story", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(appText("Add Story"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                     Button(onEdit, enabled = enabled && !state.busy, modifier = Modifier.weight(1.08f).heightIn(min = 48.dp),
                         shape = RoundedCornerShape(5.dp), contentPadding = PaddingValues(horizontal = 6.dp, vertical = 10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(OwnProfileColors.soft), contentColor = AppColors.content(OwnProfileColors.text))) {
                         Icon(FeedIcons.user, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
-                        Text("Edit Profile", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(appText("Edit Profile"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                     IconButton(onOptions, modifier = Modifier.size(48.dp).clip(RoundedCornerShape(5.dp)).background(AppColors.surface(OwnProfileColors.soft))) {
-                        Icon(FeedIcons.more, "Profile options", tint = AppColors.content(OwnProfileColors.text))
+                        Icon(FeedIcons.more, appDescription("Profile options"), tint = AppColors.content(OwnProfileColors.text))
                     }
                 }
                 Spacer(Modifier.height(28.dp))
@@ -125,7 +128,7 @@ private fun ProfileStat(count: Long?, label: String, enabled: Boolean, onClick: 
     val base = Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(6.dp))
     Text(buildAnnotatedString {
         withStyle(SpanStyle(fontWeight = FontWeight.Black)) { append(count?.toString() ?: "—") }
-        append(" $label")
+        append(" ${appText(label)}")
     }, color = AppColors.content(OwnProfileColors.text), fontSize = 14.sp,
         modifier = (if (enabled) base.clickable(role = Role.Button, onClick = onClick) else base)
             .padding(vertical = 14.dp, horizontal = 3.dp))
@@ -135,7 +138,7 @@ private fun ProfileStat(count: Long?, label: String, enabled: Boolean, onClick: 
 private fun CameraButton(description: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
     IconButton(onClick, enabled = enabled, modifier = modifier.size(48.dp).clip(CircleShape)
         .background(AppColors.surface(androidx.compose.ui.graphics.Color.White.copy(alpha = 0.95f))).border(1.dp, AppColors.outline(OwnProfileColors.line), CircleShape)) {
-        Icon(OwnProfileIcons.camera, description, Modifier.size(21.dp), tint = AppColors.content(if (enabled) OwnProfileColors.text else OwnProfileColors.muted))
+        Icon(OwnProfileIcons.camera, appDescription(description), Modifier.size(21.dp), tint = AppColors.content(if (enabled) OwnProfileColors.text else OwnProfileColors.muted))
     }
 }
 

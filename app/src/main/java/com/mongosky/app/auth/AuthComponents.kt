@@ -1,5 +1,8 @@
 package com.mongosky.app.auth
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -60,7 +63,7 @@ internal fun AuthPage(
                             Icon(
                                 imageVector =
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
+                                contentDescription = appDescription("Back")
                             )
                         }
                     }
@@ -80,12 +83,12 @@ internal fun AuthPage(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = title,
+                        text = appText(title),
                         style = MaterialTheme.typography.headlineMedium
                     )
 
                     Text(
-                        text = subtitle,
+                        text = appText(subtitle),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -121,7 +124,7 @@ internal fun AuthField(
         singleLine = true,
 
         label = {
-            Text(text = label)
+            Text(text = appText(label))
         },
 
         textStyle = MaterialTheme.typography.bodyLarge,
@@ -142,7 +145,7 @@ internal fun AuthField(
                     enabled = enabled
                 ) {
                     Text(
-                        text = if (showPassword) "Hide" else "Show",
+                        text = appText(if (showPassword) "Hide" else "Show"),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -194,7 +197,7 @@ internal fun AuthPrimaryButton(
         }
 
         Text(
-            text = label,
+            text = appText(label),
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center
         )
@@ -230,7 +233,7 @@ internal fun AuthSecondaryButton(
         )
     ) {
         Text(
-            text = label,
+            text = appText(label),
             style = MaterialTheme.typography.labelLarge
         )
     }
@@ -247,7 +250,7 @@ internal fun AuthMessage(
         contentColor = MaterialTheme.colorScheme.onErrorContainer
     ) {
         Text(
-            text = message,
+            text = appText(message),
             modifier = Modifier.padding(14.dp),
             style = MaterialTheme.typography.bodyMedium
         )

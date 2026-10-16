@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="edit_profile_title">Edit Profile</string>
+  <string name="edit_profile_back">Go back</string>
+  <string name="edit_profile_change_cover">Change Cover</string>
+  <string name="edit_profile_change_photo">Change Profile Photo</string>
+  <string name="edit_profile_cover_description">Your cover photo</string>
+  <string name="edit_profile_photo_description">Your profile photo</string>
+  <string name="edit_profile_bio">Bio</string>
+  <string name="edit_profile_bio_hint">Write bio…</string>
+  <string name="edit_profile_bio_counter">%1$d/%2$d</string>
+  <string name="edit_profile_bio_remaining">%1$d characters remaining</string>
+  <string name="edit_profile_public">Public</string>
+  <string name="edit_profile_public_hint">Your bio will be visible to everyone.</string>
+  <string name="edit_profile_save">Save Changes</string>
+  <string name="edit_profile_saving">Saving Changes…</string>
+  <string name="edit_profile_cancel">Cancel</string>
+  <string name="edit_profile_loading">Loading profile…</string>
+  <string name="edit_profile_load_error">Unable to load profile</string>
+  <string name="edit_profile_retry">Try again</string>
+  <string name="edit_profile_discard_title">Discard unsaved changes?</string>
+  <string name="edit_profile_discard_body">Your unsaved bio and selected photos will be discarded.</string>
+  <string name="edit_profile_discard_partial_body">Your unsaved changes will be discarded. Changes already saved will remain on your profile.</string>
+  <string name="edit_profile_discard">Discard</string>
+  <string name="edit_profile_keep_editing">Keep Editing</string>
+  <string name="edit_profile_partial">Some changes were saved.</string>
+  <string name="edit_profile_uncertain">A photo upload may have finished. Review the saved photos before trying again.</string>
+  <string name="edit_profile_reviewed">These are the current saved photos. Keep them, or tap a camera to choose a photo again.</string>
+  <string name="edit_profile_check_saved">Check Saved Photos</string>
+  <string name="edit_profile_checking">Checking…</string>
+  <string name="edit_profile_use_saved">Keep Saved Photos</string>
+  <string name="edit_profile_sign_in">Sign in again</string>
+</resources>

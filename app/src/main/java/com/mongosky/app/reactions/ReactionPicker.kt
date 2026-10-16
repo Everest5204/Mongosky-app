@@ -1,5 +1,7 @@
 package com.mongosky.app.reactions
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -105,7 +107,7 @@ internal fun ReactionPicker(picker: ReactionPickerState, active: PostReaction?, 
 @Composable
 private fun ReactionTooltip(label: String, center: Float) {
     Layout(content = {
-        Text(label, color = AppColors.content(Color.White), fontSize = 12.sp, lineHeight = 16.sp,
+        Text(appText(label), color = AppColors.content(Color.White), fontSize = 12.sp, lineHeight = 16.sp,
             fontWeight = FontWeight.SemiBold, maxLines = 1,
             modifier = Modifier.background(AppColors.surface(Color(0xE6222222)), RoundedCornerShape(14.dp))
                 .padding(horizontal = 9.dp, vertical = 5.dp).clearAndSetSemantics {})

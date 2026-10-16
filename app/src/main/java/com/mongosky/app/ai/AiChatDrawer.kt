@@ -1,5 +1,8 @@
 package com.mongosky.app.ai
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -24,23 +27,23 @@ internal fun AiChatDrawer(state:AiState,colors:AiColors,dark:Boolean,onClose:()-
     Column(Modifier.fillMaxSize().padding(horizontal=18.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min=76.dp),verticalAlignment=Alignment.CenterVertically) {
             Text("Mongosky",color=AppColors.content(colors.text),fontSize=26.sp,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
-            IconButton(onClose,Modifier.size(48.dp)) { Icon(AiIcons.Close,"Close chat menu",tint=AppColors.content(colors.muted),modifier=Modifier.size(22.dp)) }
+            IconButton(onClose,Modifier.size(48.dp)) { Icon(AiIcons.Close,appDescription("Close chat menu"),tint=AppColors.content(colors.muted),modifier=Modifier.size(22.dp)) }
         }
         AiDrawerAction("New Chat",AiIcons.Plus,colors,!state.mutating && !state.expired,onNew)
         AiDrawerAction(if(dark) "Light Mode" else "Dark Mode",if(dark) AiIcons.Sun else AiIcons.Moon,colors,true,onTheme)
         HorizontalDivider(Modifier.padding(top=18.dp,bottom=14.dp),color=AppColors.outline(colors.border))
         Row(Modifier.fillMaxWidth().heightIn(min=48.dp),verticalAlignment=Alignment.CenterVertically) {
-            Text("RECENT CHATS",color=AppColors.content(colors.muted),fontSize=13.sp,fontWeight=FontWeight.Medium,modifier=Modifier.weight(1f))
+            Text(appText("RECENT CHATS"),color=AppColors.content(colors.muted),fontSize=13.sp,fontWeight=FontWeight.Medium,modifier=Modifier.weight(1f))
             TextButton(onClick=onClear,enabled=state.ready && state.chats.isNotEmpty() && !state.sending && !state.mutating) {
                 if(state.clearing) CircularProgressIndicator(Modifier.size(16.dp),strokeWidth=2.dp,color=AppColors.content(colors.red))
-                else Text("Clear all",color=AppColors.content(if(!state.sending && !state.mutating) colors.red else colors.muted),fontSize=14.sp)
+                else Text(appText("Clear all"),color=AppColors.content(if(!state.sending && !state.mutating) colors.red else colors.muted),fontSize=14.sp)
             }
         }
         if(state.chatsLoading && state.chats.isEmpty()) Row(Modifier.padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
             CircularProgressIndicator(Modifier.size(16.dp),strokeWidth=2.dp,color=AppColors.content(colors.muted))
-            Text("Loading chats…",color=AppColors.content(colors.muted),fontSize=14.sp,modifier=Modifier.padding(start=12.dp))
-        } else if(state.chats.isEmpty()) Text("No recent chats",color=AppColors.content(colors.muted),fontSize=14.sp,modifier=Modifier.padding(12.dp))
-        if(state.error?.action==AiErrorAction.CHATS) TextButton(onReload,enabled=!state.sending && !state.mutating) { Text("Reload chats",color=AppColors.content(colors.red)) }
+            Text(appText("Loading chats…"),color=AppColors.content(colors.muted),fontSize=14.sp,modifier=Modifier.padding(start=12.dp))
+        } else if(state.chats.isEmpty()) Text(appText("No recent chats"),color=AppColors.content(colors.muted),fontSize=14.sp,modifier=Modifier.padding(12.dp))
+        if(state.error?.action==AiErrorAction.CHATS) TextButton(onReload,enabled=!state.sending && !state.mutating) { Text(appText("Reload chats"),color=AppColors.content(colors.red)) }
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp),contentPadding=PaddingValues(bottom=20.dp)) {
             items(state.chats,key={it.id}) { chat ->
                 Row(Modifier.fillMaxWidth().heightIn(min=48.dp).background(
@@ -62,7 +65,7 @@ internal fun AiChatDrawer(state:AiState,colors:AiColors,dark:Boolean,onClose:()-
 private fun AiDrawerAction(title:String,icon:ImageVector,colors:AiColors,enabled:Boolean,onClick:()->Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable(enabled=enabled,onClick=onClick).padding(horizontal=10.dp),
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
-        Icon(icon,title,tint=AppColors.content(colors.text),modifier=Modifier.size(22.dp))
-        Text(title,color=AppColors.content(colors.text),fontSize=16.sp)
+        Icon(icon,appDescription(title),tint=AppColors.content(colors.text),modifier=Modifier.size(22.dp))
+        Text(appText(title),color=AppColors.content(colors.text),fontSize=16.sp)
     }
 }

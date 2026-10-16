@@ -1,5 +1,9 @@
 package com.mongosky.app.home
 
+import com.mongosky.app.language.appText
+import androidx.compose.ui.text.rememberTextMeasurer
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -60,13 +64,18 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
         shown = state
     }
     val showFollow = !post.isOwn && (!shown.following || shown.confirmation) && HomeFeedPolicy.validId(post.author.id)
-    val name = post.author.displayName.ifBlank { "Mongosky User" }
+    val name = post.author.displayName.ifBlank { appText("Mongosky User") }
     val hasControls = shown.verified || showFollow
-    val label = if (shown.following) "Following" else "Follow"
-    val controlWidth = (if (shown.verified) 17 else 0) + (if (showFollow) {
-        (if (shown.following) 67 else 50) + if (shown.verified) 4 else 0
-    } else 0)
+    val label = appText(if (shown.following) "Following" else "Follow")
     val density = LocalDensity.current
+    val textMeasurer = rememberTextMeasurer()
+    val labelWidthEm = remember(label, textMeasurer, density) {
+        val width = textMeasurer.measure(label,
+            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold)).size.width
+        with(density) { width / 15.sp.toPx() } + 10f / 15f
+    }
+    val controlWidthEm = (if (shown.verified) 17f / 15f else 0f) +
+        (if (showFollow) labelWidthEm + (if (shown.verified) 4f / 15f else 0f) else 0f)
     val badgeSize = with(density) { 17.sp.toDp() }
     val controlGap = with(density) { 4.sp.toDp() }
     val title = remember(name, hasControls) {
@@ -80,22 +89,22 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
     }
     val inline = if (!hasControls) emptyMap() else mapOf("author-controls" to InlineTextContent(
         // Relative units keep room for the complete controls with Android's nonlinear font scaling.
-        Placeholder((controlWidth / 15f).em, (20f / 15f).em, PlaceholderVerticalAlign.TextCenter)
+        Placeholder(controlWidthEm.em, (20f / 15f).em, PlaceholderVerticalAlign.TextCenter)
     ) {
         // One inline unit: neither the badge nor the Follow label can split across lines.
         Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(controlGap)) {
-            if (shown.verified) Icon(HomeFeedIcons.verified, "Verified account", tint = Color.Unspecified,
+            if (shown.verified) Icon(HomeFeedIcons.verified, appDescription("Verified account"), tint = Color.Unspecified,
                 modifier = Modifier.size(badgeSize))
             if (showFollow) Box(Modifier.weight(1f).fillMaxHeight()
                 .clip(RoundedCornerShape(8.dp))
                 .background(AppColors.surface(if (shown.following) Color(0xFFF1F5F9) else Color.Transparent))
                 .clickable(enabled = enabled && !shown.pending && !shown.following,
-                    role = Role.Button, onClickLabel = "Follow $name") {
+                    role = Role.Button, onClickLabel = appText("Follow $name")) {
                     if (onFollow != null) onFollow() else controls.follow(post)
                 }
-                .semantics { stateDescription = if (shown.pending) "Following in progress" else
-                    if (shown.following) "Following" else "Not following" },
+                .semantics { stateDescription = appText(if (shown.pending) "Following in progress" else
+                    if (shown.following) "Following" else "Not following") },
                 contentAlignment = Alignment.Center) {
                 Text(label, fontSize = 14.sp, lineHeight = 18.sp, maxLines = 1, softWrap = false,
                     fontWeight = FontWeight.Bold, color = AppColors.content(if (shown.following) Color(0xFF475569)
@@ -112,12 +121,12 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
                 lineHeight = 20.sp, fontWeight = FontWeight.Bold,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
                 modifier = Modifier.fillMaxWidth().profileLink(post.author.id, post.author))
-            Text("${post.updateLabel} · ${postTimeAgo(post.createdAt, now)}", color = AppColors.content(FeedColors.muted),
+            Text("${appText(post.updateLabel)} · ${appText(postTimeAgo(post.createdAt, now))}", color = AppColors.content(FeedColors.muted),
                 fontSize = 12.sp, lineHeight = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
         }
         IconButton(onClick = { if (onMenu != null) onMenu() else controls.openMenu(post) }, enabled = enabled, modifier = Modifier.size(48.dp)) {
-            Icon(FeedIcons.more, "Post options", tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(22.dp))
+            Icon(FeedIcons.more, appDescription("Post options"), tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(22.dp))
         }
     }
 }

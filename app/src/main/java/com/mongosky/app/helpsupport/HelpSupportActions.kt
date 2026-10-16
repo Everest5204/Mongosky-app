@@ -1,5 +1,7 @@
 package com.mongosky.app.helpsupport
 
+import com.mongosky.app.language.appText
+
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -24,7 +26,7 @@ internal object HelpSupportActions {
     fun copyEmail(context: Context): Boolean = try {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         if (clipboard == null) false else {
-            clipboard.setPrimaryClip(ClipData.newPlainText("Mongosky support", HelpSupportContent.CONTACT_EMAIL))
+            clipboard.setPrimaryClip(ClipData.newPlainText(appText("Mongosky support"), HelpSupportContent.CONTACT_EMAIL))
             true
         }
     } catch (_: SecurityException) { false }

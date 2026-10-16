@@ -1,5 +1,7 @@
 package com.mongosky.app.helpsupport
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -45,7 +47,7 @@ internal fun HelpSupportRoute(onBack: () -> Unit) {
     fun back() { if (contactOpen) contactOpen = false else onBack() }
     fun copyEmail() {
         val copied = HelpSupportActions.copyEmail(context)
-        scope.launch { snackbar.showSnackbar(if (copied) "Support email copied." else "Couldn't copy the email. ${HelpSupportContent.CONTACT_EMAIL}") }
+        scope.launch { snackbar.showSnackbar(appText(if (copied) "Support email copied." else "Couldn't copy the email. ${HelpSupportContent.CONTACT_EMAIL}")) }
     }
     fun openEmail() {
         if (openingEmail) return
@@ -90,20 +92,20 @@ internal fun HelpSupportRoute(onBack: () -> Unit) {
         SnackbarHost(snackbar, Modifier.align(androidx.compose.ui.Alignment.BottomCenter).imePadding().padding(12.dp))
     }
     if (clearConfirm) AlertDialog(onDismissRequest = { clearConfirm = false },
-        containerColor = AppColors.surface(HelpSupportColors.background), title = { Text("Clear this draft?") },
-        text = { Text("The summary and details you wrote will be removed.") },
+        containerColor = AppColors.surface(HelpSupportColors.background), title = { Text(appText("Clear this draft?")) },
+        text = { Text(appText("The summary and details you wrote will be removed.")) },
         confirmButton = { TextButton(onClick = {
             summary = ""; description = ""; includeAppInfo = false; attempted = false; clearConfirm = false
-        }) { Text("Clear draft", color = AppColors.content(HelpSupportColors.brand)) } },
-        dismissButton = { TextButton(onClick = { clearConfirm = false }) { Text("Keep draft") } })
+        }) { Text(appText("Clear draft"), color = AppColors.content(HelpSupportColors.brand)) } },
+        dismissButton = { TextButton(onClick = { clearConfirm = false }) { Text(appText("Keep draft")) } })
     if (emailUnavailable) AlertDialog(onDismissRequest = { emailUnavailable = false },
-        containerColor = AppColors.surface(HelpSupportColors.background), title = { Text("Email app unavailable") },
+        containerColor = AppColors.surface(HelpSupportColors.background), title = { Text(appText("Email app unavailable")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Open or set up an email app, or copy our address and contact us from another device. Your draft is saved here.")
+                Text(appText("Open or set up an email app, or copy our address and contact us from another device. Your draft is saved here."))
                 SelectionContainer { Text(HelpSupportContent.CONTACT_EMAIL) }
             }
         },
-        confirmButton = { TextButton(onClick = { copyEmail(); emailUnavailable = false }) { Text("Copy email", color = AppColors.content(HelpSupportColors.brand)) } },
-        dismissButton = { TextButton(onClick = { emailUnavailable = false }) { Text("Close") } })
+        confirmButton = { TextButton(onClick = { copyEmail(); emailUnavailable = false }) { Text(appText("Copy email"), color = AppColors.content(HelpSupportColors.brand)) } },
+        dismissButton = { TextButton(onClick = { emailUnavailable = false }) { Text(appText("Close")) } })
 }

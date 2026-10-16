@@ -1,5 +1,8 @@
 package com.mongosky.app.ai
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -54,7 +57,7 @@ fun AiScreen(viewModel:AiViewModel,onSignInAgain:()->Unit) {
             Column(Modifier.fillMaxSize().background(AppColors.surface(colors.background)).imePadding().navigationBarsPadding()) {
                 Row(Modifier.fillMaxWidth().heightIn(min=66.dp).padding(start=8.dp,end=16.dp),verticalAlignment=Alignment.CenterVertically) {
                     IconButton(onClick={keyboard?.hide();scope.launch { drawer.open() }},modifier=Modifier.size(48.dp)) {
-                        Icon(AiIcons.Menu,"Open chat menu",tint=AppColors.content(colors.text),modifier=Modifier.size(24.dp))
+                        Icon(AiIcons.Menu,appDescription("Open chat menu"),tint=AppColors.content(colors.text),modifier=Modifier.size(24.dp))
                     }
                     Text("Mongosky",color=AppColors.content(colors.text),fontSize=23.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(start=8.dp))
                 }
@@ -70,10 +73,10 @@ fun AiScreen(viewModel:AiViewModel,onSignInAgain:()->Unit) {
                 }
             }
         }
-        if(clearConfirm) AlertDialog(onDismissRequest={clearConfirm=false},title={Text("Clear all chats?")},
-            text={Text("Delete all Mongosky AI chats? This cannot be undone.")},
-            confirmButton={TextButton(onClick={clearConfirm=false;controller.clearChats()},enabled=!state.sending && !state.mutating) { Text("Delete all",color=AppColors.content(colors.red)) }},
-            dismissButton={TextButton(onClick={clearConfirm=false}) { Text("Cancel",color=AppColors.content(colors.text)) }},containerColor=AppColors.surface(colors.surface))
+        if(clearConfirm) AlertDialog(onDismissRequest={clearConfirm=false},title={Text(appText("Clear all chats?"))},
+            text={Text(appText("Delete all Mongosky AI chats? This cannot be undone."))},
+            confirmButton={TextButton(onClick={clearConfirm=false;controller.clearChats()},enabled=!state.sending && !state.mutating) { Text(appText("Delete all"),color=AppColors.content(colors.red)) }},
+            dismissButton={TextButton(onClick={clearConfirm=false}) { Text(appText("Cancel"),color=AppColors.content(colors.text)) }},containerColor=AppColors.surface(colors.surface))
     }
 }
 
@@ -82,12 +85,12 @@ private fun AiErrorBanner(error:AiError,expired:Boolean,colors:AiColors,onReload
     Column(Modifier.fillMaxWidth().padding(bottom=10.dp).background(AppColors.surface(colors.errorBackground),RoundedCornerShape(14.dp))
         .border(1.dp,AppColors.outline(colors.errorBorder),RoundedCornerShape(14.dp))) {
         Row(Modifier.fillMaxWidth().padding(start=12.dp),verticalAlignment=Alignment.CenterVertically) {
-            Text(error.message,color=AppColors.content(colors.errorText),fontSize=13.sp,lineHeight=20.sp,modifier=Modifier.weight(1f).padding(vertical=10.dp))
-            if(!expired) IconButton(onDismiss,Modifier.size(48.dp)) { Icon(AiIcons.Close,"Dismiss error",tint=AppColors.content(colors.errorText),modifier=Modifier.size(18.dp)) }
+            Text(appText(error.message),color=AppColors.content(colors.errorText),fontSize=13.sp,lineHeight=20.sp,modifier=Modifier.weight(1f).padding(vertical=10.dp))
+            if(!expired) IconButton(onDismiss,Modifier.size(48.dp)) { Icon(AiIcons.Close,appDescription("Dismiss error"),tint=AppColors.content(colors.errorText),modifier=Modifier.size(18.dp)) }
         }
-        if(expired) TextButton(onSignInAgain,modifier=Modifier.padding(start=4.dp)) { Text("Sign in again",color=AppColors.content(colors.errorText)) }
+        if(expired) TextButton(onSignInAgain,modifier=Modifier.padding(start=4.dp)) { Text(appText("Sign in again"),color=AppColors.content(colors.errorText)) }
         else if(error.action!=AiErrorAction.NONE) TextButton(onReload,enabled=enabled,modifier=Modifier.padding(start=4.dp)) {
-            Text(if(error.action==AiErrorAction.MESSAGES) "Reload chat" else "Reload chats",color=AppColors.content(colors.errorText))
+            Text(appText(if(error.action==AiErrorAction.MESSAGES) "Reload chat" else "Reload chats"),color=AppColors.content(colors.errorText))
         }
     }
 }

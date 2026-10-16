@@ -1,5 +1,7 @@
 package com.mongosky.app.drawer
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -47,8 +49,8 @@ internal fun LeftDrawer(viewModel: DrawerViewModel, userName: String, profileIma
                 onProfile = { onNavigate(DrawerDestination.PROFILE) }, onClose = onClose)
             state.error?.let { message ->
                 Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp)) {
-                    Text(message, color = AppColors.content(DrawerColors.muted), fontSize = 13.sp)
-                    if (!state.sessionExpired) TextButton(onClick = { viewModel.refresh(force = true) }, enabled = enabled) { Text("Retry") }
+                    Text(appText(message), color = AppColors.content(DrawerColors.muted), fontSize = 13.sp)
+                    if (!state.sessionExpired) TextButton(onClick = { viewModel.refresh(force = true) }, enabled = enabled) { Text(appText("Retry")) }
                 }
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(DrawerColors.border)))

@@ -1,5 +1,8 @@
 package com.mongosky.app.settingsinformation
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -55,12 +58,12 @@ internal fun SettingsDocumentScreen(
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.widthIn(max = 980.dp).fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center) {
-                Text(document.title, Modifier.fillMaxWidth().padding(horizontal = 48.dp, vertical = 14.dp).semantics { heading() },
+                Text(appText(document.title), Modifier.fillMaxWidth().padding(horizontal = 48.dp, vertical = 14.dp).semantics { heading() },
                     color = AppColors.content(documentInk), fontFamily = FontFamily.SansSerif,
                     fontSize = if (wide) 20.sp else 18.sp, fontWeight = FontWeight.ExtraBold,
                     lineHeight = 25.sp, textAlign = TextAlign.Center)
                 IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart).size(48.dp)) {
-                    Icon(documentBack, contentDescription = "Back", tint = AppColors.content(documentInk), modifier = Modifier.size(22.dp))
+                    Icon(documentBack, contentDescription = appDescription("Back"), tint = AppColors.content(documentInk), modifier = Modifier.size(22.dp))
                 }
             }
             LazyColumn(Modifier.widthIn(max = 880.dp).fillMaxWidth().weight(1f),
@@ -69,7 +72,7 @@ internal fun SettingsDocumentScreen(
                 item(key = "introduction", contentType = "introduction") {
                     Column {
                         document.lastUpdated?.let {
-                            Text(it, color = AppColors.content(Color(0xFF667085)), fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold,
+                            Text(appText(it), color = AppColors.content(Color(0xFF667085)), fontSize = 14.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.SansSerif)
                             Spacer(Modifier.height(18.dp))
                         }
@@ -95,7 +98,7 @@ internal fun SettingsDocumentScreen(
 private fun DocumentParagraphs(paragraphs: List<String>, wide: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         paragraphs.forEach {
-            Text(it, color = AppColors.content(documentBody), fontFamily = FontFamily.SansSerif,
+            Text(appText(it), color = AppColors.content(documentBody), fontFamily = FontFamily.SansSerif,
                 fontSize = if (wide) 17.sp else 16.sp, lineHeight = if (wide) 30.6.sp else 28.sp)
         }
     }
@@ -105,7 +108,7 @@ private fun DocumentParagraphs(paragraphs: List<String>, wide: Boolean) {
 private fun DocumentSection(section: SettingsDocumentBlock.Section, wide: Boolean) {
     Column {
         Column(Modifier.padding(vertical = if (wide) 34.dp else 29.dp)) {
-            Text(section.title, Modifier.semantics { heading() }, color = AppColors.content(documentInk),
+            Text(appText(section.title), Modifier.semantics { heading() }, color = AppColors.content(documentInk),
                 fontFamily = FontFamily.SansSerif, fontSize = if (wide) 25.sp else 21.sp,
                 fontWeight = FontWeight.ExtraBold, lineHeight = if (wide) 32.5.sp else 27.3.sp)
             Spacer(Modifier.height(17.dp))
@@ -115,13 +118,13 @@ private fun DocumentSection(section: SettingsDocumentBlock.Section, wide: Boolea
                 Column(verticalArrangement = Arrangement.spacedBy(13.dp)) {
                     section.points.forEach { point ->
                         Row {
-                            Text("•", Modifier.width(25.dp), color = AppColors.content(Color(0xFF00866B)),
+                            Text(appText("•"), Modifier.width(25.dp), color = AppColors.content(Color(0xFF00866B)),
                                 fontSize = if (wide) 18.sp else 17.sp, lineHeight = if (wide) 29.75.sp else 28.sp)
                             Text(buildAnnotatedString {
                                 withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = AppColors.content(Color(0xFF17202D)))) {
-                                    append(point.label); append(": ")
+                                    append(appText(point.label)); append(": ")
                                 }
-                                append(point.text)
+                                append(appText(point.text))
                             }, color = AppColors.content(documentBody), fontFamily = FontFamily.SansSerif,
                                 fontSize = if (wide) 17.sp else 16.sp, lineHeight = if (wide) 29.75.sp else 28.sp)
                         }
@@ -163,10 +166,10 @@ private fun DocumentArtCard(block: SettingsDocumentBlock.Illustration, art: Sett
 @Composable
 private fun DocumentArtCopy(block: SettingsDocumentBlock.Illustration, modifier: Modifier, align: TextAlign, wide: Boolean) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(block.title, Modifier.fillMaxWidth().semantics { heading() }, color = AppColors.content(documentInk),
+        Text(appText(block.title), Modifier.fillMaxWidth().semantics { heading() }, color = AppColors.content(documentInk),
             fontFamily = FontFamily.SansSerif, fontSize = if (wide) 25.sp else 21.sp,
             fontWeight = FontWeight.ExtraBold, lineHeight = if (wide) 32.5.sp else 27.3.sp, textAlign = align)
-        Text(block.description, Modifier.fillMaxWidth(), color = AppColors.content(Color(0xFF475467)),
+        Text(appText(block.description), Modifier.fillMaxWidth(), color = AppColors.content(Color(0xFF475467)),
             fontFamily = FontFamily.SansSerif, fontSize = if (wide) 16.sp else 15.sp,
             fontWeight = FontWeight.Medium, lineHeight = if (wide) 27.2.sp else 25.5.sp, textAlign = align)
     }

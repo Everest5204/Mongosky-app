@@ -2,6 +2,8 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import android.content.ActivityNotFoundException
@@ -77,7 +79,7 @@ fun OwnProfileScreen(
     OwnProfileFeedEffects(feed, state, list,
         active = started && !signingOut && !state.sessionExpired && !actionsModel.uiState.sessionExpired,
         signingOut = signingOut)
-    LaunchedEffect(feed) { feed.controls.notices.collect { snackbar.showSnackbar(it) } }
+    LaunchedEffect(feed) { feed.controls.notices.collect { snackbar.showSnackbar(appText(it)) } }
     val picker = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
         val kind = requestedImage?.let { value -> ProfileImageKind.entries.firstOrNull { it.name == value } }
         requestedImage = null
@@ -104,8 +106,8 @@ fun OwnProfileScreen(
         lifecycleOwner?.lifecycle?.addObserver(observer)
         onDispose { lifecycleOwner?.lifecycle?.removeObserver(observer); viewModel.pause(); actionsModel.closeOverlays() }
     }
-    LaunchedEffect(viewModel, started, signingOut, videoViewer?.key, photoViewer) {
-        if (started && !signingOut && videoViewer == null && photoViewer == null) while (isActive) {
+    LaunchedEffect(viewModel, started, signingOut, videoViewer?.key, photoViewer, state.editorOpen) {
+        if (started && !signingOut && !state.editorOpen && videoViewer == null && photoViewer == null) while (isActive) {
             delay(OwnProfileViewModel.UPDATE_INTERVAL_MILLIS)
             viewModel.checkForUpdates()
             now = Instant.now()
@@ -116,11 +118,11 @@ fun OwnProfileScreen(
         if (state.ownerId.isBlank()) return
         clipboard.setText(AnnotatedString("https://mongosky.com/profile/${state.ownerId}"))
         optionsOpen = false
-        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar("Profile link copied") }
+        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar(appText("Profile link copied")) }
     }
     fun copyPost(post: HomePost) {
         clipboard.setText(AnnotatedString("https://mongosky.com/post/${post.id}"))
-        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar("Link copied") }
+        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar(appText("Link copied")) }
     }
     fun sharePost(post: HomePost) {
         val caption = when (post) { is HomePost.Text -> post.post.displayText; is HomePost.Media -> post.post.caption }
@@ -128,8 +130,8 @@ fun OwnProfileScreen(
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, listOf(caption.take(650), "https://mongosky.com/post/${post.id}").filter { it.isNotBlank() }.joinToString("\n\n"))
         }
-        try { context.startActivity(Intent.createChooser(intent, "Share post")) }
-        catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar("No sharing app is available.") } }
+        try { context.startActivity(Intent.createChooser(intent, appText("Share post"))) }
+        catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) } }
     }
     fun openProfile(id: String) {
         viewModel.connections.close()
@@ -164,7 +166,7 @@ fun OwnProfileScreen(
                     item("profile_header", "header") {
                         OwnProfileHeader(state, userName, profileImageUrl, ::chooseImage,
                             onConnections = { viewModel.connections.open(state.ownerId, it) },
-                            onStory = { scope.launch { snackbar.showSnackbar("This feature is currently unavailable.") } },
+                            onStory = { scope.launch { snackbar.showSnackbar(appText("This feature is currently unavailable.")) } },
                             onEdit = viewModel::openEditor, onOptions = { optionsOpen = true },
                             onBack = onBack, backEnabled = !signingOut)
                     }
@@ -210,29 +212,29 @@ fun OwnProfileScreen(
                     if (visibleCount == 0 && !state.postsLoading && state.activePostErrors.isEmpty() && !state.sessionExpired) item("empty", "notice") {
                         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(if (state.hasMore) "More ${state.tab.label.lowercase()} may be in older posts" else "No ${if (state.tab == OwnProfileTab.ALL) "posts" else state.tab.label.lowercase()} yet",
+                            Text(appText(if (state.hasMore) "More ${state.tab.label.lowercase()} may be in older posts" else "No ${if (state.tab == OwnProfileTab.ALL) "posts" else state.tab.label.lowercase()} yet"),
                                 color = AppColors.content(OwnProfileColors.muted), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            Text(if (state.tab == OwnProfileTab.ALL) "Share your moments with the world." else "Your ${state.tab.label.lowercase()} will appear here.",
+                            Text(appText(if (state.tab == OwnProfileTab.ALL) "Share your moments with the world." else "Your ${state.tab.label.lowercase()} will appear here."),
                                 color = AppColors.content(OwnProfileColors.muted), fontSize = 14.sp)
                         }
                     }
                     if (state.canLoadMore && !state.postsLoading && !state.sessionExpired) item("load_more", "footer") {
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text("Load more", color = AppColors.content(OwnProfileColors.brand)) } }
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text(appText("Load more"), color = AppColors.content(OwnProfileColors.brand)) } }
                     }
                 }
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(12.dp))
     }
-    if (state.editorOpen) EditOwnProfileSheet(state, viewModel::updateBio, { viewModel.saveBio() }, ::chooseImage, viewModel::closeEditor)
+    if (state.editorOpen) EditOwnProfileSheet(state, viewModel::applyProfileEdit, viewModel::closeEditor, onSignOut, signingOut)
     OwnProfileConnectionsSheet(viewModel.connections, ::openProfile)
     if (optionsOpen) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = AppColors.surface(Color.White),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Profile options", color = AppColors.content(OwnProfileColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            TextButton(::copyProfile, enabled = state.ownerId.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Copy profile link", color = AppColors.content(OwnProfileColors.text)) }
+            Text(appText("Profile options"), color = AppColors.content(OwnProfileColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            TextButton(::copyProfile, enabled = state.ownerId.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(appText("Copy profile link"), color = AppColors.content(OwnProfileColors.text)) }
             TextButton({ optionsOpen = false; onSignOut() }, enabled = !signingOut, modifier = Modifier.fillMaxWidth()) {
-                if (signingOut) OwnProfileSpinner() else Text("Sign out", color = AppColors.content(OwnProfileColors.brand))
+                if (signingOut) OwnProfileSpinner() else Text(appText("Sign out"), color = AppColors.content(OwnProfileColors.brand))
             }
         }
     }

@@ -1,5 +1,8 @@
 package com.mongosky.app.changepassword
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -74,15 +77,15 @@ internal fun ChangePasswordScreen(
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(onClick = goBack, enabled = enabled, modifier = Modifier.size(48.dp)) {
-                        Icon(ChangePasswordIcons.back, "Return to previous page", tint = AppColors.content(PasswordColors.ink),
+                        Icon(ChangePasswordIcons.back, appDescription("Return to previous page"), tint = AppColors.content(PasswordColors.ink),
                             modifier = Modifier.size(23.dp))
                     }
-                    Text("Change password", color = AppColors.content(PasswordColors.ink), fontFamily = FontFamily.SansSerif,
+                    Text(appText("Change password"), color = AppColors.content(PasswordColors.ink), fontFamily = FontFamily.SansSerif,
                         fontSize = 24.sp, lineHeight = 32.sp, letterSpacing = (-0.6).sp,
                         fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f).semantics { heading() })
                 }
                 Spacer(Modifier.height(20.dp))
-                Text("You can use this password to log in to your account. Your new password must be at least 6 characters.",
+                Text(appText("You can use this password to log in to your account. Your new password must be at least 6 characters."),
                     fontFamily = FontFamily.SansSerif, color = AppColors.content(PasswordColors.help),
                     fontSize = if (wide) 16.sp else 14.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(20.dp))
@@ -105,7 +108,7 @@ internal fun ChangePasswordScreen(
                         contentPadding = PaddingValues(0.dp), shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.heightIn(min = 48.dp),
                         colors = ButtonDefaults.textButtonColors(contentColor = AppColors.content(PasswordColors.link))) {
-                        Text("Forgot your password?", fontSize = 14.sp, lineHeight = 20.sp,
+                        Text(appText("Forgot your password?"), fontSize = 14.sp, lineHeight = 20.sp,
                             fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold)
                     }
                     Spacer(Modifier.height(4.dp))
@@ -118,7 +121,7 @@ internal fun ChangePasswordScreen(
                             CircularProgressIndicator(Modifier.size(20.dp), color = AppColors.content(PasswordColors.white), strokeWidth = 2.dp)
                             Spacer(Modifier.width(8.dp))
                         }
-                        Text(if (state.submitting) "Changing password..." else "Change password", fontSize = 16.sp,
+                        Text(appText(if (state.submitting) "Changing password..." else "Change password"), fontSize = 16.sp,
                             lineHeight = 24.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -135,9 +138,9 @@ private fun PasswordInput(
 ) {
     OutlinedTextField(value = value, onValueChange = onChange, singleLine = true, enabled = enabled,
         modifier = modifier.fillMaxWidth().heightIn(min = 62.dp).semantics {
-            contentDescription = label; contentType = autofillType
+            contentDescription = appText(label); contentType = autofillType
         }, shape = RoundedCornerShape(16.dp),
-        placeholder = { Text(label, fontSize = 16.sp, lineHeight = 24.sp, color = AppColors.content(PasswordColors.muted)) },
+        placeholder = { Text(appText(label), fontSize = 16.sp, lineHeight = 24.sp, color = AppColors.content(PasswordColors.muted)) },
         textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.SansSerif, fontSize = 16.sp,
             lineHeight = 24.sp, color = AppColors.content(PasswordColors.ink)),
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -146,7 +149,7 @@ private fun PasswordInput(
         trailingIcon = {
             IconButton(onClick = onToggle, enabled = enabled, modifier = Modifier.size(48.dp)) {
                 Icon(if (visible) ChangePasswordIcons.eyeOff else ChangePasswordIcons.eye,
-                    (if (visible) "Hide " else "Show ") + label.lowercase(), modifier = Modifier.size(20.dp),
+                    appDescription(if (visible) "Hide ${appText(label)}" else "Show ${appText(label)}"), modifier = Modifier.size(20.dp),
                     tint = AppColors.content(PasswordColors.muted.copy(alpha = if (enabled) 1f else 0.5f)))
             }
         }, colors = OutlinedTextFieldDefaults.colors(
@@ -160,7 +163,7 @@ private fun PasswordInput(
 @Composable
 private fun PasswordFeedback(message: String, error: Boolean) {
     Spacer(Modifier.height(16.dp))
-    Text(message, fontSize = 14.sp, lineHeight = 20.sp, fontFamily = FontFamily.SansSerif,
+    Text(appText(message), fontSize = 14.sp, lineHeight = 20.sp, fontFamily = FontFamily.SansSerif,
         color = AppColors.content(if (error) PasswordColors.error else PasswordColors.success),
         modifier = Modifier.fillMaxWidth().background(AppColors.surface(if (error) PasswordColors.errorBackground else PasswordColors.successBackground),
             RoundedCornerShape(12.dp)).padding(12.dp).semantics {

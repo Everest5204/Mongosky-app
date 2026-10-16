@@ -1,5 +1,8 @@
 package com.mongosky.app.getverified
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -41,9 +44,9 @@ internal fun GetVerifiedScreen(onBack: () -> Unit) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                        Icon(GetVerifiedIcons.back, contentDescription = "Back", tint = AppColors.content(ink), modifier = Modifier.size(23.dp))
+                        Icon(GetVerifiedIcons.back, contentDescription = appDescription("Back"), tint = AppColors.content(ink), modifier = Modifier.size(23.dp))
                     }
-                    Text(GetVerifiedContent.title, Modifier.weight(1f).semantics { heading() }, color = AppColors.content(ink),
+                    Text(appText(GetVerifiedContent.title), Modifier.weight(1f).semantics { heading() }, color = AppColors.content(ink),
                         fontFamily = FontFamily.SansSerif, fontSize = 24.sp, lineHeight = 32.sp,
                         fontWeight = FontWeight.SemiBold, letterSpacing = (-.6).sp)
                 }
@@ -56,16 +59,16 @@ internal fun GetVerifiedScreen(onBack: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally) {
                     GetVerifiedIllustration()
                     Spacer(Modifier.height(28.dp))
-                    Text(GetVerifiedContent.cardTitle, Modifier.fillMaxWidth().semantics { heading() }, color = AppColors.content(ink),
+                    Text(appText(GetVerifiedContent.cardTitle), Modifier.fillMaxWidth().semantics { heading() }, color = AppColors.content(ink),
                         fontFamily = FontFamily.SansSerif, fontSize = 24.sp, fontWeight = FontWeight.Bold,
                         lineHeight = 32.sp, letterSpacing = (-.6).sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(12.dp))
                     Text(buildAnnotatedString {
-                        append(GetVerifiedContent.prefix)
+                        append(appText(GetVerifiedContent.prefix))
                         withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = AppColors.content(ink))) {
-                            append(GetVerifiedContent.followers)
+                            append(appText(GetVerifiedContent.followers))
                         }
-                        append(GetVerifiedContent.suffix)
+                        append(appText(GetVerifiedContent.suffix))
                     }, Modifier.widthIn(max = 320.dp).fillMaxWidth(), color = AppColors.content(Color(0xFF52525C)),
                         fontFamily = FontFamily.SansSerif, fontSize = 16.sp, lineHeight = 28.sp,
                         textAlign = TextAlign.Center)

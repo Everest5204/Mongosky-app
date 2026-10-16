@@ -1,5 +1,7 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -51,8 +53,8 @@ internal fun OwnProfileSpinner(modifier: Modifier = Modifier, color: Color = Own
 internal fun OwnProfileNotice(message: String, action: String, onClick: () -> Unit, enabled: Boolean = true) {
     Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(message, color = AppColors.content(OwnProfileColors.muted), fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
-        TextButton(onClick, enabled = enabled) { Text(action, color = AppColors.content(OwnProfileColors.brand), fontWeight = FontWeight.SemiBold) }
+        Text(appText(message), color = AppColors.content(OwnProfileColors.muted), fontSize = 14.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
+        TextButton(onClick, enabled = enabled) { Text(appText(action), color = AppColors.content(OwnProfileColors.brand), fontWeight = FontWeight.SemiBold) }
     }
 }
 

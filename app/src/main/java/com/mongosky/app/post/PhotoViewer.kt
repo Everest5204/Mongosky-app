@@ -2,6 +2,8 @@
 
 package com.mongosky.app.post
 
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -65,7 +67,7 @@ internal fun PhotoViewer(state: PhotoViewerState, onDismiss: () -> Unit) {
         com.mongosky.app.darkmode.DarkModeSystemBars(forceDark = false)
         Column(Modifier.fillMaxSize().background(AppColors.surface(Color.White)).safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) { Icon(FeedIcons.close, "Close photos", tint = AppColors.content(FeedColors.text)) }
+                IconButton(onClick = onDismiss, modifier = Modifier.size(48.dp)) { Icon(FeedIcons.close, appDescription("Close photos"), tint = AppColors.content(FeedColors.text)) }
                 Text("${pager.currentPage + 1} / ${state.photos.size}", color = AppColors.content(FeedColors.muted), fontSize = 14.sp)
             }
             FeedDivider()
@@ -86,7 +88,7 @@ internal fun PhotoViewer(state: PhotoViewerState, onDismiss: () -> Unit) {
                     .pointerInput(index) { detectTapGestures(onDoubleTap = { scale = if (scale > 1f) 1f else 2f; offset = Offset.Zero }) },
                     contentAlignment = Alignment.Center) {
                     Icon(FeedIcons.image, null, tint = AppColors.content(FeedColors.line), modifier = Modifier.size(40.dp))
-                    AsyncImage(model = state.photos[index].url, contentDescription = "Photo ${index + 1} of ${state.photos.size}",
+                    AsyncImage(model = state.photos[index].url, contentDescription = appDescription("Photo ${index + 1} of ${state.photos.size}"),
                         modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = scale, scaleY = scale, translationX = offset.x, translationY = offset.y),
                         contentScale = ContentScale.Fit)
                 }

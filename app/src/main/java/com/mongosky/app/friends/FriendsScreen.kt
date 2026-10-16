@@ -2,6 +2,9 @@
 
 package com.mongosky.app.friends
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -69,7 +72,7 @@ fun FriendsScreen(
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(state.message) {
         val message = state.message ?: return@LaunchedEffect
-        snackbar.showSnackbar(message)
+        snackbar.showSnackbar(appText(message))
         onDismissMessage()
     }
     LaunchedEffect(list, state.activeTab, page.users.size, page.nextCursor, page.hasMore, page.refreshing, page.loadingMore, page.moreError, page.error) {
@@ -93,15 +96,15 @@ fun FriendsScreen(
             Column(Modifier.widthIn(max = 680.dp).fillMaxWidth().fillMaxHeight()
                 .clip(RoundedCornerShape(if (wide) 22.dp else 0.dp)).background(AppColors.surface(Color.White))) {
                 Box(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 6.dp, vertical = 8.dp)) {
-                    Text("Connections", modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 56.dp),
+                    Text(appText("Connections"), modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 56.dp),
                         fontSize = 20.sp, fontWeight = FontWeight.Bold, color = AppColors.content(FriendsColors.text),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                     IconButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart)) {
-                        Icon(FriendsIcons.back, "Go back", tint = AppColors.content(FriendsColors.text))
+                        Icon(FriendsIcons.back, appDescription("Go back"), tint = AppColors.content(FriendsColors.text))
                     }
                     IconButton(onClick = onRefresh, modifier = Modifier.align(Alignment.CenterEnd),
                         enabled = !page.refreshing && !state.sessionExpired && state.pendingIds.isEmpty()) {
-                        Icon(FriendsIcons.refresh, "Refresh connections", tint = AppColors.content(FriendsColors.secondary), modifier = Modifier.size(21.dp))
+                        Icon(FriendsIcons.refresh, appDescription("Refresh connections"), tint = AppColors.content(FriendsColors.secondary), modifier = Modifier.size(21.dp))
                     }
                 }
                 Row(Modifier.fillMaxWidth().selectableGroup()) {
@@ -111,12 +114,12 @@ fun FriendsScreen(
                         val foreground = if (selected) FriendsColors.brand else FriendsColors.secondary
                         Column(Modifier.weight(1f).selectable(selected, enabled = !state.sessionExpired,
                             role = Role.Tab, onClick = { onTab(tab) }).semantics {
-                                contentDescription = if (state.countsLoaded) "${tab.label}, $count" else tab.label
+                                contentDescription = if (state.countsLoaded) "${appText(tab.label)}, $count" else appText(tab.label)
                             }, horizontalAlignment = Alignment.CenterHorizontally) {
                             if (stackTabs) {
                                 Column(Modifier.padding(horizontal = 8.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(tab.label, color = AppColors.content(foreground), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(appText(tab.label), color = AppColors.content(foreground), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                                     FriendsCountPill(count, state.countsLoaded, selected)
                                 }
                             } else {
@@ -124,7 +127,7 @@ fun FriendsScreen(
                                     horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
                                     if (showTabIcons) Icon(if (tab == FriendsTab.FOLLOWERS) FriendsIcons.people else FriendsIcons.following,
                                         null, tint = AppColors.content(foreground), modifier = Modifier.size(19.dp))
-                                    Text(tab.label, color = AppColors.content(foreground), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                    Text(appText(tab.label), color = AppColors.content(foreground), fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                                     FriendsCountPill(count, state.countsLoaded, selected)
                                 }
                             }
@@ -152,8 +155,8 @@ fun FriendsScreen(
                             else -> {
                                 if (page.error != null) item(key = "refresh-error", contentType = "notice") {
                                     Row(Modifier.fillMaxWidth().padding(horizontal = padding, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Text(page.error, Modifier.weight(1f), fontSize = 12.sp, color = AppColors.content(FriendsColors.secondary))
-                                        TextButton(onClick = onRefresh) { Text("Retry", color = AppColors.content(FriendsColors.brand)) }
+                                        Text(appText(page.error), Modifier.weight(1f), fontSize = 12.sp, color = AppColors.content(FriendsColors.secondary))
+                                        TextButton(onClick = onRefresh) { Text(appText("Retry"), color = AppColors.content(FriendsColors.brand)) }
                                     }
                                 }
                                 if (page.users.isEmpty() && !page.hasMore) item(key = "empty", contentType = "state") {
@@ -169,13 +172,13 @@ fun FriendsScreen(
                                 }
                                 if (page.moreError != null) item(key = "more-error", contentType = "notice") {
                                     Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(page.moreError, fontSize = 12.sp, color = AppColors.content(FriendsColors.secondary))
-                                        TextButton(onClick = onLoadMore) { Text("Try again", color = AppColors.content(FriendsColors.brand)) }
+                                        Text(appText(page.moreError), fontSize = 12.sp, color = AppColors.content(FriendsColors.secondary))
+                                        TextButton(onClick = onLoadMore) { Text(appText("Try again"), color = AppColors.content(FriendsColors.brand)) }
                                     }
                                 } else if (page.hasMore) item(key = "load-more", contentType = "loader") {
                                     Box(Modifier.fillMaxWidth().height(64.dp), contentAlignment = Alignment.Center) {
                                         if (page.loadingMore) CircularProgressIndicator(Modifier.size(23.dp), color = AppColors.content(FriendsColors.brand), strokeWidth = 2.dp)
-                                        else TextButton(onClick = onLoadMore) { Text("Load more", color = AppColors.content(FriendsColors.brand)) }
+                                        else TextButton(onClick = onLoadMore) { Text(appText("Load more"), color = AppColors.content(FriendsColors.brand)) }
                                     }
                                 }
                                 item(key = "space", contentType = "space") { Spacer(Modifier.height(16.dp)) }
@@ -191,7 +194,7 @@ fun FriendsScreen(
 
 @Composable
 private fun FriendsCountPill(count: Long, loaded: Boolean, selected: Boolean) {
-    Text(if (loaded) friendsCount(count) else "—", color = AppColors.content(if (selected) FriendsColors.brand else FriendsColors.secondary),
+    Text(appText(if (loaded) friendsCount(count) else "—"), color = AppColors.content(if (selected) FriendsColors.brand else FriendsColors.secondary),
         fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(AppColors.surface(if (selected) FriendsColors.brand.copy(alpha = .07f) else Color(0xFFF3F4F6)))
             .padding(horizontal = 7.dp, vertical = 3.dp).semantics { liveRegion = LiveRegionMode.Polite })

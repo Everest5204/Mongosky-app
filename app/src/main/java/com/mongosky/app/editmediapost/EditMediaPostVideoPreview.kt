@@ -1,5 +1,8 @@
 package com.mongosky.app.editmediapost
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.editpost.*
@@ -38,7 +41,7 @@ internal fun EditMediaPostVideoPreview(url: String, enabled: Boolean) {
     if (!requested) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         FilledIconButton({ requested = true }, enabled = enabled, modifier = Modifier.size(56.dp),
             colors = IconButtonDefaults.filledIconButtonColors(containerColor = AppColors.surface(Color(0xC414171C)), contentColor = AppColors.content(Color.White))) {
-            Icon(EditPostIcons.play, "Preview video", modifier = Modifier.size(26.dp))
+            Icon(EditPostIcons.play, appDescription("Preview video"), modifier = Modifier.size(26.dp))
         }
     } else EditMediaPostPlayer(url, enabled)
 }
@@ -91,14 +94,14 @@ private fun EditMediaPostPlayer(url: String, enabled: Boolean) {
         Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
             ContentFrame(player, Modifier.fillMaxSize(), surfaceType = SURFACE_TYPE_TEXTURE_VIEW, contentScale = ContentScale.Fit)
             if (buffering && !error) CircularProgressIndicator(Modifier.size(24.dp), color = AppColors.content(Color.White), strokeWidth = 2.dp)
-            if (error) TextButton({ player.prepare() }, enabled = enabled) { Text("Could not play video. Retry", color = AppColors.content(Color.White)) }
+            if (error) TextButton({ player.prepare() }, enabled = enabled) { Text(appText("Could not play video. Retry"), color = AppColors.content(Color.White)) }
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton({ if (player.isPlaying || player.playWhenReady) player.pause() else {
                 if (player.playbackState == Player.STATE_ENDED) player.seekTo(0)
                 player.play()
             } }, enabled = enabled && started && !error) {
-                Icon(if (playing) EditPostIcons.pause else EditPostIcons.play, if (playing) "Pause video" else "Play video", tint = AppColors.content(Color.White))
+                Icon(if (playing) EditPostIcons.pause else EditPostIcons.play, appDescription(if (playing) "Pause video" else "Play video"), tint = AppColors.content(Color.White))
             }
             Slider(value = seek ?: if (duration > 0) (position.toDouble() / duration).toFloat().coerceIn(0f, 1f) else 0f,
                 onValueChange = { seek = it }, onValueChangeFinished = { seek?.let { player.seekTo((it * duration).toLong()) }; seek = null },

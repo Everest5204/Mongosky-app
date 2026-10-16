@@ -1,5 +1,7 @@
 package com.mongosky.app.deactivateaccount
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.layout.*
@@ -13,25 +15,25 @@ internal fun DeactivateAccountDialog(state: DeactivateAccountState, hostBusy: Bo
     onDismiss: () -> Unit, onConfirm: () -> Unit, onSignOut: () -> Unit) {
     val busy = state.submitting || hostBusy
     AlertDialog(onDismissRequest = { if (!busy && !state.uncertain) onDismiss() },
-        title = { Text(if (state.uncertain) "Confirm deactivation" else "Deactivate your account?") },
+        title = { Text(appText(if (state.uncertain) "Confirm deactivation" else "Deactivate your account?")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text("Your profile and posts will be hidden, and you will be signed out on all devices. Your data will be kept. Sign in again to reactivate.")
-                if (state.error != null) Text(state.error, color = AppColors.content(DeactivateAccountColors.Red))
+                Text(appText("Your profile and posts will be hidden, and you will be signed out on all devices. Your data will be kept. Sign in again to reactivate."))
+                if (state.error != null) Text(appText(state.error), color = AppColors.content(DeactivateAccountColors.Red))
                 if (state.submitting) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = AppColors.content(DeactivateAccountColors.Red))
-                    Text("Deactivating…")
+                    Text(appText("Deactivating…"))
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onConfirm, enabled = !busy) {
-                Text(if (state.uncertain) "Retry same request" else "Deactivate", color = AppColors.content(DeactivateAccountColors.Red))
+                Text(appText(if (state.uncertain) "Retry same request" else "Deactivate"), color = AppColors.content(DeactivateAccountColors.Red))
             }
         },
         dismissButton = {
             TextButton(onClick = if (state.uncertain) onSignOut else onDismiss, enabled = !busy) {
-                Text(if (state.uncertain) "Sign out" else "Cancel", color = AppColors.content(DeactivateAccountColors.Ink))
+                Text(appText(if (state.uncertain) "Sign out" else "Cancel"), color = AppColors.content(DeactivateAccountColors.Ink))
             }
         }, containerColor = AppColors.surface(androidx.compose.ui.graphics.Color.White))
 }

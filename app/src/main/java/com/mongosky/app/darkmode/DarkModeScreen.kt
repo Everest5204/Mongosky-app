@@ -1,6 +1,9 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.mongosky.app.darkmode
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -56,23 +59,23 @@ private val DarkModePageColors = lightColorScheme(
     BackHandler(onBack = onBack)
     val colors = MaterialTheme.colorScheme;val selected = AppAppearance.mode
     val notices = remember { SnackbarHostState() };val scope = rememberCoroutineScope()
-    fun choose(mode: AppearanceMode) { if (!AppAppearance.select(mode)) scope.launch { notices.showSnackbar("Could not save appearance. Please try again.") } }
+    fun choose(mode: AppearanceMode) { if (!AppAppearance.select(mode)) scope.launch { notices.showSnackbar(appText("Could not save appearance. Please try again.")) } }
     Scaffold(modifier = Modifier.testTag("dark-mode-page"),containerColor = colors.background,snackbarHost = { SnackbarHost(notices) },topBar = {
-        TopAppBar(title = { Text("Dark Mode",fontWeight = FontWeight.SemiBold,fontSize = 20.sp,modifier = Modifier.semantics { heading() }) },
-            navigationIcon = { IconButton(onBack) { Icon(DarkModeIcons.back,"Back to settings") } },
+        TopAppBar(title = { Text(appText("Dark Mode"),fontWeight = FontWeight.SemiBold,fontSize = 20.sp,modifier = Modifier.semantics { heading() }) },
+            navigationIcon = { IconButton(onBack) { Icon(DarkModeIcons.back,appDescription("Back to settings")) } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface))
     }) { insets ->
         Column(Modifier.fillMaxSize().padding(insets).imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp,vertical = 22.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Column(Modifier.widthIn(max = 600.dp).fillMaxWidth(),verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Choose your appearance",fontWeight = FontWeight.SemiBold,fontSize = 22.sp,color = colors.onBackground)
-                Text("Choose the look that feels right for you. It applies across Mongosky.",color = colors.onSurfaceVariant,fontSize = 14.sp,lineHeight = 21.sp)
+                Text(appText("Choose your appearance"),fontWeight = FontWeight.SemiBold,fontSize = 22.sp,color = colors.onBackground)
+                Text(appText("Choose the look that feels right for you. It applies across Mongosky."),color = colors.onSurfaceVariant,fontSize = 14.sp,lineHeight = 21.sp)
                 Spacer(Modifier.height(6.dp))
                 Column(Modifier.fillMaxWidth().selectableGroup(),verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     AppearanceOption(AppearanceMode.LIGHT,selected,"Light mode","A bright, familiar look",DarkModeIcons.sun,::choose)
                     AppearanceOption(AppearanceMode.DARK,selected,"Dark mode","A softer look in low light",DarkModeIcons.moon,::choose)
                 }
-                Text("Your choice is saved on this device.",color = colors.onSurfaceVariant,fontSize = 12.sp,modifier = Modifier.padding(top = 4.dp))
+                Text(appText("Your choice is saved on this device."),color = colors.onSurfaceVariant,fontSize = 12.sp,modifier = Modifier.padding(top = 4.dp))
             }
         }
     }
@@ -86,8 +89,8 @@ private val DarkModePageColors = lightColorScheme(
                 Box(contentAlignment = Alignment.Center) { Icon(icon,null,tint = if(active) colors.onPrimaryContainer else colors.onSurfaceVariant,modifier = Modifier.size(25.dp)) }
             }
             Column(Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(title,color = colors.onSurface,fontWeight = FontWeight.SemiBold,fontSize = 16.sp)
-                Text(subtitle,color = colors.onSurfaceVariant,fontSize = 12.sp,lineHeight = 18.sp)
+                Text(appText(title),color = colors.onSurface,fontWeight = FontWeight.SemiBold,fontSize = 16.sp)
+                Text(appText(subtitle),color = colors.onSurfaceVariant,fontSize = 12.sp,lineHeight = 18.sp)
             }
             Switch(checked = active,onCheckedChange = { checked -> onChoose(mode.fromSwitch(checked)) },
                 colors = SwitchDefaults.colors(checkedTrackColor = DarkModePageColors.primary,checkedThumbColor = Color.White,checkedBorderColor = DarkModePageColors.primary),

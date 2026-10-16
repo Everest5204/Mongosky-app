@@ -1,5 +1,9 @@
 package com.mongosky.app.helpsupport
 
+import com.mongosky.app.language.AppLanguage
+import com.mongosky.app.language.AppLocale
+import com.mongosky.app.language.appText
+
 import java.net.URLEncoder
 import java.util.Locale
 
@@ -13,11 +17,18 @@ internal object HelpSupportPolicy {
     private val indexed = HelpSupportContent.articles.map { article ->
         article to "${article.question} ${article.answer} ${article.topic.label}".lowercase(Locale.ROOT)
     }
+    private val banglaIndexed by lazy {
+        indexed.map { (article, english) ->
+            article to (english + " " + appText(article.question) + " " +
+                appText(article.answer) + " " + appText(article.topic.label)).lowercase(Locale.ROOT)
+        }
+    }
 
     fun search(query: String, topic: HelpTopic?): List<HelpArticle> {
         val words = query.take(MAX_QUERY).trim().lowercase(Locale.ROOT)
             .split(whitespace).filter(String::isNotBlank)
-        return indexed.filter { (article, searchable) ->
+        val index = if (AppLanguage.current == AppLocale.BANGLA) banglaIndexed else indexed
+        return index.filter { (article, searchable) ->
             (topic == null || topic == article.topic) && words.all(searchable::contains)
         }.map { it.first }
     }
@@ -39,14 +50,14 @@ internal object HelpSupportPolicy {
 
     fun prepareEmail(draft: SupportDraft, info: SupportAppInfo?): SupportEmail {
         require(validate(draft).isValid) { "Complete the support form before preparing an email." }
-        val subject = "Mongosky | ${draft.reason.label} | ${summary(draft.summary).trim()}"
+        val subject = "Mongosky | ${appText(draft.reason.label)} | ${summary(draft.summary).trim()}"
         val body = buildString {
-            append("Hello Mongosky support,\n\n")
-            append("Topic: ${draft.reason.label}\n")
-            append("Summary: ${summary(draft.summary).trim()}\n\n")
+            append(appText("Hello Mongosky support,\n\n"))
+            append(appText("Topic: ${appText(draft.reason.label)}\n"))
+            append(appText("Summary: ${summary(draft.summary).trim()}\n\n"))
             append(draft.description.trim())
             if (draft.includeAppInfo && info != null) {
-                append("\n\nApp version: ${info.appVersion}\nAndroid version: ${info.androidVersion}")
+                append(appText("\n\nApp version: ${info.appVersion}\nAndroid version: ${info.androidVersion}"))
             }
         }
         fun encode(value: String) = URLEncoder.encode(value, "UTF-8").replace("+", "%20")

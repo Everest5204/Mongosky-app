@@ -1,5 +1,7 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -29,18 +31,18 @@ internal fun CommentMenu(comment: PostComment, state: CommentsState, controls: C
     Box {
         Box(Modifier.size(28.dp).clip(CircleShape)
             .background(AppColors.surface(if (expanded) CommentColors.line else Color.Transparent))
-            .clickable(enabled = enabled, role = Role.Button, onClickLabel = "Comment options") {
+            .clickable(enabled = enabled, role = Role.Button, onClickLabel = appText("Comment options")) {
                 if (expanded) controls.closeMenu() else controls.openMenu(comment)
-            }.semantics { contentDescription = "Comment options" }, contentAlignment = Alignment.Center) {
+            }.semantics { contentDescription = appText("Comment options") }, contentAlignment = Alignment.Center) {
             Icon(CommentIcons.more, null, Modifier.size(18.dp), tint = AppColors.content(Color(0xFF6B7280)))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = controls::closeMenu,
             offset = DpOffset(0.dp,6.dp), modifier = Modifier.widthIn(min = 150.dp),
             shape = RoundedCornerShape(12.dp), containerColor = AppColors.surface(Color.White), tonalElevation = 0.dp) {
-            DropdownMenuItem(text = { Text("Edit", fontSize = 13.sp) },
+            DropdownMenuItem(text = { Text(appText("Edit"), fontSize = 13.sp) },
                 leadingIcon = { Icon(CommentIcons.edit, null, Modifier.size(17.dp)) }, enabled = enabled,
                 onClick = { controls.closeMenu(); controls.editComment(comment) })
-            DropdownMenuItem(text = { Text("Delete", color = AppColors.content(CommentColors.active), fontSize = 13.sp) },
+            DropdownMenuItem(text = { Text(appText("Delete"), color = AppColors.content(CommentColors.active), fontSize = 13.sp) },
                 leadingIcon = { Icon(CommentIcons.delete, null, Modifier.size(17.dp), tint = AppColors.content(CommentColors.active)) }, enabled = enabled,
                 onClick = { controls.closeMenu(); controls.deleteComment(comment) })
         }

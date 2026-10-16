@@ -1,5 +1,8 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.profile.LocalProfileViewerId
@@ -258,10 +261,10 @@ private fun ComposerHeader(
     Column {
         Box(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp)) {
             IconButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterStart)) {
-                Icon(Icons.Default.Close, "Close composer", tint = AppColors.content(ComposerText))
+                Icon(Icons.Default.Close, appDescription("Close composer"), tint = AppColors.content(ComposerText))
             }
             Text(
-                text = "Create post",
+                text = appText("Create post"),
                 color = AppColors.content(ComposerText),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
@@ -278,7 +281,7 @@ private fun ComposerHeader(
                     disabledContentColor = AppColors.content(ComposerGreen.copy(alpha = 0.45f))
                 )
             ) {
-                Text("Post", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+                Text(appText("Post"), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
             }
         }
         ComposerDivider()
@@ -294,7 +297,7 @@ private fun ComposerAuthor(name: String, profileImageUrl: String?) {
     ) {
         ProfileAvatar(imageUrl = profileImageUrl, modifier = Modifier.size(44.dp))
         Text(
-            text = name.trim().ifBlank { "Mongosky User" },
+            text = name.trim().ifBlank { appText("Mongosky User") },
             color = AppColors.content(Color(0xFF374151)),
             fontSize = 17.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -324,7 +327,7 @@ private fun ComposerCaption(caption: String, enabled: Boolean, onChange: (String
         decorationBox = { innerField ->
             Box {
                 if (caption.isEmpty()) {
-                    Text("write a caption…", color = AppColors.content(ComposerMuted), fontSize = 16.sp)
+                    Text(appText("write a caption…"), color = AppColors.content(ComposerMuted), fontSize = 16.sp)
                 }
                 innerField()
             }
@@ -341,9 +344,9 @@ private fun ComposerError(message: String, onDismiss: () -> Unit) {
             .semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(message, color = AppColors.content(Color(0xFFB91C1C)), fontSize = 14.sp, modifier = Modifier.weight(1f))
+        Text(appText(message), color = AppColors.content(Color(0xFFB91C1C)), fontSize = 14.sp, modifier = Modifier.weight(1f))
         IconButton(onClick = onDismiss) {
-            Icon(Icons.Default.Close, "Dismiss error", tint = AppColors.content(Color(0xFFB91C1C)))
+            Icon(Icons.Default.Close, appDescription("Dismiss error"), tint = AppColors.content(Color(0xFFB91C1C)))
         }
     }
 }
@@ -359,7 +362,7 @@ private fun ComposerChecking(message: String) {
         CircularProgressIndicator(
             modifier = Modifier.size(18.dp), color = AppColors.content(ComposerGreen), strokeWidth = 2.dp
         )
-        Text(message, color = AppColors.content(ComposerMuted), fontSize = 14.sp)
+        Text(appText(message), color = AppColors.content(ComposerMuted), fontSize = 14.sp)
     }
 }
 
@@ -373,16 +376,16 @@ private fun EmptyMediaSelection(enabled: Boolean, onSelect: () -> Unit) {
     ) {
         Icon(ComposerImagePlus, null, tint = AppColors.content(ComposerMuted), modifier = Modifier.size(40.dp))
         Spacer(Modifier.height(12.dp))
-        Text("Choose photos or a video", color = AppColors.content(ComposerText), fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Text(appText("Choose photos or a video"), color = AppColors.content(ComposerText), fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
-        Text("Up to 10 photos or one video", color = AppColors.content(ComposerMuted), fontSize = 14.sp)
+        Text(appText("Up to 10 photos or one video"), color = AppColors.content(ComposerMuted), fontSize = 14.sp)
         Spacer(Modifier.height(16.dp))
         OutlinedButton(
             onClick = onSelect,
             enabled = enabled,
             colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.content(ComposerGreen))
         ) {
-            Text("Select media", fontWeight = FontWeight.SemiBold)
+            Text(appText("Select media"), fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -404,8 +407,8 @@ private fun AddMoreMediaButton(count: Int, enabled: Boolean, onClick: () -> Unit
             ) {
                 Icon(ComposerImagePlus, null, tint = AppColors.content(Color(0xFF374151)), modifier = Modifier.size(22.dp))
             }
-            Text("Add more", color = AppColors.content(Color(0xFF374151)), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text("$count/${MediaPostUploadLimits.MAX_IMAGES} selected", color = AppColors.content(ComposerMuted), fontSize = 13.sp)
+            Text(appText("Add more"), color = AppColors.content(Color(0xFF374151)), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(appText("$count/${MediaPostUploadLimits.MAX_IMAGES} selected"), color = AppColors.content(ComposerMuted), fontSize = 13.sp)
         }
     }
 }

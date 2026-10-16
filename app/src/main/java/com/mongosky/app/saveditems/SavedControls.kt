@@ -1,6 +1,9 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.mongosky.app.saveditems
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -64,7 +67,7 @@ private fun canOpenSavedMenu(model: SavedItemsViewModel?,cell: SavedCell) = mode
     }).padding(horizontal = 20.dp,vertical = 12.dp),verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.spacedBy(18.dp)) {
         Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,null,
             tint = if (cell.status?.saved == true) colors.accent else colors.text,modifier = Modifier.size(23.dp))
-        Text(savedPostMenuLabel(cell),fontSize = 16.sp,color = if (enabled) colors.text else colors.muted)
+        Text(appText(savedPostMenuLabel(cell)),fontSize = 16.sp,color = if (enabled) colors.text else colors.muted)
     }
 }
 
@@ -73,7 +76,7 @@ private fun canOpenSavedMenu(model: SavedItemsViewModel?,cell: SavedCell) = mode
     val colors = rememberSavedUiColors()
     val (model,cell) = savedControl(postId,"post-dropdown",revalidate = false)
     val epoch = model?.generation ?: -1
-    DropdownMenuItem(text = { Text(savedPostMenuLabel(cell)) },leadingIcon = {
+    DropdownMenuItem(text = { Text(appText(savedPostMenuLabel(cell))) },leadingIcon = {
         Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,null,tint = colors.accent)
     },enabled = canOpenSavedMenu(model,cell),onClick = {
         if (model?.ready == false) model.retrySession()
@@ -89,7 +92,7 @@ private fun canOpenSavedMenu(model: SavedItemsViewModel?,cell: SavedCell) = mode
         enabled = canUse(model,cell),
         modifier = Modifier.size(48.dp)) {
         if (waiting(model,cell) || model?.ready == true && cell.status == null && cell.error == null) CircularProgressIndicator(Modifier.size(20.dp),strokeWidth = 2.dp,color = Color.White)
-        else Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,label(model,cell),
+        else Icon(if (cell.status?.saved == true) SavedIcons.saved else SavedIcons.bookmark,appDescription(label(model,cell)),
             tint = if (cell.status?.saved == true) Color(0xFF6CE5B7) else Color.White,modifier = Modifier.size(25.dp))
     }
 }
@@ -100,7 +103,7 @@ private fun canOpenSavedMenu(model: SavedItemsViewModel?,cell: SavedCell) = mode
         host.currentSnackbarData?.dismiss()
         model.notices.collect { value ->
             if (value.generation == model.generation) {
-                val result = host.showSnackbar(value.message,actionLabel = if (value.undo != null) "Undo" else null,withDismissAction = value.undo != null)
+                val result = host.showSnackbar(appText(value.message),actionLabel = if (value.undo != null) "Undo" else null,withDismissAction = value.undo != null)
                 if (result == SnackbarResult.ActionPerformed && value.generation == model.generation) value.undo?.let(model::undo)
             }
         }

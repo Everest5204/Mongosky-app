@@ -1,5 +1,8 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import android.content.Context
@@ -188,13 +191,13 @@ fun MediaPostPreview(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = if (
+                            contentDescription = appDescription(if (
                                 active.kind == PostMediaKind.VIDEO
                             ) {
                                 "Remove video"
                             } else {
                                 "Remove photo ${index + 1}"
-                            },
+                            }),
                             tint = AppColors.content(Color.White.copy(
                                 alpha = if (enabled) 1f else 0.5f
                             )),
@@ -239,7 +242,7 @@ private fun PhotoPreview(
     ) {
         AsyncImage(
             model = uri,
-            contentDescription = description,
+            contentDescription = appDescription(description),
             contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxSize(),
             onLoading = {
@@ -348,7 +351,7 @@ private fun PhotoThumbnails(
             ) {
                 AsyncImage(
                     model = item.uri,
-                    contentDescription = "Select photo ${index + 1}",
+                    contentDescription = appDescription("Select photo ${index + 1}"),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
@@ -528,7 +531,7 @@ private fun VideoPreview(
             modifier = Modifier
                 .fillMaxSize()
                 .semantics {
-                    contentDescription = "Selected video preview"
+                    contentDescription = appText("Selected video preview")
                 },
             surfaceType = SURFACE_TYPE_TEXTURE_VIEW,
             contentScale = ContentScale.Fit
@@ -592,11 +595,11 @@ private fun VideoPreview(
                     } else {
                         Icons.Default.PlayArrow
                     },
-                    contentDescription = if (state.playRequested) {
+                    contentDescription = appDescription(if (state.playRequested) {
                         "Pause video"
                     } else {
                         "Play video"
-                    },
+                    }),
                     tint = AppColors.content(Color.White.copy(
                         alpha = if (controlsEnabled) 1f else 0.45f
                     ))
@@ -645,7 +648,7 @@ private fun VideoPreview(
                 modifier = Modifier
                     .weight(1f)
                     .semantics {
-                        contentDescription = "Video position"
+                        contentDescription = appText("Video position")
                     },
                 colors = SliderDefaults.colors(
                     thumbColor = PreviewGreen,
@@ -690,7 +693,7 @@ private fun PreviewMessage(
     color: Color
 ) {
     Text(
-        text = message,
+        text = appText(message),
         color = AppColors.content(color),
         fontSize = 14.sp,
         textAlign = TextAlign.Center,

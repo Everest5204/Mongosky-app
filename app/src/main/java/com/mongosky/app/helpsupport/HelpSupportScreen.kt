@@ -2,6 +2,9 @@
 
 package com.mongosky.app.helpsupport
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -33,7 +36,7 @@ internal fun HelpSupportScreen(
     onContact: (SupportReason) -> Unit, onCopyEmail: () -> Unit, onBack: () -> Unit
 ) {
     val focus = LocalFocusManager.current
-    val results = remember(query, topic) { HelpSupportPolicy.search(query, topic) }
+    val results = remember(query, topic, com.mongosky.app.language.AppLanguage.current) { HelpSupportPolicy.search(query, topic) }
     val list = rememberLazyListState()
     BoxWithConstraints(Modifier.fillMaxSize().background(AppColors.surface(HelpSupportColors.background)).imePadding()) {
         val side = if (maxWidth < 360.dp) 16.dp else 20.dp
@@ -49,9 +52,9 @@ internal fun HelpSupportScreen(
                                 Icon(HelpSupportIcons.help, null, tint = AppColors.content(HelpSupportColors.brand), modifier = Modifier.size(30.dp))
                             }
                         }
-                        Text("How can we help?", Modifier.semantics { heading() }, color = AppColors.content(HelpSupportColors.text),
+                        Text(appText("How can we help?"), Modifier.semantics { heading() }, color = AppColors.content(HelpSupportColors.text),
                             fontSize = 26.sp, lineHeight = 34.sp, fontWeight = FontWeight.Bold)
-                        Text("Find an answer or get in touch with Mongosky.", color = AppColors.content(HelpSupportColors.muted),
+                        Text(appText("Find an answer or get in touch with Mongosky."), color = AppColors.content(HelpSupportColors.muted),
                             fontSize = 14.sp, lineHeight = 22.sp)
                         Spacer(Modifier.height(2.dp))
                     }
@@ -59,10 +62,10 @@ internal fun HelpSupportScreen(
                 item(key = HelpSupportListKeys.SEARCH, contentType = "search") {
                     OutlinedTextField(value = query, onValueChange = { onQuery(it.take(HelpSupportPolicy.MAX_QUERY)) },
                         modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(14.dp),
-                        label = { Text("Search help") },
+                        label = { Text(appText("Search help")) },
                         leadingIcon = { Icon(HelpSupportIcons.search, null, modifier = Modifier.size(21.dp)) },
                         trailingIcon = if (query.isEmpty()) null else ({
-                            IconButton(onClick = { onQuery("") }) { Icon(HelpSupportIcons.close, "Clear search", modifier = Modifier.size(20.dp)) }
+                            IconButton(onClick = { onQuery("") }) { Icon(HelpSupportIcons.close, appDescription("Clear search"), modifier = Modifier.size(20.dp)) }
                         }),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
@@ -80,17 +83,17 @@ internal fun HelpSupportScreen(
                 item(key = HelpSupportListKeys.FAQ_HEADING, contentType = "heading") {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         HelpSectionTitle(if (query.isBlank() && topic == null) "Frequently asked questions" else "Help articles")
-                        if (query.isNotBlank() || topic != null) Text("${results.size} ${if (results.size == 1) "answer" else "answers"} found",
+                        if (query.isNotBlank() || topic != null) Text(appText("${results.size} ${if (results.size == 1) "answer" else "answers"} found"),
                             color = AppColors.content(HelpSupportColors.muted), fontSize = 13.sp)
                     }
                 }
                 if (results.isEmpty()) {
                     item(key = HelpSupportListKeys.EMPTY, contentType = "empty") {
                         Column(Modifier.fillMaxWidth().padding(vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("No matching answers", color = AppColors.content(HelpSupportColors.text), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                            Text("Try another word or browse all topics. You can also contact support below.",
+                            Text(appText("No matching answers"), color = AppColors.content(HelpSupportColors.text), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                            Text(appText("Try another word or browse all topics. You can also contact support below."),
                                 color = AppColors.content(HelpSupportColors.muted), fontSize = 14.sp, lineHeight = 22.sp)
-                            TextButton(onClick = { focus.clearFocus(); onQuery(""); onTopic(null) }) { Text("Show all answers", color = AppColors.content(HelpSupportColors.brand)) }
+                            TextButton(onClick = { focus.clearFocus(); onQuery(""); onTopic(null) }) { Text(appText("Show all answers"), color = AppColors.content(HelpSupportColors.brand)) }
                         }
                     }
                 }
@@ -112,7 +115,7 @@ internal fun HelpSupportScreen(
                     HelpContactCard(onContact = { focus.clearFocus(); onContact(SupportReason.GENERAL) }, onCopyEmail = onCopyEmail)
                 }
                 item(key = HelpSupportListKeys.HANDOFF, contentType = "note") {
-                    Text("Support messages open in your email app. Review your message there before sending.",
+                    Text(appText("Support messages open in your email app. Review your message there before sending."),
                         color = AppColors.content(HelpSupportColors.muted), fontSize = 12.sp, lineHeight = 19.sp)
                 }
             }
@@ -122,7 +125,7 @@ internal fun HelpSupportScreen(
 
 @Composable
 private fun HelpTopicChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    FilterChip(selected = selected, onClick = onClick, label = { Text(label) },
+    FilterChip(selected = selected, onClick = onClick, label = { Text(appText(label)) },
         colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppColors.surface(HelpSupportColors.softBrand),
             selectedLabelColor = AppColors.content(HelpSupportColors.brand)), modifier = Modifier.heightIn(min = 48.dp))
 }

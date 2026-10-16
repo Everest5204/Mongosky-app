@@ -1,5 +1,8 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import android.view.WindowManager
@@ -80,10 +83,10 @@ internal fun CommentsSheet(state: CommentsState,userName: String,viewModel: Comm
             Column(panel.clip(RoundedCornerShape(if(mobile) 0.dp else 24.dp)).background(AppColors.surface(Color.White))) {
                 Row(Modifier.fillMaxWidth().heightIn(min=54.dp).padding(start=if(mobile) 10.dp else 18.dp,end=6.dp),
                     verticalAlignment=Alignment.CenterVertically) {
-                    Text("Comments",color=AppColors.content(Color.Black),fontSize=if(configuration.screenWidthDp<=420) 20.sp else 21.sp,
+                    Text(appText("Comments"),color=AppColors.content(Color.Black),fontSize=if(configuration.screenWidthDp<=420) 20.sp else 21.sp,
                         fontWeight=FontWeight.Black,modifier=Modifier.weight(1f))
                     IconButton(onClick=viewModel::closeComments,modifier=Modifier.size(48.dp)) {
-                        Icon(CommentIcons.close,"Close comments",Modifier.size(26.dp),tint=AppColors.content(Color.Black))
+                        Icon(CommentIcons.close,appDescription("Close comments"),Modifier.size(26.dp),tint=AppColors.content(Color.Black))
                     }
                 }
                 HorizontalDivider(color=AppColors.outline(CommentColors.line),thickness=1.dp)
@@ -97,7 +100,7 @@ internal fun CommentsSheet(state: CommentsState,userName: String,viewModel: Comm
                         Column(Modifier.fillMaxWidth().padding(top=62.dp),horizontalAlignment=Alignment.CenterHorizontally,
                             verticalArrangement=Arrangement.spacedBy(12.dp)) {
                             CircularProgressIndicator(Modifier.size(22.dp),color=AppColors.content(CommentColors.placeholder),strokeWidth=2.dp)
-                            Text("Loading comments...",fontSize=17.sp,color=AppColors.content(CommentColors.placeholder))
+                            Text(appText("Loading comments..."),fontSize=17.sp,color=AppColors.content(CommentColors.placeholder))
                         }
                     }
                     if (state.root.initialized && state.root.comments.isEmpty() && state.root.error==null)

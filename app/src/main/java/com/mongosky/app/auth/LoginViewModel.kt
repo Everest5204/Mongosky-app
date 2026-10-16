@@ -1,10 +1,14 @@
 package com.mongosky.app.auth
 
+import com.mongosky.app.language.appText
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mongosky.app.session.SavedLoginSession
+import com.mongosky.app.session.SessionStartupPolicy
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
@@ -16,14 +20,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 internal interface LoginSessionStore {
-    suspend fun read(): String?
-    suspend fun save(token: String)
+    suspend fun read(): SavedLoginSession?
+    suspend fun save(session: AuthSession)
+    suspend fun update(session: AuthSession): Boolean
+    suspend fun clearIfCurrent(token: String): Boolean
     suspend fun clear()
 }
 
 private class StoredLoginSession(private val store: TokenStore) : LoginSessionStore {
-    override suspend fun read() = store.read()
-    override suspend fun save(token: String) = store.save(token)
+    override suspend fun read() = store.readSession()
+    override suspend fun save(session: AuthSession) = store.saveSession(session)
+    override suspend fun update(session: AuthSession) = store.updateSession(session)
+    override suspend fun clearIfCurrent(token: String) = store.clearIfCurrent(token)
     override suspend fun clear() = store.clear()
 }
 
@@ -65,9 +73,11 @@ class LoginViewModel internal constructor(
 
     private var session: AuthSession? = null
     private var profileRefreshJob: Job? = null
+    private var validationJob: Job? = null
     private var requestJob: Job? = null
     private var generation = 0
     private var revision = 0L
+    private var lastVerifiedAtNanos = 0L
 
     var uiState by mutableStateOf(LoginUiState(checkingSession = restoreOnStart))
         private set
@@ -75,18 +85,38 @@ class LoginViewModel internal constructor(
     init { if (restoreOnStart) restoreSession() }
 
     fun restoreSession() {
-        if (!restoreOnStart || uiState.loading || session != null) return
-        uiState = LoginUiState(loading = true, checkingSession = true)
+        if (!restoreOnStart || uiState.loading || session != null || requestJob?.isActive == true) return
+        // An explicit retry keeps its error form; initial startup has no intermediate auth UI.
+        val retryError = uiState.restoreError
+        uiState = LoginUiState(loading = retryError != null,
+            checkingSession = retryError == null, restoreError = retryError)
         startRequest { attempt ->
             try {
-                val token = tokenStore.read()
+                val saved = tokenStore.read()
                 ensureCurrent(attempt)
-                if (token == null) {
+                if (saved == null) {
                     uiState = LoginUiState(checkingSession = false)
-                } else {
-                    val restored = backend.getSession(token)
+                } else if (SessionStartupPolicy.isExpired(saved.token)) {
+                    tokenStore.clearIfCurrent(saved.token)
                     ensureCurrent(attempt)
-                    showSignedIn(restored)
+                    uiState = LoginUiState(checkingSession = false,
+                        error = "Session expired. Please sign in again.")
+                } else {
+                    val cached = saved.account ?: SessionStartupPolicy.legacyAccount(saved.token)
+                    if (cached != null) {
+                        // This is the first route: no server call, delay, spinner or profile request.
+                        showSignedIn(cached, verified = false)
+                        validateSessionInBackground()
+                    } else {
+                        // One-time migration for legacy opaque tokens without an identity hint.
+                        val restored = backend.getSession(saved.token)
+                        ensureCurrent(attempt)
+                        try { tokenStore.update(restored) }
+                        catch (error: CancellationException) { throw error }
+                        catch (_: Exception) { /* The verified session is usable even if migration cannot be cached. */ }
+                        ensureCurrent(attempt)
+                        showSignedIn(restored)
+                    }
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -123,7 +153,7 @@ class LoginViewModel internal constructor(
                     uiState = LoginUiState(checkingSession = false)
                 } else {
                     withContext(NonCancellable) {
-                        try { tokenStore.save(result.token) }
+                        try { tokenStore.save(result) }
                         catch (_: Exception) { throw LoginException("Could not save your session. Please retry.") }
                         showSignedIn(result)
                     }
@@ -141,16 +171,17 @@ class LoginViewModel internal constructor(
             result.token.isBlank() || result.userId.isBlank()) throw LoginException("Could not switch accounts. Please retry.")
         val previousState = uiState
         val previousSession = session
-        profileRefreshJob?.cancel()
+        cancelSessionRequests()
         uiState = previousState.copy(loading = true, error = null)
         withContext(NonCancellable) {
             try {
                 beforeCommit()
-                tokenStore.save(result.token)
+                tokenStore.save(result)
             } catch (_: Exception) {
                 session = previousSession
                 uiState = previousState
-                refreshProfile()
+                lastVerifiedAtNanos = 0L
+                validateSessionInBackground()
                 throw LoginException("Could not save your session. Please retry.")
             }
             // A cancelled form cannot revert memory after the new token has been stored.
@@ -158,18 +189,52 @@ class LoginViewModel internal constructor(
         }
     }
 
+    /** A warm foreground entry also revalidates silently, coalesced and throttled after success. */
+    fun validateSessionInBackground() {
+        val current = session ?: return
+        if (uiState.loading || uiState.checkingSession || validationJob?.isActive == true) return
+        if (lastVerifiedAtNanos != 0L && System.nanoTime() - lastVerifiedAtNanos < 60_000_000_000L) return
+        val attempt = generation
+        validationJob = viewModelScope.launch {
+            try {
+                if (SessionStartupPolicy.isExpired(current.token)) throw SessionExpiredException()
+                val verified = backend.getSession(current.token)
+                ensureCurrent(attempt)
+                val active = session?.takeIf { it.token == current.token } ?: return@launch
+                if (verified.token != active.token || verified.userId != active.userId) throw SessionExpiredException()
+                // /auth/me has no avatar: retain the snapshot until /user/me refreshes it.
+                val updated = AuthSession(active.token, active.userId,
+                    verified.firstName.ifBlank { active.firstName },
+                    verified.lastName.ifBlank { active.lastName }, active.profileImageUrl)
+                session = updated
+                uiState = uiState.copy(signedInName = displayName(updated))
+                lastVerifiedAtNanos = System.nanoTime()
+                cacheSession(updated, attempt)
+                ensureCurrent(attempt)
+                refreshProfile()
+            } catch (error: CancellationException) { throw error }
+            catch (_: SessionExpiredException) { expireSession(current, attempt) }
+            catch (_: Exception) {
+                // Offline, 429 and 5xx do not log out a cached account. Retry on next foreground.
+            }
+        }
+    }
+
     /** Keep the current avatar visible; a response from an earlier session is ignored. */
     fun refreshProfile() {
         val current = session ?: return
         if (uiState.loading || uiState.checkingSession || profileRefreshJob?.isActive == true) return
+        val attempt = generation
         profileRefreshJob = viewModelScope.launch {
             try {
                 val refreshed = backend.getProfile(current.token)
                 ensureActive()
-                if (session !== current || uiState.loading || refreshed.userId != current.userId) return@launch
+                if (attempt != generation || session?.token != current.token || uiState.loading ||
+                    refreshed.token != current.token || refreshed.userId != current.userId) return@launch
                 session = refreshed
                 uiState = uiState.copy(signedInName = displayName(refreshed),
                     signedInUserId = refreshed.userId, signedInProfileImageUrl = refreshed.profileImageUrl)
+                cacheSession(refreshed, attempt)
             } catch (error: CancellationException) { throw error }
             catch (_: Exception) { /* Keep the last known profile when offline. */ }
         }
@@ -177,12 +242,12 @@ class LoginViewModel internal constructor(
 
     fun signOut() {
         if (uiState.loading) return
-        profileRefreshJob?.cancel()
         val previousState = uiState
+        cancelSessionRequests()
         uiState = previousState.copy(loading = true, error = null)
         startRequest { attempt ->
             try {
-                tokenStore.clear()
+                withContext(NonCancellable) { tokenStore.clear() }
                 ensureCurrent(attempt)
                 session = null
                 uiState = LoginUiState(checkingSession = false, sessionRevision = revision)
@@ -191,17 +256,51 @@ class LoginViewModel internal constructor(
                 if (attempt == generation) uiState = if (previousState.restoreError != null)
                     previousState.copy(loading = false, restoreError = "Could not remove the session. Please retry.")
                 else previousState.copy(loading = false, error = "Could not remove the session. Please retry.")
+                if (attempt == generation) {
+                    lastVerifiedAtNanos = 0L
+                    validateSessionInBackground()
+                }
             }
         }
     }
 
     /** Close an isolated form without signing out, storing credentials, or changing the active token. */
     fun endSession() {
-        generation++
-        requestJob?.cancel(); requestJob = null
-        profileRefreshJob?.cancel(); profileRefreshJob = null
+        cancelSessionRequests()
         session = null
         uiState = LoginUiState(checkingSession = false)
+    }
+
+    private fun cancelSessionRequests() {
+        generation++
+        requestJob?.cancel(); requestJob = null
+        validationJob?.cancel(); validationJob = null
+        profileRefreshJob?.cancel(); profileRefreshJob = null
+    }
+
+    private suspend fun cacheSession(account: AuthSession, attempt: Int) {
+        ensureCurrent(attempt)
+        if (session !== account) return
+        try { tokenStore.update(account) }
+        catch (error: CancellationException) { throw error }
+        catch (_: Exception) { /* A cache-write failure must not hide an already usable Home. */ }
+    }
+
+    private suspend fun expireSession(current: AuthSession, attempt: Int) {
+        ensureCurrent(attempt)
+        if (session?.token != current.token) return
+        profileRefreshJob?.cancel()
+        session = null
+        uiState = LoginUiState(loading = true, checkingSession = false, sessionRevision = revision)
+        try {
+            withContext(NonCancellable) { tokenStore.clearIfCurrent(current.token) }
+            ensureCurrent(attempt)
+            uiState = LoginUiState(checkingSession = false,
+                error = "Session expired. Please sign in again.", sessionRevision = revision)
+        } catch (error: CancellationException) { throw error }
+        catch (_: Exception) {
+            if (attempt == generation) showRestoreError("Could not clear the expired session. Try again.")
+        }
     }
 
     private fun startRequest(block: suspend kotlinx.coroutines.CoroutineScope.(Int) -> Unit) {
@@ -215,15 +314,16 @@ class LoginViewModel internal constructor(
         kotlinx.coroutines.currentCoroutineContext().ensureActive()
         if (attempt != generation) throw CancellationException("Auth form closed")
     }
-    private fun showSignedIn(result: AuthSession) {
+    private fun showSignedIn(result: AuthSession, verified: Boolean = true) {
         session = result
+        lastVerifiedAtNanos = if (verified) System.nanoTime() else 0L
         revision++
         uiState = LoginUiState(checkingSession = false, signedInName = displayName(result),
             signedInUserId = result.userId, signedInProfileImageUrl = result.profileImageUrl,
             sessionRevision = revision)
-        refreshProfile()
+        if (verified) refreshProfile()
     }
-    private fun displayName(user: AuthSession) = "${user.firstName} ${user.lastName}".trim().ifBlank { "Mongosky user" }
+    private fun displayName(user: AuthSession) = "${user.firstName} ${user.lastName}".trim().ifBlank { appText("Mongosky user") }
     private fun showLoginError(message: String) { uiState = LoginUiState(checkingSession = false, error = message) }
     private fun showRestoreError(message: String) { uiState = LoginUiState(checkingSession = false, restoreError = message) }
 }

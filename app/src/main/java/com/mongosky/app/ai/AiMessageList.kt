@@ -1,5 +1,7 @@
 package com.mongosky.app.ai
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.animation.core.*
@@ -56,7 +58,7 @@ internal fun AiMessageList(state:AiState,colors:AiColors,followRequest:Int,modif
         when {
             state.messagesLoading && state.messages.isEmpty() -> CircularProgressIndicator(
                 Modifier.size(24.dp).align(Alignment.Center),color=AppColors.content(colors.muted),strokeWidth=2.dp)
-            state.messages.isEmpty() -> Text("How can I help you?",fontSize=if(phone) 29.sp else 34.sp,
+            state.messages.isEmpty() -> Text(appText("How can I help you?"),fontSize=if(phone) 29.sp else 34.sp,
                 lineHeight=40.sp,fontWeight=FontWeight.Light,color=AppColors.content(colors.muted),
                 modifier=Modifier.align(Alignment.Center).padding(20.dp))
             else -> LazyColumn(state=list,modifier=Modifier.fillMaxSize(),contentPadding=PaddingValues(
@@ -81,7 +83,7 @@ private fun AiMessageRow(message:AiMessage,colors:AiColors,phone:Boolean) {
             else Modifier.padding(end=if(phone) 24.dp else 38.dp))) {
             if(!user && message.content.isEmpty() && message.delivery==AiDelivery.STREAMING) AiTyping(colors)
             else SelectionContainer { Text(message.content,color=AppColors.content(colors.text),fontSize=16.sp,lineHeight=26.sp) }
-            if(message.delivery==AiDelivery.INTERRUPTED) Text("Response interrupted",color=AppColors.content(colors.muted),fontSize=12.sp,modifier=Modifier.padding(top=7.dp))
+            if(message.delivery==AiDelivery.INTERRUPTED) Text(appText("Response interrupted"),color=AppColors.content(colors.muted),fontSize=12.sp,modifier=Modifier.padding(top=7.dp))
         }
     }
     }
@@ -90,7 +92,7 @@ private fun AiMessageRow(message:AiMessage,colors:AiColors,phone:Boolean) {
 @Composable
 private fun AiTyping(colors:AiColors) {
     val transition=rememberInfiniteTransition(label="AI typing")
-    Row(Modifier.height(26.dp).semantics { contentDescription="Mongosky AI is responding" },
+    Row(Modifier.height(26.dp).semantics { contentDescription=appText("Mongosky AI is responding") },
         verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)) {
         repeat(3) { index ->
             val alpha by transition.animateFloat(.3f,.95f,infiniteRepeatable(tween(550),RepeatMode.Reverse,

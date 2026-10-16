@@ -1,5 +1,8 @@
 package com.mongosky.app.saveditems
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,26 +32,26 @@ import java.time.format.DateTimeFormatter
     val colors = rememberSavedUiColors()
     var menu by remember(item.postId) { mutableStateOf(false) }
     Surface(shape = RoundedCornerShape(18.dp),color = colors.surface,border = BorderStroke(1.dp,colors.border),modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().clickable(enabled = enabled && item.available && !opening && !saving,role = Role.Button,onClickLabel = "Open saved post",onClick = open)
+        Row(Modifier.fillMaxWidth().clickable(enabled = enabled && item.available && !opening && !saving,role = Role.Button,onClickLabel = appText("Open saved post"),onClick = open)
             .padding(start = 14.dp,top = 16.dp,bottom = 16.dp,end = 4.dp),verticalAlignment = Alignment.Top) {
             SavedThumbnail(item)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f),verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(item.title,fontSize = 13.sp,fontWeight = FontWeight.SemiBold,color = colors.accent)
-                item.author?.let { Text(it.displayName.ifBlank { "Mongosky User" },fontWeight = FontWeight.SemiBold,fontSize = 15.sp,color = colors.text,
+                item.author?.let { Text(it.displayName.ifBlank { appText("Mongosky User") },fontWeight = FontWeight.SemiBold,fontSize = 15.sp,color = colors.text,
                     maxLines = 1,overflow = TextOverflow.Ellipsis) }
                 if (item.text.isNotBlank()) Text(item.text,fontSize = 14.sp,lineHeight = 20.sp,color = if (item.available) colors.text else colors.muted,maxLines = 3,overflow = TextOverflow.Ellipsis)
-                Text("Saved ${item.savedAt.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("d MMM · h:mm a"))}",fontSize = 11.sp,color = colors.muted)
+                Text(appText("Saved ${item.savedAt.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("d MMM · h:mm a").withLocale(java.util.Locale.forLanguageTag(com.mongosky.app.language.AppLanguage.current.tag)))}"),fontSize = 11.sp,color = colors.muted)
                 if (opening || saving) Row(verticalAlignment = Alignment.CenterVertically,horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     CircularProgressIndicator(Modifier.size(14.dp),strokeWidth = 1.8.dp,color = colors.accent)
-                    Text(if (saving) "Updating…" else "Opening…",fontSize = 12.sp,color = colors.muted)
+                    Text(appText(if (saving) "Updating…" else "Opening…"),fontSize = 12.sp,color = colors.muted)
                 }
             }
             Box {
-                IconButton({ menu = true },enabled = enabled && !saving && !opening,modifier = Modifier.size(48.dp)) { Icon(SavedIcons.more,"Options for saved ${item.title}",tint = colors.muted) }
+                IconButton({ menu = true },enabled = enabled && !saving && !opening,modifier = Modifier.size(48.dp)) { Icon(SavedIcons.more,appDescription("Options for saved ${item.title}"),tint = colors.muted) }
                 DropdownMenu(menu,{ menu = false },containerColor = colors.surface,shape = RoundedCornerShape(14.dp)) {
-                    if (item.available) DropdownMenuItem(text = { Text("View post") },onClick = { menu = false;open() })
-                    DropdownMenuItem(text = { Text("Remove from saved") },leadingIcon = { Icon(SavedIcons.bookmark,null) },onClick = { menu = false;remove() })
+                    if (item.available) DropdownMenuItem(text = { Text(appText("View post")) },onClick = { menu = false;open() })
+                    DropdownMenuItem(text = { Text(appText("Remove from saved")) },leadingIcon = { Icon(SavedIcons.bookmark,null) },onClick = { menu = false;remove() })
                 }
             }
         }
@@ -74,9 +77,9 @@ import java.time.format.DateTimeFormatter
     val colors = rememberSavedUiColors()
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp,vertical = 42.dp),horizontalAlignment = Alignment.CenterHorizontally,verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Icon(SavedIcons.bookmark,null,tint = colors.accent,modifier = Modifier.size(40.dp))
-        Text(title,color = colors.text,fontSize = 19.sp,fontWeight = FontWeight.SemiBold)
-        Text(body,color = colors.muted,fontSize = 14.sp,lineHeight = 21.sp,textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        action?.let { Button(onAction,colors = ButtonDefaults.buttonColors(containerColor = colors.accent,contentColor = colors.onAccent)) { Text(it) } }
+        Text(appText(title),color = colors.text,fontSize = 19.sp,fontWeight = FontWeight.SemiBold)
+        Text(appText(body),color = colors.muted,fontSize = 14.sp,lineHeight = 21.sp,textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        action?.let { Button(onAction,colors = ButtonDefaults.buttonColors(containerColor = colors.accent,contentColor = colors.onAccent)) { Text(appText(it)) } }
     }
 }
 @Composable internal fun SavedSkeleton() {

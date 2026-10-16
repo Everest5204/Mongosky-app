@@ -1,5 +1,10 @@
 package com.mongosky.app.friends
 
+import androidx.compose.foundation.layout.widthIn
+
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.BorderStroke
@@ -90,14 +95,14 @@ internal fun FriendsPersonRow(
         mapOf("verified" to InlineTextContent(
             Placeholder(16.sp, 16.sp, PlaceholderVerticalAlign.TextCenter)
         ) {
-            Icon(FriendsIcons.verified, "Verified account", tint = Color.Unspecified,
+            Icon(FriendsIcons.verified, appDescription("Verified account"), tint = Color.Unspecified,
                 modifier = Modifier.fillMaxWidth())
         })
     }
     Row(Modifier.fillMaxWidth().padding(horizontal = (horizontalPadding - 2.dp).coerceAtLeast(0.dp), vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.weight(1f).heightIn(min = 52.dp).clip(RoundedCornerShape(12.dp))
-            .clickable(role = Role.Button, onClickLabel = "Open ${user.fullName}'s profile", onClick = onProfile),
+            .clickable(role = Role.Button, onClickLabel = appText("Open ${user.fullName}'s profile"), onClick = onProfile),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             FriendsAvatar(user)
             Text(name, inlineContent = badge, modifier = Modifier.weight(1f), color = AppColors.content(FriendsColors.text),
@@ -110,13 +115,13 @@ internal fun FriendsPersonRow(
             Box(Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
                     Button(onClick = onFollow, enabled = actionEnabled && !pending && !uncertain,
-                        modifier = Modifier.width(80.dp).heightIn(min = 32.dp).semantics {
-                            contentDescription = when {
+                        modifier = Modifier.widthIn(min = 80.dp, max = 136.dp).heightIn(min = 32.dp).semantics {
+                            contentDescription = appText(when {
                                 pending -> "Updating follow state for ${user.fullName}"
                                 uncertain -> "Refresh to confirm follow state for ${user.fullName}"
                                 user.isFollowing -> "Unfollow ${user.fullName}"
-                                else -> "${user.actionLabel} ${user.fullName}"
-                            }
+                                else -> "${appText(user.actionLabel)} ${user.fullName}"
+                            })
                         }, shape = RoundedCornerShape(6.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AppColors.fill(if (user.isFollowing) Color.White else FriendsColors.brand),
@@ -126,7 +131,7 @@ internal fun FriendsPersonRow(
                         border = if (user.isFollowing) BorderStroke(1.dp, AppColors.outline(FriendsColors.border)) else null,
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 4.dp)
                     ) {
-                        Text(user.actionLabel, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp, maxLines = 2,
+                        Text(appText(user.actionLabel), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp, maxLines = 2,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                     }
                 }
@@ -173,9 +178,9 @@ internal fun FriendsStatePanel(title: String, message: String, icon: ImageVector
         Box(Modifier.size(64.dp).clip(CircleShape).background(AppColors.surface(FriendsColors.brand.copy(alpha = .07f))), contentAlignment = Alignment.Center) {
             Icon(icon, null, Modifier.size(30.dp), tint = AppColors.content(FriendsColors.brand))
         }
-        Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = AppColors.content(FriendsColors.text),
+        Text(appText(title), fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = AppColors.content(FriendsColors.text),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        Text(message, fontSize = 14.sp, color = AppColors.content(FriendsColors.secondary), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        if (actionLabel != null) TextButton(onClick = onAction) { Text(actionLabel, color = AppColors.content(FriendsColors.brand), fontWeight = FontWeight.SemiBold) }
+        Text(appText(message), fontSize = 14.sp, color = AppColors.content(FriendsColors.secondary), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        if (actionLabel != null) TextButton(onClick = onAction) { Text(appText(actionLabel), color = AppColors.content(FriendsColors.brand), fontWeight = FontWeight.SemiBold) }
     }
 }

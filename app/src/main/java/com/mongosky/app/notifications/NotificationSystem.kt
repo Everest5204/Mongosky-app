@@ -1,5 +1,8 @@
 package com.mongosky.app.notifications
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appNotificationText
+
 import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
@@ -23,8 +26,8 @@ internal object NotificationSystem {
     val tap = mutableTap.asStateFlow()
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
     fun channel(context: Context) {
-        manager(context).createNotificationChannel(NotificationChannel(CHANNEL, "Social activity", NotificationManager.IMPORTANCE_DEFAULT).apply {
-            description = "Follows, reactions, comments and replies on Mongosky"
+        manager(context).createNotificationChannel(NotificationChannel(CHANNEL, appText("Social activity"), NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = appText("Follows, reactions, comments and replies on Mongosky")
             enableVibration(true); lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         })
     }
@@ -45,11 +48,12 @@ internal object NotificationSystem {
             .putExtra("actor_id", push.actorId).putExtra("body", push.body)
         val pending = PendingIntent.getActivity(context, 0, launch, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val icon = context.resources.getIdentifier("ic_mongosky_notification", "drawable", context.packageName).takeIf { it != 0 } ?: android.R.drawable.ic_dialog_info
+        val body = appNotificationText(push.body)
         val notification = Notification.Builder(context, CHANNEL).setSmallIcon(icon).setContentTitle("Mongosky")
-            .setContentText(push.body).setStyle(Notification.BigTextStyle().bigText(push.body)).setContentIntent(pending)
+            .setContentText(body).setStyle(Notification.BigTextStyle().bigText(body)).setContentIntent(pending)
             .setAutoCancel(true).setOnlyAlertOnce(true).setCategory(Notification.CATEGORY_SOCIAL)
             .setVisibility(Notification.VISIBILITY_PRIVATE)
-            .setPublicVersion(Notification.Builder(context, CHANNEL).setSmallIcon(icon).setContentTitle("Mongosky").setContentText("New social activity").build())
+            .setPublicVersion(Notification.Builder(context, CHANNEL).setSmallIcon(icon).setContentTitle("Mongosky").setContentText(appText("New social activity")).build())
             .build()
         try { manager(context).notify(PREFIX + push.id, 0, notification); store.noteDelivered(push.id) } catch (_: SecurityException) { /* Permission may change during delivery. */ }
     }

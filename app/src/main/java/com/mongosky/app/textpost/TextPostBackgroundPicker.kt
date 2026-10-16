@@ -1,5 +1,8 @@
 package com.mongosky.app.textpost
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.border
@@ -54,15 +57,15 @@ fun TextPostBackgroundPicker(
     Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp),
             horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Background", color = AppColors.content(Color(0xFF020617)), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(appText("Background"), color = AppColors.content(Color(0xFF020617)), fontWeight = FontWeight.Bold, fontSize = 15.sp)
             Text(remaining.toString(), color = AppColors.content(if (remaining < 60) Color(0xFFE11D48) else Color(0xFF64748B)),
                 fontWeight = FontWeight.Bold, fontSize = 14.sp,
-                modifier = Modifier.semantics { contentDescription = "$remaining characters remaining" })
+                modifier = Modifier.semantics { contentDescription = appText("$remaining characters remaining") })
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             item(key = "back") {
-                IconButton(onClick = onBack, enabled = enabled) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Close composer") }
+                IconButton(onClick = onBack, enabled = enabled) { Icon(Icons.AutoMirrored.Filled.ArrowBack, appDescription("Close composer")) }
             }
             items(if (expanded) TextPostPreset.entries else TextPostPreset.entries.take(9), key = { it.id }) { preset ->
                 val active = preset == selected
@@ -79,11 +82,11 @@ fun TextPostBackgroundPicker(
             }
             item(key = "more") {
                 IconButton(onClick = { expanded = !expanded }, enabled = enabled) {
-                    Icon(Icons.Default.MoreVert, if (expanded) "Show fewer backgrounds" else "Show all backgrounds")
+                    Icon(Icons.Default.MoreVert, appDescription(if (expanded) "Show fewer backgrounds" else "Show all backgrounds"))
                 }
             }
             item(key = "emoji") {
-                IconButton(onClick = onEmoji, enabled = enabled) { Icon(Icons.Default.Face, "Add emoji", tint = AppColors.content(Color(0xFFF97316))) }
+                IconButton(onClick = onEmoji, enabled = enabled) { Icon(Icons.Default.Face, appDescription("Add emoji"), tint = AppColors.content(Color(0xFFF97316))) }
             }
         }
     }

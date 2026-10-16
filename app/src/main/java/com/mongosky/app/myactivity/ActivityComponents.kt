@@ -1,5 +1,8 @@
 package com.mongosky.app.myactivity
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.BorderStroke
@@ -44,7 +47,7 @@ internal val ActivityMuted = Color(0xFF647570)
     Surface(shape = RoundedCornerShape(18.dp), color = AppColors.surface(Color.White), border = BorderStroke(1.dp,AppColors.outline(Color(0xFFE6EEEA))),
         modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.clickable(enabled = enabled && item.available && !opening, role = Role.Button,
-            onClickLabel = if (item.kind == "follow") "View profile" else "View post", onClick = open)
+            onClickLabel = appText(if (item.kind == "follow") "View profile" else "View post"), onClick = open)
             .padding(start = 14.dp, top = 16.dp, bottom = 16.dp, end = 4.dp), verticalAlignment = Alignment.Top) {
             Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(AppColors.surface(Color(0xFFE9F6F1))), contentAlignment = Alignment.Center) {
                 Icon(icon, null, tint = AppColors.content(ActivityGreen), modifier = Modifier.size(22.dp))
@@ -52,25 +55,25 @@ internal val ActivityMuted = Color(0xFF647570)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(item.title, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, color = AppColors.content(ActivityText))
-                item.author?.let { Text(it.displayName.ifBlank { "Mongosky User" }, fontSize = 13.sp, color = AppColors.content(ActivityMuted),
+                item.author?.let { Text(it.displayName.ifBlank { appText("Mongosky User") }, fontSize = 13.sp, color = AppColors.content(ActivityMuted),
                     maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 if (item.text.isNotBlank()) Text(item.text, fontSize = 13.sp, lineHeight = 19.sp, color = AppColors.content(ActivityMuted),
                     maxLines = 3, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(item.createdAt.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("h:mm a")), fontSize = 12.sp, color = AppColors.content(ActivityMuted))
+                    Text(item.createdAt.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("h:mm a").withLocale(java.util.Locale.forLanguageTag(com.mongosky.app.language.AppLanguage.current.tag))), fontSize = 12.sp, color = AppColors.content(ActivityMuted))
                     if (opening) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 1.8.dp, color = AppColors.content(ActivityGreen))
-                    else if (item.available) Text(if (item.kind == "follow") "View profile" else "View post", fontSize = 12.sp,
+                    else if (item.available) Text(appText(if (item.kind == "follow") "View profile" else "View post"), fontSize = 12.sp,
                         fontWeight = FontWeight.Medium, color = AppColors.content(ActivityGreen))
                 }
                 item.thumbnail?.let { ActivityThumbnail(it) }
             }
             if (item.action != ActivityAction.NONE) Box {
                 IconButton(onClick = { menu = true }, enabled = enabled && !opening, modifier = Modifier.size(48.dp)) {
-                    Icon(ActivityIcons.more,"Options for ${item.title}",tint = AppColors.content(ActivityMuted))
+                    Icon(ActivityIcons.more,appDescription("Options for ${item.title}"),tint = AppColors.content(ActivityMuted))
                 }
                 DropdownMenu(menu, { menu = false }, containerColor = AppColors.surface(Color.White), shape = RoundedCornerShape(14.dp)) {
-                    if (item.available) DropdownMenuItem(text = { Text("View post") }, onClick = { menu = false; open() })
-                    DropdownMenuItem(text = { Text(item.action.label, color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; remove() })
+                    if (item.available) DropdownMenuItem(text = { Text(appText("View post")) }, onClick = { menu = false; open() })
+                    DropdownMenuItem(text = { Text(appText(item.action.label), color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; remove() })
                 }
             } else Spacer(Modifier.width(12.dp))
         }
@@ -81,9 +84,9 @@ internal val ActivityMuted = Color(0xFF647570)
     Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Icon(ActivityIcons.history,null,tint = AppColors.content(ActivityGreen),modifier = Modifier.size(38.dp))
-        Text(title, color = AppColors.content(ActivityText), fontWeight = FontWeight.SemiBold, fontSize = 19.sp)
-        Text(body, color = AppColors.content(ActivityMuted), fontSize = 14.sp, lineHeight = 21.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        action?.let { Button(onClick = onAction, colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(ActivityGreen))) { Text(it) } }
+        Text(appText(title), color = AppColors.content(ActivityText), fontWeight = FontWeight.SemiBold, fontSize = 19.sp)
+        Text(appText(body), color = AppColors.content(ActivityMuted), fontSize = 14.sp, lineHeight = 21.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        action?.let { Button(onClick = onAction, colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(ActivityGreen))) { Text(appText(it)) } }
     }
 }
 

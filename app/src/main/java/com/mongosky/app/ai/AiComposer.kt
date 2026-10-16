@@ -1,5 +1,8 @@
 package com.mongosky.app.ai
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -42,13 +45,13 @@ internal fun AiComposer(state:AiState,colors:AiColors,focus:FocusRequester,onDra
                 } else false
             },decorationBox={ inner ->
                 Box(Modifier.padding(top=11.dp,bottom=11.dp)) {
-                    if(state.draft.isEmpty()) Text("Message…",color=AppColors.content(colors.muted),fontSize=16.sp,lineHeight=25.sp)
+                    if(state.draft.isEmpty()) Text(appText("Message…"),color=AppColors.content(colors.muted),fontSize=16.sp,lineHeight=25.sp)
                     inner()
                 }
             })
         IconButton(onClick=onSend,enabled=state.canSend,modifier=Modifier.size(48.dp)) {
             if(state.sending) CircularProgressIndicator(Modifier.size(20.dp),color=AppColors.content(colors.muted),strokeWidth=2.dp)
-            else Icon(AiIcons.Send,"Send message",tint=AppColors.content(if(state.canSend) colors.red else colors.muted),modifier=Modifier.size(21.dp))
+            else Icon(AiIcons.Send,appDescription("Send message"),tint=AppColors.content(if(state.canSend) colors.red else colors.muted),modifier=Modifier.size(21.dp))
         }
     }
 }

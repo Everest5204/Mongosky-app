@@ -23,7 +23,7 @@ import androidx.core.view.WindowCompat
 
 @Composable internal fun DarkModeTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current.applicationContext
-    remember(context) { AppAppearance.initialize(context) }
+    SideEffect { AppAppearance.initialize(context) }
     DarkModeSystemBars()
     val light = remember { lightColorScheme() }
     MaterialTheme(colorScheme = AppColors.scheme(light)) {

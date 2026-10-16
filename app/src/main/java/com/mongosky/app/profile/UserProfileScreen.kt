@@ -2,6 +2,8 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import android.content.ActivityNotFoundException
@@ -71,7 +73,7 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     UserProfileFeedEffects(feed, state, list,
         active = started && state.profile != null && !state.sessionExpired && !state.unavailable && !actionsModel.uiState.sessionExpired,
         homeExpired = actionsModel.uiState.sessionExpired)
-    LaunchedEffect(feed) { feed.controls.notices.collect { snackbar.showSnackbar(it) } }
+    LaunchedEffect(feed) { feed.controls.notices.collect { snackbar.showSnackbar(appText(it)) } }
     LaunchedEffect(viewerId, userId) { viewModel.enter(viewerId, userId, hint) }
     LaunchedEffect(userId, state.refreshVersion, state.profile != null) {
         if (state.profile != null) { actionsModel.refreshProfileReactions(); reactionVersion++ }
@@ -94,19 +96,19 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
         }
     }
     LaunchedEffect(state.notice) {
-        state.notice?.let { snackbar.showSnackbar(it); viewModel.dismissNotice() }
+        state.notice?.let { snackbar.showSnackbar(appText(it)); viewModel.dismissNotice() }
     }
 
     fun copyLink(link: String) {
         clipboard.setText(AnnotatedString(link))
-        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar("Link copied") }
+        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar(appText("Link copied")) }
     }
     fun sharePost(post: HomePost) {
         val caption = when (post) { is HomePost.Text -> post.post.displayText; is HomePost.Media -> post.post.caption }
         val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT,
             listOf(caption.take(650), "https://mongosky.com/post/${post.id}").filter { it.isNotBlank() }.joinToString("\n\n")) }
-        try { context.startActivity(Intent.createChooser(intent, "Share post")) }
-        catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar("No sharing app is available.") } }
+        try { context.startActivity(Intent.createChooser(intent, appText("Share post"))) }
+        catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) } }
     }
     fun openProfile(id: String) {
         viewModel.connections.close()
@@ -136,7 +138,7 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
                 LazyColumn(state = list, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 20.dp)) {
                     item("profile_header", "header") { UserProfileHeader(state, onBack,
                         onConnections = { viewModel.connections.open(userId, it) }, onFollow = viewModel::toggleFollowing,
-                        onMessage = { scope.launch { snackbar.showSnackbar("Messaging will be connected in the Chat section.") } },
+                        onMessage = { scope.launch { snackbar.showSnackbar(appText("Messaging will be connected in the Chat section.")) } },
                         onOptions = { optionsOpen = true }) }
                     if (state.profileLoading && state.profile == null) item("profile_loading", "loading") {
                         Box(Modifier.fillMaxWidth().height(64.dp), contentAlignment = Alignment.Center) { OwnProfileSpinner() }
@@ -174,13 +176,13 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
                             OwnProfileNotice(state.postErrors.values.distinct().joinToString("\n"), "Retry", viewModel::refresh)
                         }
                         if (visibleCount == 0 && !state.postsLoading && state.postErrors.isEmpty()) item("empty", "notice") {
-                            Text(if (state.hasMore) "More ${state.tab.label.lowercase()} may be in older posts" else
-                                "No ${if (state.tab == OwnProfileTab.ALL) "posts" else state.tab.label.lowercase()} yet",
+                            Text(appText(if (state.hasMore) "More ${state.tab.label.lowercase()} may be in older posts" else
+                                "No ${if (state.tab == OwnProfileTab.ALL) "posts" else state.tab.label.lowercase()} yet"),
                                 color = AppColors.content(OwnProfileColors.muted), fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.fillMaxWidth().padding(24.dp))
                         }
                         if (state.hasMore && !state.postsLoading) item("load_more", "footer") {
-                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text("Load more", color = AppColors.content(OwnProfileColors.brand)) } }
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(viewModel::loadMore) { Text(appText("Load more"), color = AppColors.content(OwnProfileColors.brand)) } }
                         }
                     }
                 }
@@ -194,9 +196,9 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     if (optionsOpen && available) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = AppColors.surface(Color.White),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
-            Text("Profile options", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = AppColors.content(OwnProfileColors.text))
+            Text(appText("Profile options"), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = AppColors.content(OwnProfileColors.text))
             TextButton({ optionsOpen = false; copyLink("https://mongosky.com/profile/$userId") }, modifier = Modifier.fillMaxWidth()) {
-                Text("Copy profile link", color = AppColors.content(OwnProfileColors.text))
+                Text(appText("Copy profile link"), color = AppColors.content(OwnProfileColors.text))
             }
         }
     }

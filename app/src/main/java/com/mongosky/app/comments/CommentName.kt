@@ -1,5 +1,8 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.layout.size
@@ -25,7 +28,7 @@ import com.mongosky.app.profile.profileLink
 
 @Composable
 internal fun CommentName(comment: PostComment, verified: Boolean, onOpen: () -> Unit, modifier: Modifier = Modifier) {
-    val name = comment.author.displayName.ifBlank { "Mongosky User" }
+    val name = comment.author.displayName.ifBlank { appText("Mongosky User") }
     val label = remember(name, verified) { buildAnnotatedString {
         append(name)
         if (verified) { append("\u00a0"); appendInlineContent("verified") }
@@ -33,7 +36,7 @@ internal fun CommentName(comment: PostComment, verified: Boolean, onOpen: () -> 
     val size = with(LocalDensity.current) { 14.sp.toDp() }
     val inline = if (!verified) emptyMap() else mapOf("verified" to InlineTextContent(
         Placeholder(1.1.em,1.1.em,PlaceholderVerticalAlign.TextCenter)) {
-        Icon(CommentIcons.verified,"Verified account",Modifier.size(size),tint=Color.Unspecified)
+        Icon(CommentIcons.verified,appDescription("Verified account"),Modifier.size(size),tint=Color.Unspecified)
     })
     Text(label, inlineContent = inline, fontSize = 13.sp, lineHeight = 17.sp, fontWeight = FontWeight.ExtraBold,
         color = AppColors.content(CommentColors.text), maxLines = 1, overflow = TextOverflow.Ellipsis,

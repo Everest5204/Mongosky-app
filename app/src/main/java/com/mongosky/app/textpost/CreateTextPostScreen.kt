@@ -2,6 +2,9 @@
 
 package com.mongosky.app.textpost
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.profile.LocalProfileViewerId
@@ -112,8 +115,8 @@ fun CreateTextPostScreen(
             Column(Modifier.widthIn(max = 520.dp).fillMaxSize()) {
                 Row(Modifier.fillMaxWidth().height(58.dp).padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = ::close, enabled = !state.busy) { Icon(Icons.Default.Close, "Close create post") }
-                    Text("Create post", modifier = Modifier.weight(1f), color = AppColors.content(Color(0xFF020617)),
+                    IconButton(onClick = ::close, enabled = !state.busy) { Icon(Icons.Default.Close, appDescription("Close create post")) }
+                    Text(appText("Create post"), modifier = Modifier.weight(1f), color = AppColors.content(Color(0xFF020617)),
                         fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
                     Button(
                         onClick = { keyboard?.hide(); viewModel.submit() }, enabled = state.canPost,
@@ -125,7 +128,7 @@ fun CreateTextPostScreen(
                             CircularProgressIndicator(Modifier.size(16.dp), color = AppColors.content(Color.White), strokeWidth = 2.dp)
                             Spacer(Modifier.width(6.dp))
                         }
-                        Text(if (state.busy) "posting" else "post", fontWeight = FontWeight.Bold)
+                        Text(appText(if (state.busy) "posting" else "post"), fontWeight = FontWeight.Bold)
                     }
                 }
                 HorizontalDivider(color = AppColors.outline(Color(0xFFE5E7EB)))
@@ -133,7 +136,7 @@ fun CreateTextPostScreen(
                     Row(Modifier.fillMaxWidth().profileLink(LocalProfileViewerId.current).padding(horizontal = 18.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(13.dp)) {
                         ProfileAvatar(profileImageUrl, Modifier.size(46.dp))
-                        Text(userName.ifBlank { "Mongosky User" }, color = AppColors.content(Color(0xFF020617)), fontSize = 18.sp,
+                        Text(userName.ifBlank { appText("Mongosky User") }, color = AppColors.content(Color(0xFF020617)), fontSize = 18.sp,
                             fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     TextPostEditor(
@@ -146,9 +149,9 @@ fun CreateTextPostScreen(
                     if (error != null) {
                         Surface(Modifier.fillMaxWidth().padding(18.dp), color = AppColors.surface(Color(0xFFFFF1F2)), shape = RoundedCornerShape(12.dp)) {
                             Column(Modifier.padding(14.dp)) {
-                                Text(error.message, color = AppColors.content(Color(0xFF991B1B)), fontSize = 14.sp, lineHeight = 20.sp)
-                                if (error.requiresSignIn) TextButton(onClick = onSignInAgain) { Text("Sign in again") }
-                                else if (error.outcomeUnknown) TextButton(onClick = { keyboard?.hide(); onCheckFeed() }) { Text("Check Home feed") }
+                                Text(appText(error.message), color = AppColors.content(Color(0xFF991B1B)), fontSize = 14.sp, lineHeight = 20.sp)
+                                if (error.requiresSignIn) TextButton(onClick = onSignInAgain) { Text(appText("Sign in again")) }
+                                else if (error.outcomeUnknown) TextButton(onClick = { keyboard?.hide(); onCheckFeed() }) { Text(appText("Check Home feed")) }
                             }
                         }
                     }
@@ -163,18 +166,18 @@ fun CreateTextPostScreen(
 
     if (discardDialog) AlertDialog(
         onDismissRequest = { discardDialog = false },
-        title = { Text("Discard this draft?") },
-        text = { Text(if (state.uncertain) "This post may already be on your feed. Check before submitting it again." else "Your text and selected background will be cleared.") },
+        title = { Text(appText("Discard this draft?")) },
+        text = { Text(appText(if (state.uncertain) "This post may already be on your feed. Check before submitting it again." else "Your text and selected background will be cleared.")) },
         confirmButton = { TextButton(onClick = {
             discardDialog = false
             if (viewModel.discard()) { keyboard?.hide(); onClose() }
-        }) { Text("Discard") } },
-        dismissButton = { TextButton(onClick = { discardDialog = false }) { Text(if (state.uncertain) "Keep draft" else "Keep editing") } }
+        }) { Text(appText("Discard")) } },
+        dismissButton = { TextButton(onClick = { discardDialog = false }) { Text(appText(if (state.uncertain) "Keep draft" else "Keep editing")) } }
     )
 
     if (emojiSheet && state.editable) ModalBottomSheet(onDismissRequest = { emojiSheet = false }, containerColor = AppColors.surface(Color.White)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Add emoji", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(appText("Add emoji"), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             LazyVerticalGrid(columns = GridCells.Adaptive(48.dp), modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp)) {
                 items(EMOJIS, key = { it }) { emoji ->
                         TextButton(onClick = {

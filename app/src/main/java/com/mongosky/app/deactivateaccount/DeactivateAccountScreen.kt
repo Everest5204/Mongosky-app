@@ -1,5 +1,8 @@
 package com.mongosky.app.deactivateaccount
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -48,24 +51,24 @@ internal fun DeactivateAccountScreen(
         Column(Modifier.widthIn(max = 680.dp).fillMaxSize()) {
             Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack, enabled = !blocked) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = AppColors.content(colors.Ink))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appDescription("Back"), tint = AppColors.content(colors.Ink))
                 }
-                Text("Deactivate account", color = AppColors.content(colors.Ink), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(appText("Deactivate account"), color = AppColors.content(colors.Ink), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
             }
             HorizontalDivider(color = AppColors.outline(colors.Border))
             if (state.exitRequested) {
                 Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     PauseMark()
-                    Text(if (state.deactivated) "Account deactivated" else "Sign in again", fontSize = 24.sp,
+                    Text(appText(if (state.deactivated) "Account deactivated" else "Sign in again"), fontSize = 24.sp,
                         fontWeight = FontWeight.Bold, color = AppColors.content(colors.Ink), textAlign = TextAlign.Center)
-                    Text(if (state.deactivated) "Your account is paused. Sign in with your account details whenever you want to return."
-                        else "Sign in again to check your account and continue.", color = AppColors.content(colors.Muted), textAlign = TextAlign.Center)
+                    Text(appText(if (state.deactivated) "Your account is paused. Sign in with your account details whenever you want to return."
+                        else "Sign in again to check your account and continue."), color = AppColors.content(colors.Muted), textAlign = TextAlign.Center)
                     if (host.busy) CircularProgressIndicator(Modifier.size(24.dp), color = AppColors.content(colors.Red), strokeWidth = 2.dp)
                     if (host.error != null && !host.busy) {
-                        Text("Could not finish signing out. Please try again.", color = AppColors.content(colors.Red))
+                        Text(appText("Could not finish signing out. Please try again."), color = AppColors.content(colors.Red))
                         Button(onClick = host.onLeaveAccount, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(colors.Red))) { Text("Try signing out again") }
+                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(colors.Red))) { Text(appText("Try signing out again")) }
                     }
                 }
             } else {
@@ -75,9 +78,9 @@ internal fun DeactivateAccountScreen(
                         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             PauseMark()
-                            Text("Take a break from Mongosky", color = AppColors.content(colors.Ink), fontSize = 25.sp,
+                            Text(appText("Take a break from Mongosky"), color = AppColors.content(colors.Ink), fontSize = 25.sp,
                                 fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                            Text("Temporarily pause your account. You can return whenever you are ready.",
+                            Text(appText("Temporarily pause your account. You can return whenever you are ready."),
                                 color = AppColors.content(colors.Muted), textAlign = TextAlign.Center, lineHeight = 22.sp)
                         }
                     }
@@ -91,25 +94,25 @@ internal fun DeactivateAccountScreen(
                         }
                     }
                     item(key = "deactivate:history") {
-                        Text("Previous comments and messages may remain visible to other people.", color = AppColors.content(colors.Muted),
+                        Text(appText("Previous comments and messages may remain visible to other people."), color = AppColors.content(colors.Muted),
                             fontSize = 13.sp, lineHeight = 19.sp)
                     }
                     item(key = "deactivate:password") {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Confirm it is you", fontWeight = FontWeight.SemiBold, color = AppColors.content(colors.Ink), fontSize = 18.sp)
-                            Text("Enter your current password to continue.", color = AppColors.content(colors.Muted), fontSize = 14.sp)
+                            Text(appText("Confirm it is you"), fontWeight = FontWeight.SemiBold, color = AppColors.content(colors.Ink), fontSize = 18.sp)
+                            Text(appText("Enter your current password to continue."), color = AppColors.content(colors.Muted), fontSize = 14.sp)
                             OutlinedTextField(value = state.password, onValueChange = onPassword,
                                 modifier = Modifier.fillMaxWidth().focusRequester(passwordFocus).semantics { contentType = ContentType.Password },
-                                label = { Text("Current password") }, singleLine = true,
+                                label = { Text(appText("Current password")) }, singleLine = true,
                                 enabled = !blocked && !state.uncertain, isError = state.passwordError != null,
                                 visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                trailingIcon = { TextButton(onClick = onVisibility, enabled = !blocked) { Text(if (state.passwordVisible) "Hide" else "Show") } },
+                                trailingIcon = { TextButton(onClick = onVisibility, enabled = !blocked) { Text(appText(if (state.passwordVisible) "Hide" else "Show")) } },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                                 keyboardActions = KeyboardActions(onDone = { if (!blocked) { focus.clearFocus(); onContinue() } }),
-                                supportingText = state.passwordError?.let { { Text(it) } }, shape = RoundedCornerShape(14.dp),
+                                supportingText = state.passwordError?.let { { Text(appText(it)) } }, shape = RoundedCornerShape(14.dp),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AppColors.outline(colors.Red),
                                     focusedLabelColor = colors.Ink, cursorColor = AppColors.content(colors.Red)))
-                            if (state.error != null && !state.dialogOpen) Text(state.error, color = AppColors.content(colors.Red), fontSize = 14.sp)
+                            if (state.error != null && !state.dialogOpen) Text(appText(state.error), color = AppColors.content(colors.Red), fontSize = 14.sp)
                         }
                     }
                     item(key = "deactivate:actions") {
@@ -120,10 +123,10 @@ internal fun DeactivateAccountScreen(
                                 onContinue()
                             }, enabled = !blocked, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                                 shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(colors.Red))) {
-                                Text("Continue", fontWeight = FontWeight.SemiBold)
+                                Text(appText("Continue"), fontWeight = FontWeight.SemiBold)
                             }
                             TextButton(onClick = onBack, enabled = !blocked, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                                Text("Keep my account active", color = AppColors.content(colors.Ink))
+                                Text(appText("Keep my account active"), color = AppColors.content(colors.Ink))
                             }
                         }
                     }
@@ -136,8 +139,8 @@ internal fun DeactivateAccountScreen(
 @Composable
 private fun InformationRow(title: String, description: String) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title, color = AppColors.content(DeactivateAccountColors.Ink), fontWeight = FontWeight.SemiBold)
-        Text(description, color = AppColors.content(DeactivateAccountColors.Muted), fontSize = 14.sp, lineHeight = 21.sp)
+        Text(appText(title), color = AppColors.content(DeactivateAccountColors.Ink), fontWeight = FontWeight.SemiBold)
+        Text(appText(description), color = AppColors.content(DeactivateAccountColors.Muted), fontSize = 14.sp, lineHeight = 21.sp)
     }
 }
 

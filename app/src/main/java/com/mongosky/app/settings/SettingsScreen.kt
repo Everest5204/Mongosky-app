@@ -1,5 +1,8 @@
 package com.mongosky.app.settings
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -80,9 +83,9 @@ private fun SettingsHeader(onBack: () -> Unit, tablet: Boolean, compact: Boolean
         Row(Modifier.fillMaxWidth().heightIn(min = if (tablet) 68.dp else 64.dp)
             .padding(horizontal = if (compact) 10.dp else if (tablet) 24.dp else 14.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                Icon(SettingsIcons.back, "Return to previous page", tint = AppColors.content(Heading), modifier = Modifier.size(22.dp))
+                Icon(SettingsIcons.back, appDescription("Return to previous page"), tint = AppColors.content(Heading), modifier = Modifier.size(22.dp))
             }
-            Text("Settings", color = AppColors.content(Heading), fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.ExtraBold,
+            Text(appText("Settings"), color = AppColors.content(Heading), fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.ExtraBold,
                 fontSize = if (tablet) 20.sp else 18.sp, lineHeight = 24.sp, textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f).semantics { heading() })
             Spacer(Modifier.width(48.dp))
@@ -95,7 +98,7 @@ private fun SettingsMenuRow(item: SettingsMenuItem, enabled: Boolean, compact: B
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = if (phone) 64.dp else if (tablet) 72.dp else 68.dp)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .semantics(mergeDescendants = true) { if (!enabled) stateDescription = "Not available yet" }
+            .semantics(mergeDescendants = true) { if (!enabled) stateDescription = appText("Not available yet") }
             .padding(horizontal = if (compact) 16.dp else if (tablet) 24.dp else 20.dp,
                 vertical = if (phone) 11.dp else if (tablet) 14.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -104,7 +107,7 @@ private fun SettingsMenuRow(item: SettingsMenuItem, enabled: Boolean, compact: B
         Box(Modifier.size(27.dp), contentAlignment = Alignment.Center) {
             Icon(SettingsIcons.forMenu(item.id), null, tint = AppColors.content(color), modifier = Modifier.size(23.dp))
         }
-        Text(item.label, color = AppColors.content(color), fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold,
+        Text(appText(item.label), color = AppColors.content(color), fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold,
             fontSize = if (phone) 16.sp else if (tablet) 18.sp else 17.sp,
             lineHeight = if (phone) 22.sp else 24.sp, modifier = Modifier.weight(1f))
         Icon(SettingsIcons.chevron, null, tint = AppColors.content(Color(0xFF667085)), modifier = Modifier.size(21.dp))

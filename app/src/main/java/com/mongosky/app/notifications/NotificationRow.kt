@@ -1,5 +1,10 @@
 package com.mongosky.app.notifications
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.AppLanguage
+
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -46,20 +51,26 @@ private val notificationDateFormatter = DateTimeFormatter.ofPattern("MMM d, uuuu
 @Composable
 internal fun NotificationRow(item: NotificationItem, verified: Boolean, compact: Boolean, onSelect: () -> Unit) {
     val surface = if (item.isRead) Color.White else NotificationColors.unread
-    val time = remember(item.createdAt) { notificationDateFormatter.withZone(ZoneId.systemDefault()).format(item.createdAt) }
+    val locale = AppLanguage.current
+    val actorName = item.actor?.displayName?.takeIf(String::isNotBlank) ?: appText("Someone")
+    val action = appText(item.actionText)
+    val time = remember(item.createdAt, locale) {
+        notificationDateFormatter.withLocale(Locale.forLanguageTag(locale.tag))
+            .withZone(ZoneId.systemDefault()).format(item.createdAt)
+    }
     Column(Modifier.fillMaxWidth().background(AppColors.surface(surface)).clickable(role=Role.Button,onClick=onSelect)
-        .semantics(mergeDescendants=true) { contentDescription = "${if (item.isRead) "" else "Unread. "}${item.actorName} ${item.actionText}. $time." }) {
+        .semantics(mergeDescendants=true) { contentDescription = "${if (item.isRead) "" else appText("Unread. ")}$actorName $action. $time." }) {
         Row(Modifier.fillMaxWidth().heightIn(min=84.dp).padding(horizontal=if(compact)12.dp else 16.dp,vertical=if(compact)12.dp else 14.dp),
             verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(if(compact)10.dp else 12.dp)) {
             NotificationAvatar(item, surface, if(compact)44 else 48)
             Column(Modifier.weight(1f)) {
-                val message = remember(item.actorName,item.actionText,verified, com.mongosky.app.darkmode.AppAppearance.mode) { buildAnnotatedString {
-                    withStyle(SpanStyle(color=AppColors.content(NotificationColors.text),fontWeight=FontWeight.SemiBold)) { append("\u2068${item.actorName}\u2069") }
+                val message = remember(actorName,action,verified, com.mongosky.app.darkmode.AppAppearance.mode) { buildAnnotatedString {
+                    withStyle(SpanStyle(color=AppColors.content(NotificationColors.text),fontWeight=FontWeight.SemiBold)) { append("\u2068${actorName}\u2069") }
                     if (verified) { append("\u00a0"); appendInlineContent("verified") }
-                    append(" ${item.actionText}.")
+                    append(" $action.")
                 } }
                 val inline = if(verified) mapOf("verified" to InlineTextContent(Placeholder(1.em,1.em,PlaceholderVerticalAlign.TextCenter)) {
-                    Icon(NotificationIcons.verified,"Verified account",Modifier.fillMaxSize(),tint=Color.Unspecified)
+                    Icon(NotificationIcons.verified,appDescription("Verified account"),Modifier.fillMaxSize(),tint=Color.Unspecified)
                 }) else emptyMap()
                 Text(message,inlineContent=inline,color=AppColors.content(NotificationColors.secondary),fontSize=15.sp,lineHeight=22.sp)
                 Spacer(Modifier.height(4.dp))

@@ -1,5 +1,8 @@
 package com.mongosky.app.reels
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -76,27 +79,27 @@ fun ReelsPreviewSection(state: ReelsPreviewState, onOpen: (Reel) -> Unit,
             Row(Modifier.fillMaxWidth().heightIn(min = if (desktop) 56.dp else 52.dp)
                 .padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f).heightIn(min = 48.dp).clip(RoundedCornerShape(9.dp))
-                    .clickable(role = Role.Button, onClickLabel = "Open all Reels", onClick = onOpenAll)
+                    .clickable(role = Role.Button, onClickLabel = appText("Open all Reels"), onClick = onOpenAll)
                     .padding(horizontal = 7.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(ReelsIcons.preview, null, tint = AppColors.content(Color(0xFF171717)), modifier = Modifier.size(if (desktop) 25.dp else 23.dp))
-                    Text("Reels", color = AppColors.content(Color(0xFF171717)), fontSize = if (desktop) 17.sp else 16.sp, fontWeight = FontWeight.Bold)
+                    Text(appText("Reels"), color = AppColors.content(Color(0xFF171717)), fontSize = if (desktop) 17.sp else 16.sp, fontWeight = FontWeight.Bold)
                 }
-                TextButton(onOpenAll) { Text("See all", color = AppColors.content(Color(0xFF0866FF)), fontSize = 13.sp, fontWeight = FontWeight.Bold) }
+                TextButton(onOpenAll) { Text(appText("See all"), color = AppColors.content(Color(0xFF0866FF)), fontSize = 13.sp, fontWeight = FontWeight.Bold) }
                 if (desktop) {
                     IconButton(onClick = { scope.launch { list.animateScrollToItem((list.firstVisibleItemIndex - 3).coerceAtLeast(0)) } },
-                        enabled = list.canScrollBackward) { Icon(ReelsIcons.back, "Previous Reels", tint = AppColors.content(Color(0xFF171717))) }
+                        enabled = list.canScrollBackward) { Icon(ReelsIcons.back, appDescription("Previous Reels"), tint = AppColors.content(Color(0xFF171717))) }
                     IconButton(onClick = { scope.launch { list.animateScrollToItem((list.firstVisibleItemIndex + 3)
                         .coerceAtMost((state.reels.size - 1).coerceAtLeast(0))) } }, enabled = list.canScrollForward) {
-                        Icon(ReelsIcons.forward, "Next Reels", tint = AppColors.content(Color(0xFF171717)))
+                        Icon(ReelsIcons.forward, appDescription("Next Reels"), tint = AppColors.content(Color(0xFF171717)))
                     }
                 }
             }
             if (state.reels.isEmpty() && state.error != null) Column(
                 Modifier.fillMaxWidth().heightIn(min = 160.dp).padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(state.error, color = AppColors.content(Color(0xFF65676B)), fontSize = 14.sp)
-                Button(onRetry, colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(Color(0xFF0866FF)))) { Text("Retry") }
+                Text(appText(state.error), color = AppColors.content(Color(0xFF65676B)), fontSize = 14.sp)
+                Button(onRetry, colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(Color(0xFF0866FF)))) { Text(appText("Retry")) }
             } else LazyRow(state = list, modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(if (desktop) 9.dp else 8.dp)) {
@@ -108,7 +111,7 @@ fun ReelsPreviewSection(state: ReelsPreviewState, onOpen: (Reel) -> Unit,
                     val poster = if (fallback) reel.posterUrl else optimized
                     Box(Modifier.width(cardWidth).aspectRatio(9f / 16f).clip(RoundedCornerShape(12.dp))
                         .background(Brush.linearGradient(AppColors.surfaces(listOf(Color(0xFFFFF1F4), Color(0xFFEDF1F7), Color(0xFFDCE5F0)))))
-                        .clickable(role = Role.Button, onClickLabel = "Play reel", onClick = { onOpen(reel) })
+                        .clickable(role = Role.Button, onClickLabel = appText("Play reel"), onClick = { onOpen(reel) })
                         .semantics { contentDescription = "Play reel by ${reel.author.displayName}. ${reel.likesCount} likes." }) {
                         Icon(ReelsIcons.preview, null, tint = AppColors.content(Color(0xFFD81736)), modifier = Modifier.align(Alignment.Center)
                             .size(54.dp).background(AppColors.surface(Color.White.copy(alpha = 0.84f)), RoundedCornerShape(18.dp)).padding(12.dp))

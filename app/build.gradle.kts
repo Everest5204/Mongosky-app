@@ -19,6 +19,9 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        // Avoid bundling unrelated translations from dependencies.
+        resourceConfigurations += listOf("en", "bn")
+
         testInstrumentationRunner =
             "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,6 +41,14 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    // Both small text catalogs must be available for instant, offline switching.
+    // Otherwise Play may deliver only the phone's original language.
+    bundle {
+        language {
+            enableSplit = false
+        }
     }
 }
 

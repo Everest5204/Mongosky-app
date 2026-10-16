@@ -1,5 +1,7 @@
 package com.mongosky.app.post
 
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.saveditems.WarmSavedPostStatus
@@ -101,7 +103,7 @@ private fun MediaTile(photo: FeedMedia, index: Int, enabled: Boolean, onOpen: (I
     val request = remember(context, url) { ImageRequest.Builder(context.applicationContext).data(url).crossfade(false).build() }
     Box(modifier.background(AppColors.surface(FeedColors.soft)).clickable(enabled = enabled) { onOpen(index) }, contentAlignment = Alignment.Center) {
         Icon(FeedIcons.image, null, tint = AppColors.content(FeedColors.line), modifier = Modifier.size(36.dp))
-        AsyncImage(model = request, contentDescription = "Post photo ${index + 1}", modifier = Modifier.fillMaxSize(),
+        AsyncImage(model = request, contentDescription = appDescription("Post photo ${index + 1}"), modifier = Modifier.fillMaxSize(),
             contentScale = if (fit) ContentScale.Fit else ContentScale.Crop,
             onError = { if (url != photo.url) fallback = true })
         if (more > 0) Box(Modifier.fillMaxSize().background(AppColors.surface(Color.Black.copy(alpha = 0.5f))), contentAlignment = Alignment.Center) {

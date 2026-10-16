@@ -1,5 +1,7 @@
 package com.mongosky.app.drawer
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -41,7 +43,7 @@ internal fun DrawerMenuItem(item: DrawerDestination, selectedRouteName: String, 
         .padding(horizontal = 22.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
         Icon(DrawerIcons.forDestination(item), null, tint = AppColors.content(color), modifier = Modifier.size(24.dp))
-        Text(item.label, color = AppColors.content(color), fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold,
+        Text(appText(item.label), color = AppColors.content(color), fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold,
             style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
     }
 }

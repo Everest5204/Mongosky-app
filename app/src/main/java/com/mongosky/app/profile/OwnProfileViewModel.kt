@@ -8,6 +8,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.mongosky.app.auth.TokenStore
+import com.mongosky.app.editprofile.EditableProfile
 import com.mongosky.app.home.HomeFeedActions
 import com.mongosky.app.home.HomeFeedApi
 import com.mongosky.app.home.isOwn
@@ -270,7 +271,7 @@ class OwnProfileViewModel(
     }
 
     fun checkForUpdates(force: Boolean = false) {
-        if (mutable.value.ownerId.isEmpty() || mutable.value.busy || mutable.value.sessionExpired) return
+        if (mutable.value.ownerId.isEmpty() || mutable.value.busy || mutable.value.editorOpen || mutable.value.sessionExpired) return
         val now = clock()
         if (!force && lastCheck != Long.MIN_VALUE && now - lastCheck < UPDATE_INTERVAL_MILLIS) return
         lastCheck = now
@@ -369,6 +370,18 @@ class OwnProfileViewModel(
         val bio = mutable.value.profile?.bio.orEmpty()
         saved[DRAFT] = bio; saved[EDITOR] = true
         mutable.value = mutable.value.copy(editorOpen = true, bioDraft = bio, operationError = null)
+    }
+    /** Merge confirmed editor fields without reloading posts or accepting older profile reads. */
+    internal fun applyProfileEdit(edited: EditableProfile, mediaChanged: Boolean) {
+        val before = mutable.value
+        if (before.ownerId != edited.id || before.sessionExpired) return
+        val profile = before.profile ?: OwnProfile(edited.id, edited.firstName, edited.lastName)
+        profileRevision++; profileRequest++; profileJob?.cancel()
+        saved[DRAFT] = edited.bio
+        mutable.value = before.copy(profile = profile.copy(firstName = edited.firstName, lastName = edited.lastName,
+            bio = edited.bio, profileImageUrl = edited.profileImageUrl, coverImageUrl = edited.coverImageUrl),
+            bioDraft = edited.bio, profileLoading = false, operationError = null)
+        changed(media = mediaChanged)
     }
     fun closeEditor() {
         if (mutable.value.savingBio) return

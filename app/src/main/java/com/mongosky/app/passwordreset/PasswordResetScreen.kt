@@ -1,5 +1,8 @@
 package com.mongosky.app.passwordreset
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -235,11 +238,11 @@ fun PasswordResetScreen(
                             Spacer(Modifier.width(8.dp))
                         }
                         Text(
-                            text = when {
+                            text = appText(when {
                                 state.pendingAction == PasswordResetAction.RESEND_CODE -> "Sending code..."
                                 state.resendSeconds > 0 -> "Resend code in ${state.resendSeconds}s"
                                 else -> "Resend code"
-                            },
+                            }),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Center
@@ -357,7 +360,7 @@ private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> U
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = subtitle,
+                        text = appText(subtitle),
                         modifier = Modifier.fillMaxWidth().semantics {
                             liveRegion = LiveRegionMode.Polite
                         },
@@ -379,7 +382,7 @@ private fun ResetPage(subtitle: String, content: @Composable ColumnScope.() -> U
 @Composable
 private fun ResetHelper(message: String) {
     Text(
-        text = message,
+        text = appText(message),
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
         color = AppColors.content(ResetMuted),
@@ -393,7 +396,7 @@ private fun ResetError(message: String?) {
     if (message != null) {
         Spacer(Modifier.height(12.dp))
         Text(
-            text = message,
+            text = appText(message),
             modifier = Modifier.fillMaxWidth().semantics {
                 liveRegion = LiveRegionMode.Polite
             },
@@ -431,7 +434,7 @@ private fun ResetInput(
         singleLine = true,
         placeholder = {
             Text(
-                text = placeholder,
+                text = appText(placeholder),
                 modifier = Modifier.fillMaxWidth(),
                 color = AppColors.content(ResetMuted),
                 fontSize = 16.sp,
@@ -500,7 +503,7 @@ private fun ResetPasswordInput(
             IconButton(onClick = onToggle, enabled = toggleEnabled) {
                 Icon(
                     imageVector = if (visible) ResetEyeOff else ResetEye,
-                    contentDescription = if (visible) "Hide password" else "Show password",
+                    contentDescription = appDescription(if (visible) "Hide password" else "Show password"),
                     modifier = Modifier.size(24.dp),
                     tint = AppColors.content(ResetMuted)
                 )
@@ -538,7 +541,7 @@ private fun ResetActionButton(
             Spacer(Modifier.width(10.dp))
         }
         Text(
-            text = label,
+            text = appText(label),
             fontSize = 17.sp,
             lineHeight = 24.sp,
             fontWeight = FontWeight.SemiBold,
@@ -560,7 +563,7 @@ private fun ResetTextButton(label: String, enabled: Boolean, onClick: () -> Unit
         )
     ) {
         Text(
-            text = label,
+            text = appText(label),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center

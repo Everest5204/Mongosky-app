@@ -2,6 +2,9 @@
 
 package com.mongosky.app.navigation
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 import com.mongosky.app.darkmode.DarkModeNavigation
 import com.mongosky.app.darkmode.DarkModeRoute
@@ -285,7 +288,8 @@ fun MainScreen(
     val textPublicationFlow = remember(textPostViewModel) {
         textPostViewModel.uiState.map { it.publication }.distinctUntilChanged()
     }
-    val textPublication by textPublicationFlow.collectAsState(initial = textPostViewModel.uiState.value.publication)
+    val initialTextPublication = remember(textPostViewModel) { textPostViewModel.uiState.value.publication }
+    val textPublication by textPublicationFlow.collectAsState(initial = initialTextPublication)
     val ownProfileViewModel = remember(owner) {
         ViewModelProvider(owner, OwnProfileViewModel.Factory(activity.applicationContext))
             .get("MongoskyOwnProfile", OwnProfileViewModel::class.java)
@@ -419,7 +423,7 @@ fun MainScreen(
     val drawerVisible = !isSettingsInformationPage && !isDeleteAccountPage && !isPasswordSection && !isSettingsPage && !isInformationPage && !isSignupPage && (drawerState.isOpen || drawerState.targetValue == DrawerValue.Open)
     DrawerEffects(drawerViewModel, ownProfileViewModel, userId, drawerVisible, signingOut)
     LaunchedEffect(isSignupPage, error) {
-        if (isSignupPage && !signingOut && error != null) snackbar.showSnackbar(error)
+        if (isSignupPage && !signingOut && error != null) snackbar.showSnackbar(appText(error))
     }
     val pickerContract = remember { PickMultipleVisualMedia(MediaPostUploadLimits.MAX_IMAGES) }
     val mediaPicker = rememberLauncherForActivityResult(pickerContract) { uris ->
@@ -448,7 +452,7 @@ fun MainScreen(
             reelsViewModel.recordPublished(userId, result.post)
             reelsPreviewViewModel.recordPublished(userId, result.post)
             mediaPostViewModel.acknowledgeSuccess(result.draft.id)
-            scope.launch { snackbar.showSnackbar("Video published.") }
+            scope.launch { snackbar.showSnackbar(appText("Video published.")) }
         } else if (feedViewModel.insertPublishedPost(result.post)) {
             mediaPostViewModel.acknowledgeSuccess(result.draft.id)
         }
@@ -461,7 +465,7 @@ fun MainScreen(
             if (upload !== MediaPostUploadState.Idle || composer.isResetting) {
                 backStack = listOf(MainRoute.HOME.name)
                 homeTopRequest++
-                scope.launch { snackbar.showSnackbar("Finish or dismiss your previous upload first.") }
+                scope.launch { snackbar.showSnackbar(appText("Finish or dismiss your previous upload first.")) }
                 return
             }
             mediaPickerOpen = true
@@ -472,10 +476,10 @@ fun MainScreen(
                 ))
             } catch (_: ActivityNotFoundException) {
                 mediaPickerOpen = false
-                scope.launch { snackbar.showSnackbar("No media picker is available on this phone.") }
+                scope.launch { snackbar.showSnackbar(appText("No media picker is available on this phone.")) }
             } catch (_: SecurityException) {
                 mediaPickerOpen = false
-                scope.launch { snackbar.showSnackbar("Couldn't open your gallery. Please try again.") }
+                scope.launch { snackbar.showSnackbar(appText("Couldn't open your gallery. Please try again.")) }
             }
             return
         }
@@ -923,7 +927,7 @@ fun MainScreen(
                                         }
                                     )
                                     else -> Text(
-                                        text = route.title,
+                                        text = appText(route.title),
                                         modifier = Modifier.padding(24.dp),
                                         color = AppColors.content(MainPalette.text),
                                         fontSize = 22.sp,
@@ -944,11 +948,11 @@ fun MainScreen(
             AlertDialog(
                 onDismissRequest = { messagesNoticeOpen = false },
                 containerColor = AppColors.surface(Color.White),
-                title = { Text("Messages") },
-                text = { Text("Messaging is currently unavailable.") },
+                title = { Text(appText("Messages")) },
+                text = { Text(appText("Messaging is currently unavailable.")) },
                 confirmButton = {
                     TextButton(onClick = { messagesNoticeOpen = false }) {
-                        Text("OK")
+                        Text(appText("OK"))
                     }
                 }
             )
@@ -1008,7 +1012,7 @@ private fun MainActionIcon(
     IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(48.dp)) {
         Icon(
             imageVector = image,
-            contentDescription = label,
+            contentDescription = appDescription(label),
             modifier = Modifier.size(24.dp),
             tint = AppColors.content(if (enabled) MainPalette.text else MainPalette.muted)
         )
@@ -1047,12 +1051,12 @@ private fun MainBottomBar(
                         modifier = Modifier.size(50.dp).clip(CircleShape)
                             .background(AppColors.surface(MainPalette.soft))
                             .semantics {
-                                stateDescription = if (createMenuOpen) "Expanded" else "Collapsed"
+                                stateDescription = appText(if (createMenuOpen) "Expanded" else "Collapsed")
                             }
                     ) {
                         Icon(
                             imageVector = MainIcons.plus,
-                            contentDescription = if (createMenuOpen) "Close create menu" else "Open create menu",
+                            contentDescription = appDescription(if (createMenuOpen) "Close create menu" else "Open create menu"),
                             modifier = Modifier.size(28.dp),
                             tint = AppColors.content(if (createMenuOpen || selectedRoute.isCreateRoute) {
                                 MainPalette.brand
@@ -1103,7 +1107,7 @@ private fun MainBottomItem(
         Box(
             modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp))
                 .selectable(selected = selected, enabled = enabled, role = Role.Tab, onClick = onClick)
-                .semantics { contentDescription = label },
+                .semantics { contentDescription = appText(label) },
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -1119,7 +1123,7 @@ private fun MainBottomItem(
 @Composable
 private fun MainCreateItem(label: String, image: ImageVector, onClick: () -> Unit) {
     DropdownMenuItem(
-        text = { Text(label, color = AppColors.content(MainPalette.text), fontSize = 16.sp) },
+        text = { Text(appText(label), color = AppColors.content(MainPalette.text), fontSize = 16.sp) },
         leadingIcon = {
             Icon(image, contentDescription = null, tint = AppColors.content(MainPalette.muted), modifier = Modifier.size(20.dp))
         },

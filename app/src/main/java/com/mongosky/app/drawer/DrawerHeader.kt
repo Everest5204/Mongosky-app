@@ -1,5 +1,8 @@
 package com.mongosky.app.drawer
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.clickable
@@ -48,11 +51,11 @@ internal fun DrawerHeader(state: DrawerState, userName: String, profileImageUrl:
     val badgeSize = with(LocalDensity.current) { 16.sp.toDp() }
     val inline = if (!verified) emptyMap() else mapOf("verified" to InlineTextContent(
         Placeholder(0.8.em, 0.8.em, PlaceholderVerticalAlign.TextCenter)
-    ) { Icon(DrawerIcons.verified, "Verified account", tint = Color.Unspecified, modifier = Modifier.size(badgeSize)) })
+    ) { Icon(DrawerIcons.verified, appDescription("Verified account"), tint = Color.Unspecified, modifier = Modifier.size(badgeSize)) })
     Row(Modifier.fillMaxWidth().heightIn(min = 90.dp).padding(start = 18.dp, end = 6.dp, top = 16.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Row(Modifier.weight(1f).clickable(enabled = enabled, role = Role.Button,
-            onClickLabel = "Open your profile", onClick = onProfile),
+            onClickLabel = appText("Open your profile"), onClick = onProfile),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             ProfileAvatar(if (profile == null) profileImageUrl else profile.imageUrl, Modifier.size(54.dp), initial)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -61,12 +64,12 @@ internal fun DrawerHeader(state: DrawerState, userName: String, profileImageUrl:
                     style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
                 val counts = if (profile == null) "— Following • — Followers"
                     else "${profile.followingCount} Following • ${profile.followersCount} Followers"
-                Text(counts, color = AppColors.content(DrawerColors.muted), fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
+                Text(appText(counts), color = AppColors.content(DrawerColors.muted), fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
                     style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)))
             }
         }
         IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
-            Icon(DrawerIcons.close, "Close menu", tint = AppColors.content(DrawerColors.text), modifier = Modifier.size(30.dp))
+            Icon(DrawerIcons.close, appDescription("Close menu"), tint = AppColors.content(DrawerColors.text), modifier = Modifier.size(30.dp))
         }
     }
 }

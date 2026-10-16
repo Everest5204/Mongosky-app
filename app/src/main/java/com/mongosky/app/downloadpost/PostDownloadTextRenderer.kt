@@ -38,9 +38,11 @@ internal class PostDownloadTextRenderer : DownloadTextRenderer {
             ensureActive(); DownloadedFile(output, MediaFormat("image/png", "png", false))
         } catch (error: Throwable) { output.delete(); throw error } finally { image.recycle() }
     }
+    // This constant is inlined to 1, a strategy StaticLayout already supports from API 23.
+    @android.annotation.SuppressLint("InlinedApi")
     private fun layout(text: String, paint: TextPaint, centered: Boolean) = StaticLayout.Builder.obtain(text, 0, text.length, paint, 936)
         .setAlignment(if (centered) Layout.Alignment.ALIGN_CENTER else Layout.Alignment.ALIGN_NORMAL).setIncludePad(false)
-        .setLineSpacing(0f, 1.4f).setBreakStrategy(Layout.BREAK_STRATEGY_HIGH_QUALITY).build()
+        .setLineSpacing(0f, 1.4f).setBreakStrategy(android.graphics.text.LineBreaker.BREAK_STRATEGY_HIGH_QUALITY).build()
     private fun drawBackground(canvas: Canvas, file: File, width: Int, height: Int) {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }; BitmapFactory.decodeFile(file.absolutePath, bounds)
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0 || bounds.outWidth.toLong() * bounds.outHeight > 100_000_000) throw DownloadException("This background image is unavailable.")

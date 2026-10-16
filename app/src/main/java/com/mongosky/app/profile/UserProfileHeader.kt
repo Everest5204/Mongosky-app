@@ -1,6 +1,9 @@
 @file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -37,7 +40,7 @@ internal fun UserProfileHeader(state: UserProfileState, onBack: () -> Unit,
     onConnections: (ProfileConnectionKind) -> Unit, onFollow: () -> Unit, onMessage: () -> Unit, onOptions: () -> Unit) {
     val profile = state.profile
     val enabled = profile != null && !state.unavailable && !state.sessionExpired
-    val name = (profile?.displayName ?: state.hint?.displayName).orEmpty().ifBlank { "Mongosky User" }
+    val name = (profile?.displayName ?: state.hint?.displayName).orEmpty().ifBlank { appText("Mongosky User") }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val narrow = maxWidth <= 420.dp
         val coverHeight = if (narrow) 210.dp else if (maxWidth <= 680.dp) 235.dp else 270.dp
@@ -47,10 +50,10 @@ internal fun UserProfileHeader(state: UserProfileState, onBack: () -> Unit,
         Column {
             Box(Modifier.fillMaxWidth().height(coverHeight).clip(RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp))
                 .background(Brush.linearGradient(AppColors.surfaces(listOf(Color(0xFFCBD5E1), Color(0xFF94A3B8)))))) {
-                profile?.coverUrl?.let { AsyncImage(it, "$name's cover photo", Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
+                profile?.coverUrl?.let { AsyncImage(it, appDescription("$name's cover photo"), Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
                 IconButton(onBack, modifier = Modifier.align(Alignment.TopStart).padding(start = inset, top = 12.dp)
                     .size(48.dp).clip(CircleShape).background(AppColors.surface(Color.Black.copy(alpha = 0.38f)))) {
-                    Icon(OwnProfileIcons.back, "Back", Modifier.size(25.dp), tint = AppColors.content(Color.White))
+                    Icon(OwnProfileIcons.back, appDescription("Back"), Modifier.size(25.dp), tint = AppColors.content(Color.White))
                 }
             }
             Spacer(Modifier.height(avatarSize - overlap + 22.dp))
@@ -61,7 +64,7 @@ internal fun UserProfileHeader(state: UserProfileState, onBack: () -> Unit,
                             fontSize = if (narrow) 29.sp else 32.sp, lineHeight = 1.2.em, letterSpacing = (-0.8).sp),
                         autoSize = TextAutoSize.StepBased(minFontSize = 16.sp, maxFontSize = if (narrow) 29.sp else 32.sp, stepSize = 0.5.sp),
                         modifier = Modifier.weight(1f, fill = false))
-                    if (state.verified) Icon(OwnProfileIcons.verified, "Verified account", Modifier.size(21.dp), tint = Color.Unspecified)
+                    if (state.verified) Icon(OwnProfileIcons.verified, appDescription("Verified account"), Modifier.size(21.dp), tint = Color.Unspecified)
                 }
                 profile?.title?.takeIf { it.isNotBlank() }?.let {
                     Text(it, fontSize = 14.sp, color = AppColors.content(Color(0xFF64748B)), modifier = Modifier.padding(top = 7.dp))
@@ -83,18 +86,18 @@ internal fun UserProfileHeader(state: UserProfileState, onBack: () -> Unit,
                             containerColor = AppColors.fill(if (profile?.isFollowing == true) Color(0xFFEEF1F5) else Color(0xFFF0142F)),
                             contentColor = AppColors.content(if (profile?.isFollowing == true) Color(0xFF0F172A) else Color.White))) {
                         if (state.followingBusy) OwnProfileSpinner(color = AppColors.content(if (profile?.isFollowing == true) OwnProfileColors.brand else Color.White))
-                        else Text(if (profile?.isFollowing == true) "Following" else "Follow", fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                        else Text(appText(if (profile?.isFollowing == true) "Following" else "Follow"), fontSize = 14.sp, fontWeight = FontWeight.Bold,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     Button(onMessage, enabled = enabled && profile?.canMessage == true,
                         modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(9.dp),
                         contentPadding = PaddingValues(horizontal = 6.dp), colors = ButtonDefaults.buttonColors(
                             containerColor = AppColors.fill(Color(0xFFEEF1F5)), contentColor = AppColors.content(Color(0xFF0F172A)))) {
-                        Text("Message", fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(appText("Message"), fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     IconButton(onOptions, enabled = enabled,
                         modifier = Modifier.size(48.dp).clip(RoundedCornerShape(9.dp)).background(AppColors.surface(Color(0xFFEEF1F5)))) {
-                        Icon(FeedIcons.more, "Profile options", tint = AppColors.content(Color(0xFF0F172A)))
+                        Icon(FeedIcons.more, appDescription("Profile options"), tint = AppColors.content(Color(0xFF0F172A)))
                     }
                 }
                 Spacer(Modifier.height(31.dp))
@@ -112,7 +115,7 @@ private fun UserProfileStat(count: Long?, label: String, enabled: Boolean, onCli
     val base = Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(6.dp))
     Text(buildAnnotatedString {
         withStyle(SpanStyle(fontWeight = FontWeight.Black)) { append(count?.toString() ?: "—") }
-        append(" $label")
+        append(" ${appText(label)}")
     }, color = AppColors.content(Color(0xFF0F172A)), fontSize = 14.sp,
         modifier = (if (enabled) base.clickable(role = Role.Button, onClick = onClick) else base)
             .padding(horizontal = 2.dp, vertical = 14.dp))

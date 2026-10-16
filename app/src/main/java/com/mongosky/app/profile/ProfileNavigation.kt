@@ -1,5 +1,7 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -25,7 +27,7 @@ internal fun profileRouteUserId(route: String): String? =
 fun Modifier.profileLink(userId: String?, author: FeedAuthor? = null, beforeOpen: () -> Unit = {}): Modifier {
     val id = profileUserId(userId) ?: return this
     val navigate = LocalProfileNavigator.current
-    return clickable(role = Role.Button, onClickLabel = "View profile") {
+    return clickable(role = Role.Button, onClickLabel = appText("View profile")) {
         beforeOpen()
         navigate(ProfileOpenRequest(id, author?.takeIf { profileUserId(it.id) == id }))
     }

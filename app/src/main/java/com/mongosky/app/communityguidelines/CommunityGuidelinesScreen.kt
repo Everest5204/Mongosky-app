@@ -1,5 +1,8 @@
 package com.mongosky.app.communityguidelines
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.BorderStroke
@@ -45,7 +48,7 @@ internal fun CommunityGuidelinesScreen(onBack: () -> Unit) {
                 item(key = "guidelines-navigation") {
                     InformationCard {
                         Column(Modifier.padding(14.dp)) {
-                            Text("On this page", color = AppColors.content(InformationColors.muted), fontSize = 11.sp, letterSpacing = .9.sp, fontWeight = FontWeight.ExtraBold)
+                            Text(appText("On this page"), color = AppColors.content(InformationColors.muted), fontSize = 11.sp, letterSpacing = .9.sp, fontWeight = FontWeight.ExtraBold)
                             Spacer(Modifier.height(10.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 items(CommunityGuidelinesContent.navigation, key = { it.id }) { section ->
@@ -53,7 +56,7 @@ internal fun CommunityGuidelinesScreen(onBack: () -> Unit) {
                                         shape = RoundedCornerShape(100.dp), border = BorderStroke(1.dp, AppColors.outline(InformationColors.border)),
                                         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.content(InformationColors.text)),
                                         contentPadding = PaddingValues(horizontal = 13.dp, vertical = 10.dp), modifier = Modifier.heightIn(min = 48.dp)) {
-                                        Text(section.title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(appText(section.title), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
                             }
@@ -78,7 +81,7 @@ private fun GuidelineHero(small: Boolean) {
             Spacer(Modifier.height(18.dp))
             InformationHeading(CommunityGuidelinesContent.heroTitle, if (small) 34f else 44f)
             Spacer(Modifier.height(19.dp))
-            Text(CommunityGuidelinesContent.heroDescription, color = AppColors.content(Color(0xFF526172)), fontSize = 15.sp, lineHeight = 26.sp)
+            Text(appText(CommunityGuidelinesContent.heroDescription), color = AppColors.content(Color(0xFF526172)), fontSize = 15.sp, lineHeight = 26.sp)
             Spacer(Modifier.height(24.dp))
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CommunityGuidelinesContent.heroHighlights.forEach { highlight ->
@@ -86,7 +89,7 @@ private fun GuidelineHero(small: Boolean) {
                         Box(Modifier.size(28.dp).background(AppColors.surface(InformationColors.primary.copy(alpha = .08f)), CircleShape), contentAlignment = Alignment.Center) {
                             Icon(InformationIcons.check, null, tint = AppColors.content(InformationColors.primary), modifier = Modifier.size(17.dp))
                         }
-                        Text(highlight, color = AppColors.content(Color(0xFF344054)), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(appText(highlight), color = AppColors.content(Color(0xFF344054)), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -101,11 +104,11 @@ private fun GuidelineSection(block: GuidelineBlock, wide: Boolean, small: Boolea
             Spacer(Modifier.height(14.dp))
             InformationHeading(block.title, if (wide) 34f else 26f)
             Spacer(Modifier.height(15.dp))
-            Text(block.description, color = AppColors.content(Color(0xFF526172)), fontSize = 15.sp, lineHeight = 26.sp)
+            Text(appText(block.description), color = AppColors.content(Color(0xFF526172)), fontSize = 15.sp, lineHeight = 26.sp)
             if (block.paragraphs.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    block.paragraphs.forEach { Text(it, color = AppColors.content(InformationColors.text), fontSize = 14.sp, lineHeight = 24.sp) }
+                    block.paragraphs.forEach { Text(appText(it), color = AppColors.content(InformationColors.text), fontSize = 14.sp, lineHeight = 24.sp) }
                 }
             }
             if (block.rules.isNotEmpty()) {
@@ -123,8 +126,8 @@ private fun GuidelineSection(block: GuidelineBlock, wide: Boolean, small: Boolea
                 Spacer(Modifier.height(25.dp))
                 Surface(color = AppColors.surface(Color(0xFFFFF9ED)), border = BorderStroke(1.dp, AppColors.outline(Color(0xFFF3D8A8))), shape = RoundedCornerShape(16.dp)) {
                     Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(11.dp), verticalAlignment = Alignment.Top) {
-                        Icon(InformationIcons.info, "Important safety information", tint = AppColors.content(Color(0xFFA66A08)), modifier = Modifier.size(30.dp))
-                        Text(it, color = AppColors.content(Color(0xFF805716)), fontSize = 13.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Icon(InformationIcons.info, appDescription("Important safety information"), tint = AppColors.content(Color(0xFFA66A08)), modifier = Modifier.size(30.dp))
+                        Text(appText(it), color = AppColors.content(Color(0xFF805716)), fontSize = 13.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -139,9 +142,9 @@ private fun GuidelineRuleCard(rule: GuidelineRule, modifier: Modifier) {
                 Icon(InformationIcons.shield, null, tint = AppColors.content(InformationColors.primary), modifier = Modifier.size(18.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(rule.title, color = AppColors.content(Color(0xFF1D2939)), fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.ExtraBold)
+                Text(appText(rule.title), color = AppColors.content(Color(0xFF1D2939)), fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.ExtraBold)
                 Spacer(Modifier.height(7.dp))
-                Text(rule.description, color = AppColors.content(InformationColors.muted), fontSize = 13.sp, lineHeight = 22.sp)
+                Text(appText(rule.description), color = AppColors.content(InformationColors.muted), fontSize = 13.sp, lineHeight = 22.sp)
             }
         }
     }
@@ -165,7 +168,7 @@ private fun GuidelineIllustrationCard(block: GuidelineBlock, wide: Boolean, smal
                     Spacer(Modifier.height(14.dp))
                     InformationHeading(block.title, if (wide) 34f else 26f)
                     Spacer(Modifier.height(17.dp))
-                    Text(block.description, color = AppColors.content(Color(0xFF586678)), fontSize = 14.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium)
+                    Text(appText(block.description), color = AppColors.content(Color(0xFF586678)), fontSize = 14.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium)
                 }
             }, right = { InformationIllustration(art) })
         }
@@ -181,7 +184,7 @@ private fun GuidelineClosing(onBack: () -> Unit, wide: Boolean) {
             Spacer(Modifier.height(18.dp))
             InformationHeading(CommunityGuidelinesContent.closingTitle, if (wide) 34f else 26f, Color.White, centered = true)
             Spacer(Modifier.height(17.dp))
-            Text(CommunityGuidelinesContent.closingDescription, color = AppColors.content(Color.White.copy(alpha = .82f)), fontSize = 15.sp, lineHeight = 26.sp, textAlign = TextAlign.Center)
+            Text(appText(CommunityGuidelinesContent.closingDescription), color = AppColors.content(Color.White.copy(alpha = .82f)), fontSize = 15.sp, lineHeight = 26.sp, textAlign = TextAlign.Center)
             Spacer(Modifier.height(28.dp))
             InformationBackButton(CommunityGuidelinesContent.closingPrimaryActionLabel, onBack, Modifier.widthIn(max = 440.dp).fillMaxWidth())
         }

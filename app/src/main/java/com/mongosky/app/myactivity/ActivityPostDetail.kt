@@ -2,6 +2,9 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.myactivity
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import android.content.ActivityNotFoundException
@@ -42,14 +45,14 @@ import kotlinx.coroutines.launch
     val actions = PostCardActions(onReact = { feed.react(post,it) },onComments = { feed.openComments(post) },
         onShare = {
             val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT,"https://mongosky.com/post/${post.id}") }
-            try { context.startActivity(Intent.createChooser(intent,"Share post")) }
-            catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar("No sharing app is available.") } }
+            try { context.startActivity(Intent.createChooser(intent,appText("Share post"))) }
+            catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) } }
         },onCopyLink = { clipboard.setText(AnnotatedString("https://mongosky.com/post/${post.id}")) },
         onReactionPeople = { feed.openReactionPeople(post) },onRetryReaction = { feed.ensureReaction(post) })
     val reaction = feed.reactions[post.key] ?: PostReactionState(ReactionSummary(total = post.likesCount))
     val count = feed.commentCounts[post.key] ?: post.commentsCount
     Scaffold(containerColor = AppColors.surface(ActivityBackground),snackbarHost = { SnackbarHost(snackbar) },topBar = {
-        TopAppBar(title = { Text("Activity post") },navigationIcon = { IconButton(onBack,enabled = enabled) { Icon(ActivityIcons.back,"Back to My Activity") } },
+        TopAppBar(title = { Text(appText("Activity post")) },navigationIcon = { IconButton(onBack,enabled = enabled) { Icon(ActivityIcons.back,appDescription("Back to My Activity")) } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = AppColors.surface(Color.White)))
     }) { inset -> Box(Modifier.fillMaxSize().padding(inset),contentAlignment = Alignment.TopCenter) {
         LazyColumn(Modifier.widthIn(max = 680.dp).fillMaxSize(),contentPadding = PaddingValues(bottom = 24.dp),verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -63,7 +66,7 @@ import kotlinx.coroutines.launch
                 is HomePost.Media -> MediaPostCard(post.post,Instant.now(),reaction,count,canAct,actions,
                     onOpenPhotos = { photos,index -> viewer = PhotoViewerState(photos,index) })
             } }
-            if (target.item.kind == "comment_love") item("hint") { Text("Open comments to view and manage your comment likes.",
+            if (target.item.kind == "comment_love") item("hint") { Text(appText("Open comments to view and manage your comment likes."),
                 modifier = Modifier.padding(horizontal = 16.dp),fontSize = 13.sp,color = AppColors.content(ActivityMuted)) }
         }
     } }

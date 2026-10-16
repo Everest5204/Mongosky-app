@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="edit_profile_title">প্রোফাইল সম্পাদনা</string>
+  <string name="edit_profile_back">ফিরে যান</string>
+  <string name="edit_profile_change_cover">কভার পরিবর্তন</string>
+  <string name="edit_profile_change_photo">প্রোফাইল ছবি পরিবর্তন</string>
+  <string name="edit_profile_cover_description">আপনার কভার ছবি</string>
+  <string name="edit_profile_photo_description">আপনার প্রোফাইল ছবি</string>
+  <string name="edit_profile_bio">বায়ো</string>
+  <string name="edit_profile_bio_hint">বায়ো লিখুন…</string>
+  <string name="edit_profile_bio_counter">%1$d/%2$d</string>
+  <string name="edit_profile_bio_remaining">আর %1$dটি অক্ষর লেখা যাবে</string>
+  <string name="edit_profile_public">সবার জন্য উন্মুক্ত</string>
+  <string name="edit_profile_public_hint">আপনার বায়ো সবাই দেখতে পাবেন।</string>
+  <string name="edit_profile_save">পরিবর্তন সংরক্ষণ</string>
+  <string name="edit_profile_saving">সংরক্ষণ হচ্ছে…</string>
+  <string name="edit_profile_cancel">বাতিল</string>
+  <string name="edit_profile_loading">প্রোফাইল লোড হচ্ছে…</string>
+  <string name="edit_profile_load_error">প্রোফাইল লোড করা যায়নি</string>
+  <string name="edit_profile_retry">আবার চেষ্টা করুন</string>
+  <string name="edit_profile_discard_title">অসংরক্ষিত পরিবর্তন বাতিল করবেন?</string>
+  <string name="edit_profile_discard_body">সংরক্ষণ না করা বায়ো ও বেছে নেওয়া ছবিগুলো বাতিল হবে।</string>
+  <string name="edit_profile_discard_partial_body">অসংরক্ষিত পরিবর্তন বাতিল হবে। ইতোমধ্যে সংরক্ষিত পরিবর্তন প্রোফাইলে থাকবে।</string>
+  <string name="edit_profile_discard">বাতিল করুন</string>
+  <string name="edit_profile_keep_editing">সম্পাদনা চালিয়ে যান</string>
+  <string name="edit_profile_partial">কিছু পরিবর্তন সংরক্ষিত হয়েছে।</string>
+  <string name="edit_profile_uncertain">ছবি আপলোড সম্পন্ন হয়ে থাকতে পারে। আবার চেষ্টা করার আগে সংরক্ষিত ছবিগুলো দেখুন।</string>
+  <string name="edit_profile_reviewed">এগুলো বর্তমানে সংরক্ষিত ছবি। এই ছবিগুলো রাখুন অথবা ক্যামেরায় চাপ দিয়ে আবার ছবি বেছে নিন।</string>
+  <string name="edit_profile_check_saved">সংরক্ষিত ছবি দেখুন</string>
+  <string name="edit_profile_checking">যাচাই হচ্ছে…</string>
+  <string name="edit_profile_use_saved">সংরক্ষিত ছবি রাখুন</string>
+  <string name="edit_profile_sign_in">আবার সাইন ইন করুন</string>
+</resources>

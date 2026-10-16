@@ -1,5 +1,8 @@
 package com.mongosky.app.auth
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.BorderStroke
@@ -62,6 +65,8 @@ fun LoginScreen(
     onForgotPassword: (() -> Unit)? = null
 ) {
     val state = viewModel.uiState
+    // Initial routing is owned by the native startup gate, never by an auth loading page.
+    if (state.checkingSession) return
     val focusManager = LocalFocusManager.current
     val autofillManager = LocalAutofillManager.current
     val context = LocalContext.current.applicationContext
@@ -142,21 +147,6 @@ fun LoginScreen(
 
         LoginPage(subtitle = "Sign In to your Account") {
             when {
-                state.checkingSession -> {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(28.dp),
-                            color = AppColors.content(LoginRed),
-                            strokeWidth = 2.dp
-                        )
-                        Text("Checking your session...", color = AppColors.content(LoginMuted), fontSize = 14.sp)
-                    }
-                }
-
                 restoreError != null -> {
                     LoginError(restoreError)
                     state.error?.takeIf { it != restoreError }?.let {
@@ -174,13 +164,13 @@ fun LoginScreen(
                         enabled = !state.loading,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Back to sign in", color = AppColors.content(LoginBlue))
+                        Text(appText("Back to sign in"), color = AppColors.content(LoginBlue))
                     }
                 }
 
                 name != null -> {
                     Text(
-                        text = "Welcome, $name",
+                        text = appText("Welcome, $name"),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = AppColors.content(Color.Black)
@@ -206,7 +196,7 @@ fun LoginScreen(
                     ) {
                         HorizontalDivider(Modifier.weight(1f), color = AppColors.outline(LoginBorder))
                         Text(
-                            "or",
+                            appText("or"),
                             modifier = Modifier.padding(horizontal = 14.dp),
                             color = AppColors.content(LoginMuted),
                             fontSize = 14.sp,
@@ -250,7 +240,7 @@ fun LoginScreen(
                             ) {
                                 Icon(
                                     imageVector = if (showPassword) LoginEyeOff else LoginEye,
-                                    contentDescription = if (showPassword) "Hide password" else "Show password",
+                                    contentDescription = appDescription(if (showPassword) "Hide password" else "Show password"),
                                     modifier = Modifier.size(24.dp),
                                     tint = AppColors.content(LoginMuted)
                                 )
@@ -282,7 +272,7 @@ fun LoginScreen(
                     Spacer(Modifier.height(24.dp))
                     Text(
                         text = buildAnnotatedString {
-                            append("Do not have an account?  ")
+                            append(appText("Do not have an account?  "))
                             withLink(
                                 LinkAnnotation.Clickable(
                                     tag = "sign_up",
@@ -294,7 +284,7 @@ fun LoginScreen(
                                     ),
                                     linkInteractionListener = { openSignup() }
                                 )
-                            ) { append("Sign Up") }
+                            ) { append(appText("Sign Up")) }
                         },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                             .padding(vertical = 12.dp),
@@ -336,7 +326,7 @@ private fun LoginPage(subtitle: String, content: @Composable ColumnScope.() -> U
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = subtitle,
+                        text = appText(subtitle),
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = AppColors.content(LoginMuted),
@@ -373,7 +363,7 @@ private fun LoginInput(
         },
         enabled = enabled,
         singleLine = true,
-        placeholder = { Text(placeholder, color = AppColors.content(LoginMuted), fontSize = 16.sp) },
+        placeholder = { Text(appText(placeholder), color = AppColors.content(LoginMuted), fontSize = 16.sp) },
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = AppColors.content(LoginInk)),
         shape = LoginPill,
         keyboardOptions = keyboardOptions,
@@ -418,7 +408,7 @@ private fun LoginActionButton(label: String, loading: Boolean = false, onClick: 
             Spacer(Modifier.width(10.dp))
         }
         Text(
-            label,
+            appText(label),
             fontSize = 17.sp,
             lineHeight = 24.sp,
             fontWeight = FontWeight.SemiBold,
@@ -430,7 +420,7 @@ private fun LoginActionButton(label: String, loading: Boolean = false, onClick: 
 @Composable
 private fun LoginError(message: String) {
     Text(
-        text = message,
+        text = appText(message),
         modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
         color = AppColors.content(Color(0xFFD60000)),
         fontSize = 14.sp,
@@ -467,7 +457,7 @@ private fun LoginGoogleButton() {
             )
             Spacer(Modifier.width(14.dp))
             Text(
-                text = "Continue with Google",
+                text = appText("Continue with Google"),
                 modifier = Modifier.weight(1f, fill = false),
                 textAlign = TextAlign.Center,
                 fontSize = 17.sp,
@@ -578,7 +568,7 @@ private fun LoginRememberOption(
             }
         }
         Spacer(Modifier.width(8.dp))
-        Text("Remember me", color = AppColors.content(LoginInk), fontSize = 14.sp, lineHeight = 21.sp)
+        Text(appText("Remember me"), color = AppColors.content(LoginInk), fontSize = 14.sp, lineHeight = 21.sp)
     }
 }
 
@@ -594,7 +584,7 @@ private fun LoginForgotButton(enabled: Boolean, onClick: () -> Unit) {
             disabledContentColor = AppColors.content(LoginMuted)
         )
     ) {
-        Text("Forgotten password?", fontSize = 14.sp, lineHeight = 21.sp)
+        Text(appText("Forgotten password?"), fontSize = 14.sp, lineHeight = 21.sp)
     }
 }
 

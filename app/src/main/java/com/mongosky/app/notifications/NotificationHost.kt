@@ -1,5 +1,9 @@
 package com.mongosky.app.notifications
 
+import com.mongosky.app.language.appText
+
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -55,7 +59,7 @@ internal fun NotificationHost(viewModel:NotificationsViewModel, owner:String?, s
 internal fun NotificationBell(count:Long,enabled:Boolean,onClick:()->Unit) {
     Box {
         IconButton(onClick=onClick,enabled=enabled,modifier=Modifier.size(48.dp)) {
-            Icon(NotificationIcons.bell,"Notifications${if(count>0) ", $count unread" else ""}",Modifier.size(23.dp),tint=AppColors.content(NotificationColors.text))
+            Icon(NotificationIcons.bell,appDescription(appText("Notifications") + if(count>0) appText(", $count unread") else ""),Modifier.size(23.dp),tint=AppColors.content(NotificationColors.text))
         }
         if(count>0) Box(Modifier.align(Alignment.TopEnd).padding(top=4.dp,end=2.dp).defaultMinSize(minWidth=17.dp,minHeight=17.dp)
             .background(AppColors.surface(Color(0xFFFF3040)),CircleShape).padding(horizontal=4.dp),contentAlignment=Alignment.Center) {

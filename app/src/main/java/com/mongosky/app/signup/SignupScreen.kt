@@ -1,5 +1,8 @@
 package com.mongosky.app.signup
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import android.app.DatePickerDialog
@@ -74,7 +77,7 @@ fun SignupScreen(
             BackHandler(onBack = onCreatedBack)
             SignupWhitePage(subtitle = "Account created", onBack = if (showBackButton) onCreatedBack else null) {
                 Text(
-                    text = "Welcome, $name",
+                    text = appText("Welcome, $name"),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     color = AppColors.content(Color.Black),
@@ -184,7 +187,7 @@ private fun SignupForm(
                     )
                     Spacer(Modifier.width(14.dp))
                     Text(
-                        text = "Continue with Google",
+                        text = appText("Continue with Google"),
                         modifier = Modifier.weight(1f, fill = false),
                         textAlign = TextAlign.Center,
                         fontSize = 17.sp,
@@ -227,7 +230,7 @@ private fun SignupForm(
                     ) {
                         Icon(
                             imageVector = if (showPassword) SignupEyeOff else SignupEye,
-                            contentDescription = if (showPassword) "Hide password" else "Show password",
+                            contentDescription = appDescription(if (showPassword) "Hide password" else "Show password"),
                             tint = AppColors.content(SignupMuted),
                             modifier = Modifier.size(24.dp)
                         )
@@ -274,18 +277,18 @@ private fun SignupForm(
                 }
                 Text(
                     text = buildAnnotatedString {
-                        append("I agree to the ")
+                        append(appText("I agree to the "))
                         withLink(
                             LinkAnnotation.Url("https://mongosky.com/privacy-policy", policyStyles) {
                                 openPage("privacy-policy")
                             }
-                        ) { append("Privacy Policy") }
-                        append(" and have read ")
+                        ) { append(appText("Privacy Policy")) }
+                        append(appText(" and have read "))
                         withLink(
                             LinkAnnotation.Url("https://mongosky.com/about", policyStyles) {
                                 openPage("about")
                             }
-                        ) { append("About Us") }
+                        ) { append(appText("About Us")) }
                         append(".")
                     },
                     modifier = Modifier.weight(1f),
@@ -362,7 +365,7 @@ private fun SignupForm(
                     listOf("male" to "Male", "female" to "Female", "other" to "Other")
                         .forEach { (value, label) ->
                             DropdownMenuItem(
-                                text = { Text(label, color = AppColors.content(Color.Black)) },
+                                text = { Text(appText(label), color = AppColors.content(Color.Black)) },
                                 onClick = { gender = value; genderMenu = false; clearError() }
                             )
                         }
@@ -374,7 +377,7 @@ private fun SignupForm(
         val message = localError ?: state.error
         if (message != null) {
             Text(
-                text = message,
+                text = appText(message),
                 color = AppColors.content(Color(0xFFD60000)),
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -411,7 +414,7 @@ private fun SignupForm(
         signedInAs?.let { SignupAccountNotice(it) }
         Text(
             text = buildAnnotatedString {
-                append("Already have an account?  ")
+                append(appText("Already have an account?  "))
                 withLink(
                     LinkAnnotation.Clickable(
                         tag = "sign_in",
@@ -420,7 +423,7 @@ private fun SignupForm(
                         ),
                         linkInteractionListener = { if (!state.loading) onSignIn() }
                     )
-                ) { append("Sign In") }
+                ) { append(appText("Sign In")) }
             },
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                 .padding(vertical = 12.dp),
@@ -466,7 +469,7 @@ private fun SignupWhitePage(
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = subtitle,
+                            text = appText(subtitle),
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             color = AppColors.content(SignupMuted),
@@ -488,14 +491,14 @@ internal fun SignupBackBar(onBack: () -> Unit, enabled: Boolean = true) {
     Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack, enabled = enabled, modifier = Modifier.size(48.dp)) {
-            Icon(SignupBack, "Back", tint = AppColors.content(SignupInk), modifier = Modifier.size(26.dp))
+            Icon(SignupBack, appDescription("Back"), tint = AppColors.content(SignupInk), modifier = Modifier.size(26.dp))
         }
     }
 }
 
 @Composable
 private fun SignupAccountNotice(name: String) {
-    Text("Signed in as $name. Sign in to switch accounts.",
+    Text(appText("Signed in as $name. Sign in to switch accounts."),
         modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
         color = AppColors.content(SignupMuted), fontSize = 13.sp, lineHeight = 19.sp)
     Spacer(Modifier.height(12.dp))
@@ -519,7 +522,7 @@ private fun SignupInput(
         modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp),
         enabled = enabled,
         singleLine = true,
-        placeholder = { Text(placeholder, color = AppColors.content(SignupMuted), fontSize = 16.sp) },
+        placeholder = { Text(appText(placeholder), color = AppColors.content(SignupMuted), fontSize = 16.sp) },
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = AppColors.content(SignupInk)),
         shape = SignupPill,
         keyboardOptions = keyboardOptions,
@@ -574,7 +577,7 @@ private fun SignupChoiceButton(
         )
         Spacer(Modifier.width(12.dp))
         Text(
-            text = text,
+            text = appText(text),
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Start,
             fontSize = 16.sp,
@@ -615,7 +618,7 @@ private fun SignupActionButton(
             Spacer(Modifier.width(10.dp))
         }
         Text(
-            label,
+            appText(label),
             fontSize = 17.sp,
             lineHeight = 24.sp,
             fontWeight = FontWeight.SemiBold,
@@ -707,5 +710,13 @@ private val SignupCheck = signupOutlineVector("SignupCheck", "M5 12L10 17L19 7")
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, widthDp = 360, heightDp = 800)
 @Composable
 private fun SignupPreview() {
-    SignupScreen(viewModel = SignupViewModel(), onBack = {}, onSignIn = {})
+    val store = remember { androidx.lifecycle.ViewModelStore() }
+    DisposableEffect(store) { onDispose { store.clear() } }
+    val previewModel = remember(store) {
+        val owner = object : androidx.lifecycle.ViewModelStoreOwner {
+            override val viewModelStore = store
+        }
+        androidx.lifecycle.ViewModelProvider(owner, SignupViewModel.Factory())[SignupViewModel::class.java]
+    }
+    SignupScreen(viewModel = previewModel, onBack = {}, onSignIn = {})
 }

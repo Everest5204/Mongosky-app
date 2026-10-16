@@ -1,5 +1,7 @@
 package com.mongosky.app.pinpost
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.layout.*
@@ -27,27 +29,27 @@ internal fun PinPostDialog(controller: PinPostController) {
     }
     AlertDialog(onDismissRequest = { controller.dismiss() }, containerColor = AppColors.surface(androidx.compose.ui.graphics.Color.White),
         icon = { Icon(HomeFeedIcons.pin, null, tint = AppColors.content(FeedColors.brand)) },
-        title = { Text(if (state.unpin) "Unpin this post?" else "Pin to your profile?", fontWeight = FontWeight.Bold) },
+        title = { Text(appText(if (state.unpin) "Unpin this post?" else "Pin to your profile?"), fontWeight = FontWeight.Bold) },
         text = { Column(Modifier.heightIn(max = 300.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             when {
                 state.loading -> Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(Modifier.size(20.dp), color = AppColors.content(FeedColors.brand), strokeWidth = 2.dp)
-                    Text("Checking your profile pin…")
+                    Text(appText("Checking your profile pin…"))
                 }
-                state.unpin -> Text("This post will return to its usual place on your profile.")
-                state.baseline?.post != null -> Text("This post will replace your current pinned post at the top of your profile. The previous post stays on your profile.")
-                else -> Text("This post will appear at the top of your profile. You can pin one post at a time.")
+                state.unpin -> Text(appText("This post will return to its usual place on your profile."))
+                state.baseline?.post != null -> Text(appText("This post will replace your current pinned post at the top of your profile. The previous post stays on your profile."))
+                else -> Text(appText("This post will appear at the top of your profile. You can pin one post at a time."))
             }
-            state.error?.let { Text(it, color = AppColors.content(FeedColors.brand), fontSize = 14.sp) }
+            state.error?.let { Text(appText(it), color = AppColors.content(FeedColors.brand), fontSize = 14.sp) }
         } },
         confirmButton = {
             TextButton(onClick = { when { state.uncertain -> controller.check(); state.needsRefresh -> controller.retryRead(); else -> controller.confirm() } },
                 enabled = !state.busy && !state.loading && cooldown == 0L) {
                 if (state.busy) CircularProgressIndicator(Modifier.size(18.dp), color = AppColors.content(FeedColors.brand), strokeWidth = 2.dp)
-                else Text(when { cooldown > 0 -> "Wait ${(cooldown + 999) / 1000}s"; state.uncertain -> "Check status"; state.needsRefresh -> "Refresh"; state.attempt != null -> "Retry update"; state.unpin -> "Unpin"; state.baseline?.post != null -> "Replace pin"; else -> "Pin post" }, color = AppColors.content(FeedColors.brand))
+                else Text(appText(when { cooldown > 0 -> "Wait ${(cooldown + 999) / 1000}s"; state.uncertain -> "Check status"; state.needsRefresh -> "Refresh"; state.attempt != null -> "Retry update"; state.unpin -> "Unpin"; state.baseline?.post != null -> "Replace pin"; else -> "Pin post" }), color = AppColors.content(FeedColors.brand))
             }
         },
-        dismissButton = { TextButton(onClick = { controller.dismiss() }, enabled = !state.busy) { Text("Cancel", color = AppColors.content(FeedColors.muted)) } })
+        dismissButton = { TextButton(onClick = { controller.dismiss() }, enabled = !state.busy) { Text(appText("Cancel"), color = AppColors.content(FeedColors.muted)) } })
 }
 
 @Composable
@@ -55,7 +57,7 @@ internal fun PinnedPostLabel() {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         Icon(HomeFeedIcons.pin, null, Modifier.size(15.dp), tint = AppColors.content(FeedColors.muted))
-        Text("Pinned", color = AppColors.content(FeedColors.muted), fontSize = 12.sp, fontWeight = FontWeight.Medium)
+        Text(appText("Pinned"), color = AppColors.content(FeedColors.muted), fontSize = 12.sp, fontWeight = FontWeight.Medium)
     }
 }
 

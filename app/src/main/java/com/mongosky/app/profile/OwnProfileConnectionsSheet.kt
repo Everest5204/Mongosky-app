@@ -1,6 +1,9 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.mongosky.app.profile
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.clickable
@@ -35,8 +38,8 @@ internal fun OwnProfileConnectionsSheet(controller: OwnProfileConnectionsControl
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = AppColors.surface(Color.White)) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.85f)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(controller::close) { Icon(FeedIcons.close, "Close list", tint = AppColors.content(OwnProfileColors.text)) }
-                Text(kind.label, color = AppColors.content(OwnProfileColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                IconButton(controller::close) { Icon(FeedIcons.close, appDescription("Close list"), tint = AppColors.content(OwnProfileColors.text)) }
+                Text(appText(kind.label), color = AppColors.content(OwnProfileColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             OwnProfileDivider()
             LazyColumn(state = list, modifier = Modifier.fillMaxSize()) {
@@ -45,13 +48,13 @@ internal fun OwnProfileConnectionsSheet(controller: OwnProfileConnectionsControl
                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         ProfileAvatar(person.imageUrl, Modifier.size(44.dp).clickable { onProfile(person.id) })
                         Column(Modifier.weight(1f).clickable { onProfile(person.id) }.padding(vertical = 8.dp)) {
-                            Text(person.displayName.ifBlank { "Mongosky User" }, color = AppColors.content(OwnProfileColors.text), fontSize = 15.sp,
+                            Text(person.displayName.ifBlank { appText("Mongosky User") }, color = AppColors.content(OwnProfileColors.text), fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            Text("View profile", color = AppColors.content(OwnProfileColors.muted), fontSize = 12.sp)
+                            Text(appText("View profile"), color = AppColors.content(OwnProfileColors.muted), fontSize = 12.sp)
                         }
                         if (!person.isSelf) TextButton({ controller.toggleFollowing(person.id) }, enabled = person.id !in state.busyIds) {
                             if (person.id in state.busyIds) OwnProfileSpinner() else Text(
-                                if (person.isFollowing) "Following" else if (person.followsYou) "Follow Back" else "Follow",
+                                appText(if (person.isFollowing) "Following" else if (person.followsYou) "Follow Back" else "Follow"),
                                 color = AppColors.content(OwnProfileColors.brand), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -59,10 +62,10 @@ internal fun OwnProfileConnectionsSheet(controller: OwnProfileConnectionsControl
                 if (state.loading) item("loading") { Box(Modifier.fillMaxWidth().height(64.dp), contentAlignment = Alignment.Center) { OwnProfileSpinner() } }
                 state.error?.let { error -> item("error") { OwnProfileNotice(error, "Retry", controller::retry) } }
                 if (state.items.isEmpty() && !state.loading && state.error == null) item("empty") {
-                    Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { Text("No ${kind.path} yet", color = AppColors.content(OwnProfileColors.muted)) }
+                    Box(Modifier.fillMaxWidth().height(180.dp), contentAlignment = Alignment.Center) { Text(appText("No ${kind.path} yet"), color = AppColors.content(OwnProfileColors.muted)) }
                 }
                 if (state.hasMore && !state.loading && state.error == null && state.items.isNotEmpty()) item("more") {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(controller::loadMore) { Text("Load more", color = AppColors.content(OwnProfileColors.brand)) } }
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TextButton(controller::loadMore) { Text(appText("Load more"), color = AppColors.content(OwnProfileColors.brand)) } }
                 }
             }
         }

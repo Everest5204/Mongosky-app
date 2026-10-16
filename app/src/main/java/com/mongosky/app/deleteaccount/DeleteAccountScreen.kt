@@ -1,5 +1,8 @@
 package com.mongosky.app.deleteaccount
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -57,9 +60,9 @@ internal fun DeleteAccountScreen(
             Row(Modifier.widthIn(max = 448.dp).fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = back, enabled = !hostBusy, modifier = Modifier.size(48.dp)) {
-                    Icon(DeleteAccountIcons.get("back"), "Go back", tint = AppColors.content(DeletionColors.slate900), modifier = Modifier.size(22.dp))
+                    Icon(DeleteAccountIcons.get("back"), appDescription("Go back"), tint = AppColors.content(DeletionColors.slate900), modifier = Modifier.size(22.dp))
                 }
-                Text("Delete Account", modifier = Modifier.weight(1f).semantics { heading() }, textAlign = TextAlign.Center,
+                Text(appText("Delete Account"), modifier = Modifier.weight(1f).semantics { heading() }, textAlign = TextAlign.Center,
                     fontFamily = FontFamily.SansSerif, fontSize = 18.sp, lineHeight = 26.sp,
                     fontWeight = FontWeight.SemiBold, color = AppColors.content(DeletionColors.slate900))
                 Spacer(Modifier.width(48.dp))
@@ -71,11 +74,11 @@ internal fun DeleteAccountScreen(
                         Icon(DeleteAccountIcons.get("trash"), null, tint = AppColors.content(DeletionColors.red600), modifier = Modifier.size(42.dp))
                     }
                     Spacer(Modifier.height(12.dp))
-                    Text("Delete Your Account", fontFamily = FontFamily.SansSerif, fontSize = 24.sp, lineHeight = 32.sp,
+                    Text(appText("Delete Your Account"), fontFamily = FontFamily.SansSerif, fontSize = 24.sp, lineHeight = 32.sp,
                         fontWeight = FontWeight.Bold, letterSpacing = (-0.6).sp, textAlign = TextAlign.Center,
                         color = AppColors.content(DeletionColors.slate900), modifier = Modifier.semantics { heading() })
                     Spacer(Modifier.height(8.dp))
-                    Text("We're sorry to see you go. Please read the information below before deleting your account.",
+                    Text(appText("We're sorry to see you go. Please read the information below before deleting your account."),
                         fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 24.sp,
                         textAlign = TextAlign.Center, color = AppColors.content(DeletionColors.slate500))
                 }
@@ -84,7 +87,7 @@ internal fun DeleteAccountScreen(
                     "Your account and associated data will be removed from our active systems. Deleted accounts have no restore option in Mongosky.", false)
                 Spacer(Modifier.height(20.dp))
                 Column(Modifier.padding(horizontal = 8.dp)) {
-                    Text("What will be deleted?", fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp,
+                    Text(appText("What will be deleted?"), fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp,
                         fontWeight = FontWeight.SemiBold, color = AppColors.content(DeletionColors.slate900), modifier = Modifier.semantics { heading() })
                     Spacer(Modifier.height(12.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -92,7 +95,7 @@ internal fun DeleteAccountScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Icon(DeleteAccountIcons.get(item.icon), null, tint = AppColors.content(DeletionColors.slate500),
                                     modifier = Modifier.padding(top = 2.dp).size(18.dp))
-                                Text(item.description, modifier = Modifier.weight(1f), fontFamily = FontFamily.SansSerif,
+                                Text(appText(item.description), modifier = Modifier.weight(1f), fontFamily = FontFamily.SansSerif,
                                     fontSize = 12.sp, lineHeight = 20.sp, color = AppColors.content(DeletionColors.slate600))
                             }
                         }
@@ -102,16 +105,16 @@ internal fun DeleteAccountScreen(
                 DeletionInfoCard("info", "Before you delete",
                     "Save anything you want to keep. Cleanup may take time. Copies in backups or saved by other people may remain after deletion from active systems.", true)
                 Spacer(Modifier.height(20.dp))
-                Text("To confirm, please enter your password", fontFamily = FontFamily.SansSerif,
+                Text(appText("To confirm, please enter your password"), fontFamily = FontFamily.SansSerif,
                     fontSize = 12.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold, color = AppColors.content(DeletionColors.slate900))
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(value = state.password, onValueChange = onPassword, singleLine = true, enabled = enabled,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).focusRequester(passwordFocus).semantics {
-                        contentDescription = "Current password"; contentType = ContentType.Password
+                        contentDescription = appText("Current password"); contentType = ContentType.Password
                     }, shape = RoundedCornerShape(12.dp), isError = state.passwordError != null,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.SansSerif,
                         fontSize = 16.sp, lineHeight = 24.sp, color = AppColors.content(DeletionColors.slate900)),
-                    placeholder = { Text("Enter your password", fontFamily = FontFamily.SansSerif,
+                    placeholder = { Text(appText("Enter your password"), fontFamily = FontFamily.SansSerif,
                         fontSize = 14.sp, color = AppColors.content(DeletionColors.slate400)) },
                     visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false,
@@ -121,7 +124,7 @@ internal fun DeleteAccountScreen(
                     trailingIcon = {
                         IconButton(onClick = { visible = !visible }, enabled = enabled, modifier = Modifier.size(48.dp)) {
                             Icon(DeleteAccountIcons.get(if (visible) "eyeOff" else "eye"),
-                                if (visible) "Hide password" else "Show password", modifier = Modifier.size(19.dp), tint = AppColors.content(DeletionColors.slate500))
+                                appDescription(if (visible) "Hide password" else "Show password"), modifier = Modifier.size(19.dp), tint = AppColors.content(DeletionColors.slate500))
                         }
                     }, colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AppColors.outline(DeletionColors.red400), unfocusedBorderColor = AppColors.outline(DeletionColors.slate200),
@@ -130,7 +133,7 @@ internal fun DeleteAccountScreen(
                         disabledContainerColor = AppColors.surface(DeletionColors.slate50), cursorColor = AppColors.content(DeletionColors.red600)))
                 state.passwordError?.let {
                     Spacer(Modifier.height(8.dp))
-                    Text(it, fontSize = 12.sp, lineHeight = 20.sp, color = AppColors.content(DeletionColors.red600),
+                    Text(appText(it), fontSize = 12.sp, lineHeight = 20.sp, color = AppColors.content(DeletionColors.red600),
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive })
                 }
                 if (!state.dialogOpen && state.error != null) {
@@ -145,14 +148,14 @@ internal fun DeleteAccountScreen(
                         CircularProgressIndicator(Modifier.size(16.dp), color = AppColors.content(DeletionColors.white), strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                     }
-                    Text(if (state.phase == DeletionPhase.SUBMITTING) "Submitting…" else "Delete My Account",
+                    Text(appText(if (state.phase == DeletionPhase.SUBMITTING) "Submitting…" else "Delete My Account"),
                         fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Spacer(Modifier.height(12.dp))
                 TextButton(onClick = back, enabled = !hostBusy, modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = 48.dp),
                     shape = RoundedCornerShape(8.dp), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
                     colors = ButtonDefaults.textButtonColors(contentColor = AppColors.content(DeletionColors.slate500))) {
-                    Text(if (state.phase == DeletionPhase.SUBMITTING) "Close" else "Cancel", fontFamily = FontFamily.SansSerif,
+                    Text(appText(if (state.phase == DeletionPhase.SUBMITTING) "Close" else "Cancel"), fontFamily = FontFamily.SansSerif,
                         fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium)
                 }
             }
@@ -170,11 +173,11 @@ private fun DeletionInfoCard(icon: String, title: String, body: String, informat
             Icon(DeleteAccountIcons.get(icon), null, tint = Color.Unspecified,
                 modifier = Modifier.padding(top = 2.dp).size(if (information) 24.dp else 25.dp))
             Column(Modifier.weight(1f)) {
-                Text(title, fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp,
+                Text(appText(title), fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp,
                     fontWeight = FontWeight.SemiBold, color = AppColors.content(if (information) DeletionColors.blue600 else DeletionColors.red600),
                     modifier = Modifier.semantics { heading() })
                 Spacer(Modifier.height(4.dp))
-                Text(body, fontFamily = FontFamily.SansSerif, fontSize = 12.sp, lineHeight = 20.sp, color = AppColors.content(DeletionColors.slate600))
+                Text(appText(body), fontFamily = FontFamily.SansSerif, fontSize = 12.sp, lineHeight = 20.sp, color = AppColors.content(DeletionColors.slate600))
             }
         }
     }
@@ -184,7 +187,7 @@ private fun DeletionInfoCard(icon: String, title: String, body: String, informat
 internal fun DeletionFeedback(message: String) {
     Surface(Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Assertive },
         shape = RoundedCornerShape(12.dp), color = AppColors.surface(DeletionColors.red50), border = BorderStroke(1.dp, AppColors.outline(DeletionColors.red100))) {
-        Text(message, modifier = Modifier.padding(12.dp), fontFamily = FontFamily.SansSerif,
+        Text(appText(message), modifier = Modifier.padding(12.dp), fontFamily = FontFamily.SansSerif,
             fontSize = 14.sp, lineHeight = 24.sp, color = AppColors.content(DeletionColors.red800))
     }
 }

@@ -2,6 +2,8 @@
 
 package com.mongosky.app.home
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.saveditems.SavedMenuAction
@@ -33,7 +35,7 @@ internal fun HomePostMenu(post: HomePost, onDismiss: () -> Unit, pins: PinPostCo
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet,
         containerColor = AppColors.surface(Color.White), tonalElevation = 0.dp) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
-            Text("Post options", color = AppColors.content(FeedColors.text), fontSize = 18.sp, fontWeight = FontWeight.Bold,
+            Text(appText("Post options"), color = AppColors.content(FeedColors.text), fontSize = 18.sp, fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 20.dp, bottom = 10.dp))
             homeMenuActions(post).forEach { action ->
                 if (action == HomeMenuAction.SAVE) {
@@ -51,7 +53,7 @@ internal fun HomePostMenu(post: HomePost, onDismiss: () -> Unit, pins: PinPostCo
                     .padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                     Icon(HomeFeedIcons.forAction(action), null, tint = AppColors.content(tint), modifier = Modifier.size(23.dp))
-                    Text(if (action == HomeMenuAction.PIN) pins?.label(post) ?: "Pin to profile" else action.label, color = AppColors.content(tint), fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text(appText(if (action == HomeMenuAction.PIN) pins?.label(post) ?: "Pin to profile" else action.label), color = AppColors.content(tint), fontSize = 16.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -61,13 +63,13 @@ internal fun HomePostMenu(post: HomePost, onDismiss: () -> Unit, pins: PinPostCo
 @Composable
 internal fun HomeDeleteDialog(state: HomeDeleteState, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(onDismissRequest = { if (!state.busy) onDismiss() }, containerColor = AppColors.surface(Color.White),
-        title = { Text("Delete post?") },
+        title = { Text(appText("Delete post?")) },
         text = { Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("This post and its comments will be permanently removed.")
-            state.error?.let { Text(it, color = AppColors.content(FeedColors.brand), fontSize = 14.sp) }
+            Text(appText("This post and its comments will be permanently removed."))
+            state.error?.let { Text(appText(it), color = AppColors.content(FeedColors.brand), fontSize = 14.sp) }
         } },
         confirmButton = { TextButton(onClick = onConfirm, enabled = !state.busy) {
-            Text(if (state.busy) "Deleting…" else if (state.uncertain) "Check again" else "Delete", color = AppColors.content(FeedColors.brand))
+            Text(appText(if (state.busy) "Deleting…" else if (state.uncertain) "Check again" else "Delete"), color = AppColors.content(FeedColors.brand))
         } },
-        dismissButton = { TextButton(onClick = onDismiss, enabled = !state.busy) { Text("Cancel", color = AppColors.content(FeedColors.muted)) } })
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !state.busy) { Text(appText("Cancel"), color = AppColors.content(FeedColors.muted)) } })
 }

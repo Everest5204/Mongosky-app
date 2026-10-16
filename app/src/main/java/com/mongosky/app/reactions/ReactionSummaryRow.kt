@@ -1,5 +1,7 @@
 package com.mongosky.app.reactions
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -39,7 +41,7 @@ internal fun ReactionSummaryRow(summary: ReactionSummary, enabled: Boolean, onCl
         }
         Row(Modifier.fillMaxWidth().heightIn(min = 34.dp)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = "${summary.summaryText()}, view reactions" }
+            .semantics { contentDescription = appText("${summary.summaryText()}, view reactions") }
             .padding(start = inset, end = inset, top = if (mobile) 8.dp else 7.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(gap)) {
             Box(Modifier.width(iconWidth).height(22.dp)) {

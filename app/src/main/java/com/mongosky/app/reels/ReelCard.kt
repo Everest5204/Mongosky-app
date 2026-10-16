@@ -1,6 +1,9 @@
 @file:androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
 package com.mongosky.app.reels
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.animation.core.Animatable
@@ -63,7 +66,7 @@ internal fun ReelCard(
         Box(Modifier.fillMaxSize().pointerInput(reel.id, active, playback) {
             detectTapGestures(onTap = { if (active && playback?.error != true) playback?.toggle() },
                 onDoubleTap = { if (active) { heartKey++; onDoubleLove() } })
-        }.semantics { contentDescription = "Video. Tap to pause or play, double tap to love." })
+        }.semantics { contentDescription = appText("Video. Tap to pause or play, double tap to love.") })
         if (active && (playback == null || playback.buffering) && playback?.error != true) CircularProgressIndicator(
             Modifier.align(Alignment.Center).size(38.dp), color = AppColors.content(Color.White), strokeWidth = 3.dp
         )
@@ -75,8 +78,8 @@ internal fun ReelCard(
             Modifier.align(Alignment.Center).padding(24.dp).background(AppColors.surface(Color.Black.copy(alpha = 0.85f)), androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
                 .padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Could not play this video.", color = AppColors.content(Color.White), fontSize = 14.sp)
-            TextButton(playback::retry) { Text("Retry", color = AppColors.content(Color.White)) }
+            Text(appText("Could not play this video."), color = AppColors.content(Color.White), fontSize = 14.sp)
+            TextButton(playback::retry) { Text(appText("Retry"), color = AppColors.content(Color.White)) }
         }
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.3f),
             0.18f to Color.Transparent, 0.42f to Color.Transparent, 0.62f to Color.Black.copy(alpha = 0.2f),
@@ -88,10 +91,10 @@ internal fun ReelCard(
                 ProfileAvatar(reel.author.profileImageUrl, Modifier.size(38.dp).border(2.dp, AppColors.outline(Color.White.copy(alpha = 0.92f)), CircleShape))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(reel.author.displayName.ifBlank { "Mongosky User" }, color = AppColors.content(Color.White),
+                        Text(reel.author.displayName.ifBlank { appText("Mongosky User") }, color = AppColors.content(Color.White),
                             fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false))
-                        if (verified) Icon(ReelsIcons.seal, "Verified", tint = Color.Unspecified,
+                        if (verified) Icon(ReelsIcons.seal, appDescription("Verified"), tint = Color.Unspecified,
                             modifier = Modifier.padding(start = 4.dp).size(14.dp))
                     }
                     if (reel.username.isNotBlank()) Text("@${reel.username}", color = AppColors.content(Color.White.copy(alpha = 0.78f)),
@@ -104,7 +107,7 @@ internal fun ReelCard(
                     maxLines = if (expanded) Int.MAX_VALUE else 2, overflow = TextOverflow.Ellipsis,
                     modifier = captionModifier)
                 if (reel.caption.length > 120 || reel.caption.count { it == '\n' } >= 2) Text(
-                    if (expanded) "less" else "more", color = AppColors.content(Color.White.copy(alpha = 0.86f)), fontSize = 13.sp,
+                    appText(if (expanded) "less" else "more"), color = AppColors.content(Color.White.copy(alpha = 0.86f)), fontSize = 13.sp,
                     fontWeight = FontWeight.Bold, modifier = Modifier.heightIn(min = 32.dp).clickable { expanded = !expanded }.padding(top = 4.dp)
                 )
             }
@@ -130,7 +133,7 @@ internal fun ReelCard(
         if (active && love?.error != null) Row(Modifier.align(Alignment.TopCenter).padding(top = 76.dp, start = 20.dp, end = 20.dp)
             .background(AppColors.surface(Color(0xFFAE1C36)), androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).clickable(onClick = onClearError)
             .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(love.error, color = AppColors.content(Color.White), fontSize = 13.sp, modifier = Modifier.weight(1f))
+            Text(appText(love.error), color = AppColors.content(Color.White), fontSize = 13.sp, modifier = Modifier.weight(1f))
             Text(" ×", color = AppColors.content(Color.White), fontSize = 22.sp)
         }
     }
@@ -140,7 +143,7 @@ internal fun ReelCard(
 private fun ReelAction(icon: ImageVector, description: String, label: String, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
         ReelRoundButton(icon, description, onClick)
-        Text(label, color = AppColors.content(Color.White), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(appText(label), color = AppColors.content(Color.White), fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -150,7 +153,7 @@ internal fun ReelRoundButton(icon: ImageVector, description: String, onClick: ()
     tint: Color = Color.White, iconSize: Int = 25) {
     Box(modifier.clip(CircleShape).background(AppColors.surface(if (filled) Color.White.copy(alpha = 0.94f) else Color(0xFF1C1C1C).copy(alpha = 0.64f)))
         .border(1.dp, AppColors.outline(Color.White.copy(alpha = if (filled) 0.96f else 0.24f)), CircleShape)
-        .clickable(enabled = enabled, role = Role.Button, onClickLabel = description, onClick = onClick), contentAlignment = Alignment.Center) {
-        Icon(icon, description, tint = AppColors.content(tint), modifier = Modifier.size(iconSize.dp))
+        .clickable(enabled = enabled, role = Role.Button, onClickLabel = appText(description), onClick = onClick), contentAlignment = Alignment.Center) {
+        Icon(icon, appDescription(description), tint = AppColors.content(tint), modifier = Modifier.size(iconSize.dp))
     }
 }

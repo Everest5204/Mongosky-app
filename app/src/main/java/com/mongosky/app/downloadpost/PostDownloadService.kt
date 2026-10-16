@@ -1,5 +1,7 @@
 package com.mongosky.app.downloadpost
 
+import com.mongosky.app.language.appText
+
 import android.app.*
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -16,8 +18,8 @@ class PostDownloadService : Service() {
     override fun onCreate() {
         super.onCreate(); downloads = PostDownloads.get(this)
         val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel(CHANNEL, "Post downloads", NotificationManager.IMPORTANCE_LOW).apply {
-            description = "Progress for posts you save to Gallery"; setShowBadge(false)
+        manager.createNotificationChannel(NotificationChannel(CHANNEL, appText("Post downloads"), NotificationManager.IMPORTANCE_LOW).apply {
+            description = appText("Progress for posts you save to Gallery"); setShowBadge(false)
         })
         scope.launch { downloads.coordinator.state.collectLatest { rows ->
             val active = foregroundDownload(rows)
@@ -63,7 +65,7 @@ class PostDownloadService : Service() {
             DownloadPhase.CANCELLED -> "Download cancelled"; DownloadPhase.FAILED -> "Post download failed"
         }
         val builder = Notification.Builder(this, CHANNEL).setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle(title).setContentText(row.message ?: "${row.completed} of ${row.plan.count} files")
+            .setContentTitle(appText(title)).setContentText(appText(row.message ?: "${row.completed} of ${row.plan.count} files"))
             .setOnlyAlertOnce(true).setOngoing(row.active).setAutoCancel(!row.active)
         if (row.active) {
             builder.setProgress(100, ((row.fraction ?: 0f) * 100).toInt(), row.fraction == null)

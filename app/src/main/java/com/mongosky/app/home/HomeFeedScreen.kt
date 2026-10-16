@@ -3,6 +3,8 @@
 
 package com.mongosky.app.home
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import android.content.ActivityNotFoundException
@@ -107,7 +109,7 @@ fun HomeFeedScreen(
     var photoViewer by remember { mutableStateOf<PhotoViewerState?>(null) }
     var handledTopRequest by rememberSaveable { mutableStateOf(0) }
     val galleryDownloads = rememberGalleryDownloadActions()
-    LaunchedEffect(controls) { controls.notices.collect { snackbar.showSnackbar(it) } }
+    LaunchedEffect(controls) { controls.notices.collect { snackbar.showSnackbar(appText(it)) } }
     HomeFeedEffects(viewModel, listState)
     val preview = reelsPreviewViewModel.state
     val hasReelsPreview = state.posts.size >= HOME_REELS_AFTER_POSTS &&
@@ -144,12 +146,12 @@ fun HomeFeedScreen(
             putExtra(Intent.EXTRA_TITLE, "${post.author.displayName.ifBlank { "Mongosky" }}'s post")
             putExtra(Intent.EXTRA_TEXT, text)
         }
-        try { context.startActivity(Intent.createChooser(intent, "Share post")) }
-        catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar("No sharing app is available.") } }
+        try { context.startActivity(Intent.createChooser(intent, appText("Share post"))) }
+        catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) } }
     } }
     val copyPost: (HomePost) -> Unit = remember(clipboard, scope, snackbar) { { post ->
         clipboard.setText(AnnotatedString(postLink(post)))
-        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar("Link copied") }
+        if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar(appText("Link copied")) }
     } }
     val openPhotos: (List<FeedMedia>, Int) -> Unit = remember { { photos, index ->
         photoViewer = PhotoViewerState(photos, index)
@@ -178,7 +180,7 @@ fun HomeFeedScreen(
                 if (state.newPostsCount > 0) item(key = "new-posts", contentType = "notice") {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         TextButton(onClick = { viewModel.refresh(); scope.launch { listState.scrollToItem(0) } }) {
-                            Text("${state.newPostsCount} new ${if (state.newPostsCount == 1) "post" else "posts"}",
+                            Text(appText("${state.newPostsCount} new ${if (state.newPostsCount == 1) "post" else "posts"}"),
                                 color = AppColors.content(FeedColors.brand), fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -209,9 +211,9 @@ fun HomeFeedScreen(
                     item(key = "empty_feed", contentType = "notice") {
                         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 60.dp),
                             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("No posts yet", color = AppColors.content(FeedColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                            Text("New posts will appear here.", color = AppColors.content(FeedColors.muted), fontSize = 14.sp)
-                            TextButton(onClick = viewModel::refresh) { Text("Refresh") }
+                            Text(appText("No posts yet"), color = AppColors.content(FeedColors.text), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(appText("New posts will appear here."), color = AppColors.content(FeedColors.muted), fontSize = 14.sp)
+                            TextButton(onClick = viewModel::refresh) { Text(appText("Refresh")) }
                         }
                     }
                 }
@@ -220,8 +222,8 @@ fun HomeFeedScreen(
                         Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
                             when {
                                 state.loading -> FeedSpinner()
-                                state.hasMore -> TextButton(onClick = viewModel::loadMore) { Text("Load more", color = AppColors.content(FeedColors.muted), fontSize = 14.sp) }
-                                else -> Text("You're all caught up", color = AppColors.content(FeedColors.muted), fontSize = 13.sp)
+                                state.hasMore -> TextButton(onClick = viewModel::loadMore) { Text(appText("Load more"), color = AppColors.content(FeedColors.muted), fontSize = 14.sp) }
+                                else -> Text(appText("You're all caught up"), color = AppColors.content(FeedColors.muted), fontSize = 13.sp)
                             }
                         }
                     }

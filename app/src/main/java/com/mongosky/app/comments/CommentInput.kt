@@ -1,5 +1,8 @@
 package com.mongosky.app.comments
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -59,19 +62,19 @@ internal fun CommentInput(value: String, onValueChange: (String) -> Unit, placeh
                     RoundedCornerShape(if (compact) 14.dp else 24.dp))
                     .background(AppColors.surface(if (focused || compact) Color.White else CommentColors.input), RoundedCornerShape(if (compact) 14.dp else 24.dp))
                     .padding(horizontal = if (compact) 10.dp else 14.dp, vertical = 11.dp)) {
-                    if (value.isEmpty()) Text(placeholder, color = AppColors.content(CommentColors.placeholder),
+                    if (value.isEmpty()) Text(appText(placeholder), color = AppColors.content(CommentColors.placeholder),
                         fontSize = if (compact) 14.sp else 15.sp, lineHeight = 20.sp)
                     input()
                 }
             })
         onCancel?.let { cancel ->
             IconButton(onClick = cancel, enabled = !sending, modifier = Modifier.size(48.dp)) {
-                Icon(CommentIcons.close, "Cancel $submitLabel", Modifier.size(18.dp), tint = AppColors.content(CommentColors.muted))
+                Icon(CommentIcons.close, appDescription("Cancel $submitLabel"), Modifier.size(18.dp), tint = AppColors.content(CommentColors.muted))
             }
         }
         IconButton(onClick = onSend, enabled = canSend, modifier = Modifier.size(48.dp)) {
             if (sending) CircularProgressIndicator(Modifier.size(21.dp), color = AppColors.content(CommentColors.active), strokeWidth = 2.dp)
-            else Icon(CommentIcons.send, submitLabel, Modifier.size(if (compact) 22.dp else 25.dp),
+            else Icon(CommentIcons.send, appDescription(submitLabel), Modifier.size(if (compact) 22.dp else 25.dp),
                 tint = AppColors.content(if (canSend) CommentColors.active else Color(0xFFD8DCE2)))
         }
     }

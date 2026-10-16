@@ -1,5 +1,8 @@
 package com.mongosky.app.notifications
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -56,11 +59,11 @@ internal fun NotificationsScreen(viewModel: NotificationsViewModel, onBack: () -
         val compact = maxWidth<=360.dp
         Column(Modifier.fillMaxSize(),horizontalAlignment=Alignment.CenterHorizontally) {
             Row(Modifier.widthIn(max=680.dp).fillMaxWidth().heightIn(min=60.dp).padding(horizontal=12.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically) {
-                IconButton(onClick=onBack,modifier=Modifier.size(48.dp)) { Icon(NotificationIcons.back,"Go back",tint=AppColors.content(NotificationColors.secondary)) }
-                Text("Notification",Modifier.weight(1f),fontSize=18.sp,fontWeight=FontWeight.Bold,color=AppColors.content(NotificationColors.text),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+                IconButton(onClick=onBack,modifier=Modifier.size(48.dp)) { Icon(NotificationIcons.back,appDescription("Go back"),tint=AppColors.content(NotificationColors.secondary)) }
+                Text(appText("Notification"),Modifier.weight(1f),fontSize=18.sp,fontWeight=FontWeight.Bold,color=AppColors.content(NotificationColors.text),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
                 IconButton(onClick=viewModel.controller::refresh,enabled=!state.loading && state.connection!=NotificationConnection.UNAUTHORIZED,modifier=Modifier.size(48.dp)) {
                     if(state.loading) CircularProgressIndicator(Modifier.size(20.dp),color=AppColors.content(NotificationColors.muted),strokeWidth=1.8.dp)
-                    else Icon(NotificationIcons.refresh,"Refresh notifications",Modifier.size(20.dp),tint=AppColors.content(NotificationColors.secondary))
+                    else Icon(NotificationIcons.refresh,appDescription("Refresh notifications"),Modifier.size(20.dp),tint=AppColors.content(NotificationColors.secondary))
                 }
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(AppColors.outline(NotificationColors.line)))
@@ -69,7 +72,7 @@ internal fun NotificationsScreen(viewModel: NotificationsViewModel, onBack: () -
             else if(!state.loaded) Box(Modifier.weight(1f),contentAlignment=Alignment.Center) {
                 Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(Modifier.size(28.dp),color=AppColors.content(NotificationColors.muted),strokeWidth=1.8.dp)
-                    Text("Loading notifications…",fontSize=14.sp,color=AppColors.content(NotificationColors.muted))
+                    Text(appText("Loading notifications…"),fontSize=14.sp,color=AppColors.content(NotificationColors.muted))
                 }
             } else LazyColumn(Modifier.widthIn(max=680.dp).fillMaxWidth().weight(1f),state=list) {
                 item("permission") { NotificationPermission() }
@@ -81,7 +84,7 @@ internal fun NotificationsScreen(viewModel: NotificationsViewModel, onBack: () -
                 if(state.items.isEmpty()) item("empty") {
                     Column(Modifier.fillParentMaxHeight(0.75f).fillMaxWidth().padding(24.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(18.dp,Alignment.CenterVertically)) {
                         Icon(NotificationIcons.bell,null,Modifier.size(64.dp),tint=AppColors.content(Color(0xFF9CA3AF)))
-                        Text("No notification yet",fontSize=16.sp,color=AppColors.content(Color(0xFF6B7280)))
+                        Text(appText("No notification yet"),fontSize=16.sp,color=AppColors.content(Color(0xFF6B7280)))
                     }
                 }
                 items(state.items,key={it.id},contentType={"notification"}) { item ->
@@ -95,7 +98,7 @@ internal fun NotificationsScreen(viewModel: NotificationsViewModel, onBack: () -
                         if(state.moreError!=null) NotificationNotice(state.moreError.orEmpty(),true)
                         Button(onClick=viewModel.controller::loadMore,enabled=!state.loadingMore && !state.loading,
                             colors=ButtonDefaults.buttonColors(containerColor=AppColors.fill(Color(0xFFF1F5F9)),contentColor=AppColors.content(NotificationColors.secondary)),shape=RoundedCornerShape(10.dp)) {
-                            Text(if(state.loadingMore)"Loading…" else if(state.moreError!=null)"Try again" else "Load more",fontSize=14.sp)
+                            Text(appText(if(state.loadingMore)"Loading…" else if(state.moreError!=null)"Try again" else "Load more"),fontSize=14.sp)
                         }
                     }
                 }
@@ -106,15 +109,15 @@ internal fun NotificationsScreen(viewModel: NotificationsViewModel, onBack: () -
 @Composable
 private fun ColumnScope.NotificationState(title:String,body:String,action:String,onAction:()->Unit) {
     Column(Modifier.fillMaxWidth().weight(1f).padding(24.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp,Alignment.CenterVertically)) {
-        Text(title,color=AppColors.content(NotificationColors.secondary),fontSize=16.sp,fontWeight=FontWeight.SemiBold)
-        Text(body,color=AppColors.content(NotificationColors.muted),fontSize=14.sp,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
-        TextButton(onClick=onAction) { Text(action,color=AppColors.content(NotificationColors.blue)) }
+        Text(appText(title),color=AppColors.content(NotificationColors.secondary),fontSize=16.sp,fontWeight=FontWeight.SemiBold)
+        Text(appText(body),color=AppColors.content(NotificationColors.muted),fontSize=14.sp,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+        TextButton(onClick=onAction) { Text(appText(action),color=AppColors.content(NotificationColors.blue)) }
     }
 }
 @Composable
 private fun NotificationNotice(text:String,error:Boolean=false,onRetry:(()->Unit)?=null) {
     Column(Modifier.padding(16.dp,12.dp).fillMaxWidth().background(AppColors.surface(if(error)Color(0xFFFFF1F2) else Color(0xFFF1F5F9)),RoundedCornerShape(8.dp)).padding(12.dp,10.dp)) {
-        Text(text,fontSize=13.sp,lineHeight=20.sp,color=AppColors.content(if(error)Color(0xFF9F1239) else NotificationColors.muted))
-        if(onRetry!=null) TextButton(onClick=onRetry) { Text("Retry",color=AppColors.content(NotificationColors.blue)) }
+        Text(appText(text),fontSize=13.sp,lineHeight=20.sp,color=AppColors.content(if(error)Color(0xFF9F1239) else NotificationColors.muted))
+        if(onRetry!=null) TextButton(onClick=onRetry) { Text(appText("Retry"),color=AppColors.content(NotificationColors.blue)) }
     }
 }

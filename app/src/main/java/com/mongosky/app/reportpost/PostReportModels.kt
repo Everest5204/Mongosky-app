@@ -1,5 +1,7 @@
 package com.mongosky.app.reportpost
 
+import com.mongosky.app.language.appText
+
 import androidx.compose.runtime.Immutable
 import com.mongosky.app.post.FeedSource
 import com.mongosky.app.post.HomePost
@@ -27,7 +29,7 @@ internal data class ReportTarget(val postId: String, val source: String, val aut
     companion object {
         fun from(post: HomePost) = ReportTarget(post.id,
             if (post.source == FeedSource.TEXT) "text" else "media",
-            post.author.displayName.ifBlank { "Mongosky user" })
+            post.author.displayName.ifBlank { appText("Mongosky user") })
     }
 }
 

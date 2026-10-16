@@ -1,5 +1,7 @@
 package com.mongosky.app.reactions
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -73,22 +75,22 @@ internal fun ReactionButton(state: PostReactionState, enabled: Boolean, onReact:
             }
             .semantics {
                 role = Role.Button
-                contentDescription = when {
+                contentDescription = appText(when {
                     state.saving -> "Saving reaction"
                     active == null -> "Love. Hold and slide to choose a reaction"
-                    else -> "${active.label} selected. Hold and slide to choose a reaction"
-                }
+                    else -> "${appText(active.label)} selected. Hold and slide to choose a reaction"
+                })
                 if (!interactive) disabled()
                 else {
                     onClick { picker.dismiss(); quickReact(); true }
-                    onLongClick(label = "Choose reaction") { picker.showChoices(); true }
+                    onLongClick(label = appText("Choose reaction")) { picker.showChoices(); true }
                 }
             }.focusable(interactive, interactions),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             if (active == null) Icon(FeedIcons.heart, null, modifier = Modifier.size(22.dp), tint = AppColors.content(FeedColors.muted))
             else Text(active.emoji, fontSize = 21.sp)
             Spacer(Modifier.width(6.dp))
-            Text(active?.label ?: "Love", color = AppColors.content(if (active != null) FeedColors.brand else FeedColors.muted),
+            Text(appText(active?.label ?: "Love"), color = AppColors.content(if (active != null) FeedColors.brand else FeedColors.muted),
                 fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
         }
         if (interactive) ReactionPicker(picker, active, onSelect = { select(it) })

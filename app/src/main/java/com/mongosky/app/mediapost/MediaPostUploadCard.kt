@@ -1,5 +1,8 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.BorderStroke
@@ -111,7 +114,7 @@ fun MediaPostUploadCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = title,
+                        text = appText(title),
                         color = AppColors.content(if (failure == null) {
                             UploadText
                         } else {
@@ -125,7 +128,7 @@ fun MediaPostUploadCard(
                     )
 
                     Text(
-                        text = mediaLabel(draft),
+                        text = appText(mediaLabel(draft)),
                         color = AppColors.content(UploadMuted),
                         fontSize = 13.sp
                     )
@@ -144,7 +147,7 @@ fun MediaPostUploadCard(
 
             if (failure != null) {
                 Text(
-                    text = failure.message,
+                    text = appText(failure.message),
                     color = AppColors.content(UploadError),
                     fontSize = 14.sp,
                     modifier = Modifier.semantics {
@@ -182,20 +185,20 @@ private fun UploadThumbnail(draft: MediaPostDraft) {
         if (media?.kind == PostMediaKind.VIDEO) {
             Icon(
                 imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Selected video",
+                contentDescription = appDescription("Selected video"),
                 tint = AppColors.content(UploadGreen),
                 modifier = Modifier.size(30.dp)
             )
         } else if (media != null) {
             Text(
-                text = "Photo",
+                text = appText("Photo"),
                 color = AppColors.content(UploadMuted),
                 fontSize = 12.sp
             )
 
             AsyncImage(
                 model = media.uri,
-                contentDescription = "Selected photo",
+                contentDescription = appDescription("Selected photo"),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
@@ -244,7 +247,7 @@ private fun UploadProgress(state: MediaPostUploadState) {
     }
 
     Text(
-        text = message,
+        text = appText(message),
         color = AppColors.content(UploadMuted),
         fontSize = 13.sp
     )
@@ -301,7 +304,7 @@ private fun UploadFailureActions(
                         containerColor = AppColors.fill(UploadGreen)
                     )
                 ) {
-                    Text("Sign in again")
+                    Text(appText("Sign in again"))
                 }
             }
 
@@ -313,14 +316,14 @@ private fun UploadFailureActions(
                     )
                 ) {
                     Text(
-                        if (
+                        appText(if (
                             failure.draft.media.firstOrNull()?.kind ==
                             PostMediaKind.VIDEO
                         ) {
                             "Check Reels"
                         } else {
                             "Check feed"
-                        }
+                        })
                     )
                 }
             }
@@ -335,11 +338,11 @@ private fun UploadFailureActions(
                         )
                     ) {
                         Text(
-                            if (retryIn > 0) {
+                            appText(if (retryIn > 0) {
                                 "Retry in ${retryIn}s"
                             } else {
                                 "Retry"
-                            }
+                            })
                         )
                     }
                 }
@@ -350,7 +353,7 @@ private fun UploadFailureActions(
                         contentColor = AppColors.content(UploadGreen)
                     )
                 ) {
-                    Text("Edit post")
+                    Text(appText("Edit post"))
                 }
             }
         }
@@ -361,7 +364,7 @@ private fun UploadFailureActions(
                 contentColor = AppColors.content(UploadMuted)
             )
         ) {
-            Text("Dismiss")
+            Text(appText("Dismiss"))
         }
     }
 }

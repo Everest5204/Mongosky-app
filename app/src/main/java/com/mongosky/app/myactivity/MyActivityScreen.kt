@@ -1,6 +1,9 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.mongosky.app.myactivity
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.activity.compose.BackHandler
@@ -40,34 +43,34 @@ import kotlinx.coroutines.flow.distinctUntilChanged
             .distinctUntilChanged().collect(viewModel::setBrowsing)
     }
     LaunchedEffect(state.filter) { list.scrollToItem(0) }
-    LaunchedEffect(state.notice) { state.notice?.let { viewModel.consumeNotice(); snackbar.showSnackbar(it) } }
+    LaunchedEffect(state.notice) { state.notice?.let { viewModel.consumeNotice(); snackbar.showSnackbar(appText(it)) } }
     Scaffold(containerColor = AppColors.surface(ActivityBackground), snackbarHost = { SnackbarHost(snackbar) },
-        topBar = { TopAppBar(title = { Text("My Activity",fontWeight = FontWeight.SemiBold,fontSize = 21.sp) },
-            navigationIcon = { IconButton(onBack, enabled = enabled && !state.saving) { Icon(ActivityIcons.back,"Back") } },
-            actions = { IconButton(viewModel::refresh, enabled = canAct && !state.loading && !state.refreshing) { Icon(ActivityIcons.refresh,"Refresh activity") } },
+        topBar = { TopAppBar(title = { Text(appText("My Activity"),fontWeight = FontWeight.SemiBold,fontSize = 21.sp) },
+            navigationIcon = { IconButton(onBack, enabled = enabled && !state.saving) { Icon(ActivityIcons.back,appDescription("Back")) } },
+            actions = { IconButton(viewModel::refresh, enabled = canAct && !state.loading && !state.refreshing) { Icon(ActivityIcons.refresh,appDescription("Refresh activity")) } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = AppColors.surface(Color.White), titleContentColor = AppColors.content(ActivityText))) }) { inset ->
         Box(Modifier.fillMaxSize().padding(inset), contentAlignment = Alignment.TopCenter) {
             Column(Modifier.widthIn(max = 680.dp).fillMaxWidth()) {
                 Column(Modifier.fillMaxWidth().background(AppColors.surface(Color.White)).padding(start = 16.dp, end = 16.dp, bottom = 10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                         Icon(ActivityIcons.lock,null,tint = AppColors.content(ActivityMuted),modifier = Modifier.size(14.dp))
-                        Text("Only you can see this activity",fontSize = 12.sp,color = AppColors.content(ActivityMuted))
+                        Text(appText("Only you can see this activity"),fontSize = 12.sp,color = AppColors.content(ActivityMuted))
                     }
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ActivityCategory.entries.forEach { c ->
                             FilterChip(state.filter.category == c,{ viewModel.select(c) },enabled = canAct,
-                                label = { Text(c.label) },colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppColors.surface(Color(0xFFE0F3EB)),selectedLabelColor = AppColors.content(ActivityGreen)))
+                                label = { Text(appText(c.label)) },colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppColors.surface(Color(0xFFE0F3EB)),selectedLabelColor = AppColors.content(ActivityGreen)))
                         }
                     }
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         ActivityRange.entries.forEach { r ->
-                            FilterChip(state.filter.range == r,{viewModel.select(r)},enabled = canAct,label = { Text(r.label,fontSize = 12.sp) },
+                            FilterChip(state.filter.range == r,{viewModel.select(r)},enabled = canAct,label = { Text(appText(r.label),fontSize = 12.sp) },
                                 colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppColors.surface(ActivityBackground),selectedLabelColor = AppColors.content(ActivityText)))
                         }
                     }
                 }
                 if (state.updatesAvailable && !state.sessionExpired) TextButton(viewModel::refresh,enabled = canAct,modifier = Modifier.fillMaxWidth()) {
-                    Text("Activity updated · Tap to refresh",color = AppColors.content(ActivityGreen))
+                    Text(appText("Activity updated · Tap to refresh"),color = AppColors.content(ActivityGreen))
                 }
                 PullToRefreshBox(state.refreshing,onRefresh = { if (canAct) viewModel.refresh() },modifier = Modifier.weight(1f)) {
                     LazyColumn(state = list,contentPadding = PaddingValues(start = 16.dp,end = 16.dp,top = 16.dp,bottom = 24.dp),
@@ -76,9 +79,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
                             if (!state.loading && !state.sessionExpired && state.error == null) {
                                 val count = if (state.filter.category == ActivityCategory.ALL) state.counts.values.sum() else state.counts[state.filter.category] ?: 0
                                 Row(Modifier.fillMaxWidth().padding(bottom = 4.dp),horizontalArrangement = Arrangement.SpaceBetween,verticalAlignment = Alignment.CenterVertically) {
-                                    Text(if (state.filter.category == ActivityCategory.ALL) "Recent activity" else state.filter.category.label,
+                                    Text(appText(if (state.filter.category == ActivityCategory.ALL) "Recent activity" else state.filter.category.label),
                                         fontSize = 15.sp,fontWeight = FontWeight.SemiBold,color = AppColors.content(ActivityText),modifier = Modifier.semantics { heading() })
-                                    Text("$count ${if (count == 1L) "item" else "items"}",fontSize = 12.sp,color = AppColors.content(ActivityMuted))
+                                    Text(appText("$count ${if (count == 1L) "item" else "items"}"),fontSize = 12.sp,color = AppColors.content(ActivityMuted))
                                 }
                             }
                         }
@@ -93,8 +96,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
                                 val date = row.createdAt.atZone(zone).toLocalDate()
                                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                     if (index == 0 || state.items[index - 1].createdAt.atZone(zone).toLocalDate() != date) {
-                                        val title = when (date) { today -> "Today"; today.minusDays(1) -> "Yesterday"; else -> date.format(DateTimeFormatter.ofPattern("d MMM yyyy")) }
-                                        Text(title,fontSize = 12.sp,fontWeight = FontWeight.SemiBold,color = AppColors.content(ActivityMuted),
+                                        val title = when (date) { today -> "Today"; today.minusDays(1) -> "Yesterday"; else -> date.format(DateTimeFormatter.ofPattern("d MMM yyyy").withLocale(java.util.Locale.forLanguageTag(com.mongosky.app.language.AppLanguage.current.tag))) }
+                                        Text(appText(title),fontSize = 12.sp,fontWeight = FontWeight.SemiBold,color = AppColors.content(ActivityMuted),
                                             modifier = Modifier.padding(top = if (index == 0) 0.dp else 10.dp).semantics { heading() })
                                     }
                                     ActivityRow(row,canAct,state.targetLoading == row.key,{viewModel.open(row)},{viewModel.askToRemove(row)})
@@ -105,8 +108,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
                                     state.loadingMore -> Box(Modifier.fillMaxWidth().padding(18.dp),contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp),color = AppColors.content(ActivityGreen),strokeWidth = 2.dp) }
                                     state.pageError != null -> ActivityMessage("Couldn't load more",state.pageError,
                                         if (state.hasMore) "Try again" else "Refresh",if (state.hasMore) viewModel::loadMore else viewModel::refresh)
-                                    state.hasMore -> { LaunchedEffect(state.items.lastOrNull()?.key,state.filter,canAct) { if (canAct) viewModel.loadMore() }; TextButton(viewModel::loadMore,enabled = canAct,modifier = Modifier.fillMaxWidth()) { Text("Load more",color = AppColors.content(ActivityGreen)) } }
-                                    state.items.isNotEmpty() -> Text("You're all caught up",fontSize = 12.sp,color = AppColors.content(ActivityMuted),modifier = Modifier.fillMaxWidth().padding(18.dp),textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                    state.hasMore -> { LaunchedEffect(state.items.lastOrNull()?.key,state.filter,canAct) { if (canAct) viewModel.loadMore() }; TextButton(viewModel::loadMore,enabled = canAct,modifier = Modifier.fillMaxWidth()) { Text(appText("Load more"),color = AppColors.content(ActivityGreen)) } }
+                                    state.items.isNotEmpty() -> Text(appText("You're all caught up"),fontSize = 12.sp,color = AppColors.content(ActivityMuted),modifier = Modifier.fillMaxWidth().padding(18.dp),textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                                 }
                             }
                         }
@@ -116,9 +119,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
         }
     }
     state.confirmation?.let { item -> AlertDialog(onDismissRequest = viewModel::dismissConfirmation,
-        title = { Text("${item.action.label}?") },text = { Text(item.action.confirmation,lineHeight = 23.sp) },
+        title = { Text(appText("${appText(item.action.label)}?")) },text = { Text(appText(item.action.confirmation),lineHeight = 23.sp) },
         confirmButton = { TextButton(viewModel::confirmRemove,enabled = enabled && !state.saving) {
             if (state.saving) CircularProgressIndicator(Modifier.size(20.dp),strokeWidth = 2.dp)
-            else Text(item.action.label,color = MaterialTheme.colorScheme.error)
-        } },dismissButton = { TextButton(viewModel::dismissConfirmation,enabled = !state.saving) { Text("Cancel") } },containerColor = AppColors.surface(Color.White),shape = RoundedCornerShape(22.dp)) }
+            else Text(appText(item.action.label),color = MaterialTheme.colorScheme.error)
+        } },dismissButton = { TextButton(viewModel::dismissConfirmation,enabled = !state.saving) { Text(appText("Cancel")) } },containerColor = AppColors.surface(Color.White),shape = RoundedCornerShape(22.dp)) }
 }

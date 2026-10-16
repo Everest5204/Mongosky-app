@@ -2,6 +2,9 @@
 
 package com.mongosky.app.reactions
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -104,15 +107,15 @@ private fun ReactionPeoplePanel(
         Row(Modifier.fillMaxWidth().heightIn(min = if (mobile) 52.dp else 54.dp)
             .padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Reactions", color = AppColors.content(ReactionText), fontSize = 18.sp, fontWeight = FontWeight(850))
+            Text(appText("Reactions"), color = AppColors.content(ReactionText), fontSize = 18.sp, fontWeight = FontWeight(850))
             IconButton(onClick = onDismiss, modifier = Modifier.size(38.dp)) {
-                Icon(FeedIcons.close, "Close reactions", tint = AppColors.content(ReactionText), modifier = Modifier.size(24.dp))
+                Icon(FeedIcons.close, appDescription("Close reactions"), tint = AppColors.content(ReactionText), modifier = Modifier.size(24.dp))
             }
         }
         ReactionDivider()
         val tabHeight = if (mobile) 54.dp else 56.dp
         Row(Modifier.fillMaxWidth().height(tabHeight).horizontalScroll(rememberScrollState())
-            .padding(horizontal = 14.dp).semantics { contentDescription = "Reaction filters" },
+            .padding(horizontal = 14.dp).semantics { contentDescription = appText("Reaction filters") },
             horizontalArrangement = Arrangement.spacedBy(if (mobile) 16.dp else 18.dp),
             verticalAlignment = Alignment.CenterVertically) {
             if (state.total > 0) ReactionFilterTab(null, state.total, state.filter == null, tabHeight, onFilter)
@@ -127,7 +130,7 @@ private fun ReactionPeoplePanel(
             state.error != null -> Column(Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 ReactionListNotice(state.error)
-                TextButton(onClick = onRetry) { Text("Retry", color = AppColors.content(ReactionActive)) }
+                TextButton(onClick = onRetry) { Text(appText("Retry"), color = AppColors.content(ReactionActive)) }
             }
             state.people.isEmpty() -> ReactionListNotice("No reactions found.")
             else -> LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false),
@@ -149,12 +152,12 @@ private fun ReactionFilterTab(
     val color = if (selected) ReactionActive else ReactionMuted
     Row(Modifier.height(height)
         .selectable(selected = selected, role = Role.Tab, onClick = { onSelect(reaction) })
-        .semantics { contentDescription = "${reaction?.label ?: "All"}, $count reactions" }
+        .semantics { contentDescription = appText("${reaction?.label ?: "All"}, $count reactions") }
         .drawBehind {
             if (selected) drawRect(ReactionActive, topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - 3.dp.toPx()),
                 size = androidx.compose.ui.geometry.Size(size.width, 3.dp.toPx()))
         }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-        Text(reaction?.emoji ?: "All", color = AppColors.content(color), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+        Text(appText(reaction?.emoji ?: "All"), color = AppColors.content(color), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
         Text(count.toString(), color = AppColors.content(color), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold)
     }
 }
@@ -163,10 +166,10 @@ private fun ReactionFilterTab(
 private fun ReactionPersonRow(
     person: ReactionPerson, verified: Boolean, mobile: Boolean, badgeSize: Dp, onDismiss: () -> Unit
 ) {
-    val name = person.author.displayName.ifBlank { "Mongosky User" }
+    val name = person.author.displayName.ifBlank { appText("Mongosky User") }
     Row(Modifier.fillMaxWidth().heightIn(min = if (mobile) 66.dp else 68.dp)
         .profileLink(person.author.id, person.author, beforeOpen = onDismiss)
-        .semantics { contentDescription = "Open $name's profile, ${person.reaction.label} reaction" }
+        .semantics { contentDescription = appText("Open $name's profile, ${appText(person.reaction.label)} reaction") }
         .padding(horizontal = if (mobile) 14.dp else 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(13.dp)) {
         Box(Modifier.size(46.dp)) {
@@ -190,7 +193,7 @@ private fun ReactionPersonRow(
             Text(name, modifier = Modifier.weight(1f, fill = false), color = AppColors.content(ReactionText),
                 fontSize = if (mobile) 15.sp else 16.sp, fontWeight = FontWeight(850),
                 lineHeight = if (mobile) 18.sp else 19.2.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (verified) Icon(ReactionPeopleIcons.seal, "Verified account", tint = Color.Unspecified,
+            if (verified) Icon(ReactionPeopleIcons.seal, appDescription("Verified account"), tint = Color.Unspecified,
                 modifier = Modifier.size(badgeSize))
         }
     }
@@ -198,7 +201,7 @@ private fun ReactionPersonRow(
 
 @Composable
 private fun ReactionListNotice(text: String) {
-    Text(text, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 36.dp),
+    Text(appText(text), modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 36.dp),
         color = AppColors.content(ReactionMuted), fontSize = 14.sp, fontWeight = FontWeight(650),
         textAlign = androidx.compose.ui.text.style.TextAlign.Center)
 }

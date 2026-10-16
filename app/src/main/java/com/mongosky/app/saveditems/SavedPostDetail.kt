@@ -2,6 +2,9 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.saveditems
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.activity.compose.BackHandler
@@ -64,9 +67,9 @@ internal fun SavedPostDetail(
                 putExtra(Intent.EXTRA_TEXT, "https://mongosky.com/post/${post.id}")
             }
             try {
-                context.startActivity(Intent.createChooser(intent, "Share post"))
+                context.startActivity(Intent.createChooser(intent, appText("Share post")))
             } catch (_: ActivityNotFoundException) {
-                scope.launch { snackbar.showSnackbar("No sharing app is available.") }
+                scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) }
             }
         },
         onCopyLink = { clipboard.setText(AnnotatedString("https://mongosky.com/post/${post.id}")) },
@@ -81,10 +84,10 @@ internal fun SavedPostDetail(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Saved post") },
+                title = { Text(appText("Saved post")) },
                 navigationIcon = {
                     IconButton(onBack, enabled = enabled) {
-                        Icon(SavedIcons.back, "Back to saved items")
+                        Icon(SavedIcons.back, appDescription("Back to saved items"))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.surface),

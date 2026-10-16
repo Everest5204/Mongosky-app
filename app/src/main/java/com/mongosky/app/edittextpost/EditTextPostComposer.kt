@@ -1,5 +1,7 @@
 package com.mongosky.app.edittextpost
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.editpost.*
@@ -56,10 +58,10 @@ internal fun EditTextPostComposer(state: EditTextPostState, onText: (String) -> 
                 textStyle = style, cursorBrush = SolidColor(color),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 24.dp)
-                    .heightIn(max = height - 48.dp).semantics { contentDescription = "Edit text post" },
+                    .heightIn(max = height - 48.dp).semantics { contentDescription = appText("Edit text post") },
                 decorationBox = { field ->
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        if (state.text.isEmpty()) Text("Write something...", style = style.copy(color = color.copy(alpha = 0.5f)))
+                        if (state.text.isEmpty()) Text(appText("Write something..."), style = style.copy(color = color.copy(alpha = 0.5f)))
                         field()
                     }
                 })

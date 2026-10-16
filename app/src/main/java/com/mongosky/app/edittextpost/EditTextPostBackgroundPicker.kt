@@ -1,5 +1,8 @@
 package com.mongosky.app.edittextpost
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.editpost.*
@@ -43,14 +46,14 @@ internal fun EditTextPostBackgroundPicker(state: EditTextPostState, onPreset: (T
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Icon(EditPostIcons.palette, null, tint = AppColors.content(EditPostColors.text), modifier = Modifier.size(17.dp))
             Spacer(Modifier.width(7.dp))
-            Text("Background", color = AppColors.content(EditPostColors.text), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold,
+            Text(appText("Background"), color = AppColors.content(EditPostColors.text), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.weight(1f))
             Text("${state.limit - state.length}", color = AppColors.content(if (state.limit - state.length < 60) EditPostColors.error else EditPostColors.muted),
                 fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             item("back") { IconButton(onBack, enabled = !state.saving, modifier = Modifier.size(48.dp)) {
-                Icon(FeedIcons.back, "Go back", tint = AppColors.content(EditPostColors.muted), modifier = Modifier.size(20.dp))
+                Icon(FeedIcons.back, appDescription("Go back"), tint = AppColors.content(EditPostColors.muted), modifier = Modifier.size(20.dp))
             } }
             items(presets, key = { it.id }) { preset ->
                 val chosen = state.background == preset.background
@@ -65,7 +68,7 @@ internal fun EditTextPostBackgroundPicker(state: EditTextPostState, onPreset: (T
                 }
             }
             item("more") { IconButton({ all = !all }, enabled = state.editable, modifier = Modifier.size(48.dp)) {
-                Icon(EditPostIcons.grid, if (all) "Show fewer backgrounds" else "Show more backgrounds",
+                Icon(EditPostIcons.grid, appDescription(if (all) "Show fewer backgrounds" else "Show more backgrounds"),
                     tint = AppColors.content(if (all) EditPostColors.green else EditPostColors.muted), modifier = Modifier.size(20.dp))
             } }
         }

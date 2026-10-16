@@ -1,5 +1,7 @@
 package com.mongosky.app.changename
 
+import com.mongosky.app.language.appText
+
 import java.time.Instant
 
 internal data class NameStatus(val first: String, val last: String, val canChange: Boolean, val next: Instant?)
@@ -41,5 +43,5 @@ internal fun remainingTime(next: Instant, now: Instant): String {
     val values = listOf(seconds / 86400, seconds % 86400 / 3600, seconds % 3600 / 60, seconds % 60)
     val labels = listOf("day", "hour", "minute", "second")
     val start = values.indexOfFirst { it > 0 }.let { if (it < 0) 3 else it }
-    return (start..3).joinToString(", ") { "${values[it]} ${labels[it]}${if (values[it] == 1L) "" else "s"}" }
+    return (start..3).joinToString(", ") { appText("${values[it]} ${labels[it]}${if (values[it] == 1L) "" else "s"}") }
 }

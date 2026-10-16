@@ -2,6 +2,9 @@
 
 package com.mongosky.app.post
 
+import com.mongosky.app.language.appText
+import com.mongosky.app.language.appDescription
+
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.saveditems.SavedDropdownAction
@@ -88,23 +91,23 @@ internal fun PostHeader(author: FeedAuthor, createdAt: Instant, now: Instant, ac
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         PostAvatar(author, Modifier.size(44.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(author.displayName.ifBlank { "Mongosky User" }, color = AppColors.content(FeedColors.text), fontSize = 15.sp,
+            Text(author.displayName.ifBlank { appText("Mongosky User") }, color = AppColors.content(FeedColors.text), fontSize = 15.sp,
                 fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.profileLink(author.id, author))
-            Text("$action · ${postTimeAgo(createdAt, now)}", color = AppColors.content(FeedColors.muted), fontSize = 12.sp,
+            Text("${appText(action)} · ${appText(postTimeAgo(createdAt, now))}", color = AppColors.content(FeedColors.muted), fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Box {
             IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(48.dp)) {
-                Icon(FeedIcons.more, "Post options", tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(22.dp))
+                Icon(FeedIcons.more, appDescription("Post options"), tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(22.dp))
             }
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false },
                 shape = RoundedCornerShape(16.dp), containerColor = AppColors.surface(Color.White), tonalElevation = 0.dp) {
                 postId?.let { SavedDropdownAction(it) { menuOpen = false } }
-                DropdownMenuItem(text = { Text("Copy link", fontSize = 15.sp) }, onClick = { menuOpen = false; actions.onCopyLink() })
-                DropdownMenuItem(text = { Text("Share", fontSize = 15.sp) }, onClick = { menuOpen = false; actions.onShare() })
+                DropdownMenuItem(text = { Text(appText("Copy link"), fontSize = 15.sp) }, onClick = { menuOpen = false; actions.onCopyLink() })
+                DropdownMenuItem(text = { Text(appText("Share"), fontSize = 15.sp) }, onClick = { menuOpen = false; actions.onShare() })
                 actions.onReport?.let { report ->
-                    DropdownMenuItem(text = { Text("Report", fontSize = 15.sp) }, onClick = { menuOpen = false; report() })
+                    DropdownMenuItem(text = { Text(appText("Report"), fontSize = 15.sp) }, onClick = { menuOpen = false; report() })
                 }
             }
         }
@@ -137,8 +140,8 @@ internal fun PostFooter(state: PostReactionState, commentsCount: Long, enabled: 
         }
         if (state.error != null) {
             Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(state.error, color = AppColors.content(FeedColors.muted), fontSize = 12.sp, lineHeight = 17.sp, modifier = Modifier.weight(1f))
-                TextButton(onClick = actions.onRetryReaction, enabled = enabled && !state.loading && !state.saving) { Text("Retry", fontSize = 13.sp) }
+                Text(appText(state.error), color = AppColors.content(FeedColors.muted), fontSize = 12.sp, lineHeight = 17.sp, modifier = Modifier.weight(1f))
+                TextButton(onClick = actions.onRetryReaction, enabled = enabled && !state.loading && !state.saving) { Text(appText("Retry"), fontSize = 13.sp) }
             }
         }
     }
@@ -147,11 +150,11 @@ internal fun PostFooter(state: PostReactionState, commentsCount: Long, enabled: 
 @Composable
 private fun FooterButton(icon: ImageVector, label: String, description: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
     Row(modifier.height(54.dp).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-        .semantics { contentDescription = description }.padding(horizontal = 3.dp),
+        .semantics { contentDescription = appText(description) }.padding(horizontal = 3.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
         Icon(icon, null, tint = AppColors.content(FeedColors.muted), modifier = Modifier.size(21.dp))
         Spacer(Modifier.width(6.dp))
-        Text(label, color = AppColors.content(FeedColors.muted), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+        Text(appText(label), color = AppColors.content(FeedColors.muted), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
@@ -169,7 +172,7 @@ internal fun PostCaption(caption: String) {
             maxLines = if (expanded) Int.MAX_VALUE else 5, overflow = TextOverflow.Ellipsis,
             onTextLayout = { if (!expanded) overflow = it.hasVisualOverflow })
         if (expanded || overflow) {
-            Text(if (expanded) "See less" else "See more", color = AppColors.content(FeedColors.muted), fontSize = 14.sp,
+            Text(appText(if (expanded) "See less" else "See more"), color = AppColors.content(FeedColors.muted), fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold, modifier = Modifier.clip(RoundedCornerShape(6.dp))
                     .clickable { expanded = !expanded }.padding(vertical = 8.dp))
         }

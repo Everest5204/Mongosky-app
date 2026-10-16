@@ -1,5 +1,7 @@
 package com.mongosky.app.deleteaccount
 
+import com.mongosky.app.language.appText
+
 import com.mongosky.app.darkmode.AppColors
 
 import androidx.compose.foundation.background
@@ -67,7 +69,7 @@ internal fun DeleteAccountDialog(
                     Spacer(Modifier.height(16.dp))
                     Column(Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
                         horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(title, textAlign = TextAlign.Center, fontFamily = FontFamily.SansSerif, fontSize = 20.sp,
+                        Text(appText(title), textAlign = TextAlign.Center, fontFamily = FontFamily.SansSerif, fontSize = 20.sp,
                             lineHeight = 28.sp, letterSpacing = (-0.5).sp, fontWeight = FontWeight.SemiBold,
                             color = AppColors.content(DeletionColors.slate900), modifier = Modifier.semantics { heading() })
                         Spacer(Modifier.height(12.dp))
@@ -104,7 +106,7 @@ internal fun DeleteAccountDialog(
                                 CircularProgressIndicator(Modifier.size(16.dp), color = AppColors.content(DeletionColors.white), strokeWidth = 2.dp)
                                 Spacer(Modifier.width(8.dp))
                             }
-                            Text(if (state.sessionChanged) "Close" else if (state.sessionExpired) "Sign in again" else "Continue",
+                            Text(appText(if (state.sessionChanged) "Close" else if (state.sessionExpired) "Sign in again" else "Continue"),
                                 fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold)
                         }
                     } else {
@@ -112,7 +114,7 @@ internal fun DeleteAccountDialog(
                             Button(onClick = onDiscard, enabled = !hostBusy, modifier = Modifier.weight(1f).heightIn(min = 48.dp).focusRequester(actionFocus),
                                 shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.fill(DeletionColors.slate100), contentColor = AppColors.content(DeletionColors.slate700))) {
-                                Text(if (busy) "Close" else "Discard", fontFamily = FontFamily.SansSerif, fontSize = 14.sp,
+                                Text(appText(if (busy) "Close" else "Discard"), fontFamily = FontFamily.SansSerif, fontSize = 14.sp,
                                     lineHeight = 20.sp, fontWeight = FontWeight.SemiBold)
                             }
                             Button(onClick = onDelete, enabled = !state.busy && !hostBusy,
@@ -124,8 +126,8 @@ internal fun DeleteAccountDialog(
                                     CircularProgressIndicator(Modifier.size(16.dp), color = AppColors.content(DeletionColors.white), strokeWidth = 2.dp)
                                     Spacer(Modifier.width(8.dp))
                                 }
-                                Text(if (state.phase == DeletionPhase.PROCESSING) "Deleting…"
-                                    else if (state.phase == DeletionPhase.SUBMITTING) "Submitting…" else "Delete",
+                                Text(appText(if (state.phase == DeletionPhase.PROCESSING) "Deleting…"
+                                    else if (state.phase == DeletionPhase.SUBMITTING) "Submitting…" else "Delete"),
                                     fontFamily = FontFamily.SansSerif, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold)
                             }
                         }
@@ -138,7 +140,7 @@ internal fun DeleteAccountDialog(
 
 @Composable
 private fun DialogParagraph(text: String, prominent: Boolean) {
-    Text(text, textAlign = TextAlign.Center, fontFamily = FontFamily.SansSerif,
+    Text(appText(text), textAlign = TextAlign.Center, fontFamily = FontFamily.SansSerif,
         fontSize = if (prominent) 15.sp else 14.sp, lineHeight = 24.sp,
         color = AppColors.content(if (prominent) DeletionColors.slate700 else DeletionColors.slate600))
 }
