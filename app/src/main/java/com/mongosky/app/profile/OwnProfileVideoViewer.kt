@@ -1,5 +1,6 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.caption.rememberCaptionText
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -96,7 +97,7 @@ internal fun OwnProfileVideoViewer(asset: ProfileGalleryAsset, onDismiss: () -> 
         Column(Modifier.fillMaxSize().background(AppColors.surface(Color.Black)).safeDrawingPadding()) {
             Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onDismiss) { Icon(FeedIcons.close, appDescription("Close video"), tint = AppColors.content(Color.White)) }
-                Text(asset.caption.ifBlank { appText("Video") }, color = AppColors.content(Color.White), maxLines = 2, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                Text(rememberCaptionText(asset.caption.ifBlank { appText("Video") }), color = AppColors.content(Color.White), maxLines = 2, fontSize = 15.sp, modifier = Modifier.weight(1f))
             }
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 ContentFrame(player, Modifier.fillMaxSize(), surfaceType = SURFACE_TYPE_TEXTURE_VIEW, contentScale = ContentScale.Fit)

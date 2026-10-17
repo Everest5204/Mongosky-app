@@ -1,5 +1,6 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.caption.rememberCaptionText
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -137,7 +138,7 @@ fun MediaPostUploadCard(
 
             if (draft.caption.isNotBlank()) {
                 Text(
-                    text = draft.caption,
+                    text = rememberCaptionText(draft.caption),
                     color = AppColors.content(UploadText),
                     fontSize = 14.sp,
                     maxLines = 2,

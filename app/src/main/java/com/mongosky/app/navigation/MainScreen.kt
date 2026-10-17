@@ -2,6 +2,7 @@
 
 package com.mongosky.app.navigation
 
+import com.mongosky.app.caption.HashtagHost
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -245,7 +246,7 @@ fun MainScreen(
         if (signingOut) searchViewModel.endSession() else searchViewModel.startSession(sessionKey)
     }
     val feedViewModel = remember(owner) {
-        ViewModelProvider(owner, HomeFeedViewModel.Factory(TokenStore(activity.applicationContext)))
+        ViewModelProvider(owner, HomeFeedViewModel.Factory(TokenStore(activity.applicationContext), activity.applicationContext))
             .get("MongoskyHomeFeed", HomeFeedViewModel::class.java)
     }
     // Mongosky My Activity v1: private state survives rotation and is cleared on sign out.
@@ -392,7 +393,7 @@ fun MainScreen(
                 reelsPreviewViewModel.endSession()
                 textPostViewModel.endSession()
                 mediaPostViewModel.endSession()
-                feedViewModel.endSession()
+                feedViewModel.detach()
                 activityViewModel.endSession()
                 drawerViewModel.endSession()
                 drawerSignupViewModel.endSession()
@@ -560,6 +561,7 @@ fun MainScreen(
 
     fun leaveAccount(onComplete: () -> Unit, showSignOutPage: Boolean = true) {
         if (signingOut) return
+        feedViewModel.endSession()
         aiViewModel.endSession()
         notificationsViewModel.endSession()
         savedItemsViewModel.endSession()
@@ -625,6 +627,8 @@ fun MainScreen(
 
     // Mongosky Deactivate Account host v1
     // Mongosky Personal Details host v1
+    HashtagHost(sessionKey = "$sessionKey:${loginViewModel.uiState.sessionRevision}", enabled = !signingOut,
+        posts = feedViewModel.uiState.posts, onOpenProfile = ::openUserProfile) {
     CompositionLocalProvider(LocalProfileNavigator provides ::openUserProfile, LocalProfileViewerId provides userId,
         LocalSavedItems provides savedItemsViewModel,
         LocalPersonalDetailsHost provides PersonalDetailsHost(
@@ -845,7 +849,9 @@ fun MainScreen(
                                         reelsPreviewViewModel = reelsPreviewViewModel,
                                         onOpenReel = { reelsViewModel.openReel(it); navigate(MainRoute.REELS) },
                                         onOpenReels = { navigate(MainRoute.REELS) },
-                                        scrollToTopRequest = homeTopRequest
+                                        scrollToTopRequest = homeTopRequest,
+                                        backToTopEnabled = !signingOut && !signupOpening.isOpening && !drawerVisible &&
+                                            !mediaPickerOpen && !createMenuOpen && !messagesNoticeOpen
                                     )
                                     MainRoute.REELS -> ReelsScreen(
                                         viewModel = reelsViewModel, userId = userId, userName = userName,
@@ -958,6 +964,7 @@ fun MainScreen(
                 }
             )
         }
+    }
     }
     }
 }

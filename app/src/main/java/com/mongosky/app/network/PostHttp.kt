@@ -37,14 +37,18 @@ internal interface PostTransport {
 }
 
 /** One cancellable client. Mutations are never automatically replayed. */
-internal class PostHttp : PostTransport {
+internal class PostHttp(
+    private val client: OkHttpClient = defaultClient,
+    baseUrl: String = "https://api.mongosky.com/"
+) : PostTransport {
+    private val base = baseUrl.toHttpUrl()
     override suspend fun request(token: String, method: String, path: String, query: Map<String, String>, body: JSONObject?): JSONObject =
         withContext(Dispatchers.IO) {
             ensureActive()
             if (token.isBlank() || token.any { it <= ' ' || it >= '\u007f' }) {
                 throw FeedApiException("Please sign in again.", FeedApiFailure.SESSION_EXPIRED)
             }
-            val url = ("https://api.mongosky.com$path").toHttpUrl().newBuilder()
+            val url = (base.resolve(path) ?: throw invalidPostResponse()).newBuilder()
             query.forEach { (key, value) -> url.addQueryParameter(key, value) }
             val request = Request.Builder().url(url.build()).header("Authorization", "Bearer $token")
                 .header("Accept", "application/json").header("Cache-Control", "no-store")
@@ -61,7 +65,7 @@ internal class PostHttp : PostTransport {
                             response.use {
                                 try {
                                     if (!continuation.isActive) return
-                                    if (!response.isSuccessful) throw httpError(response.code)
+                                    if (!response.isSuccessful) throw httpError(response.code, path)
                                     val stream = response.body ?: throw invalidPostResponse()
                                     if (stream.contentLength() > MAX_BYTES) throw invalidPostResponse()
                                     val output = ByteArrayOutputStream()
@@ -96,7 +100,7 @@ internal class PostHttp : PostTransport {
 
     private companion object {
         const val MAX_BYTES = 1024 * 1024
-        val client = OkHttpClient.Builder().connectTimeout(12, TimeUnit.SECONDS).readTimeout(25, TimeUnit.SECONDS)
+        val defaultClient = OkHttpClient.Builder().connectTimeout(12, TimeUnit.SECONDS).readTimeout(25, TimeUnit.SECONDS)
             .callTimeout(35, TimeUnit.SECONDS).retryOnConnectionFailure(false).followRedirects(false).followSslRedirects(false).build()
     }
 }
@@ -113,10 +117,11 @@ internal fun invalidPostResponse(cause: Throwable? = null) = FeedApiException(
     "Could not read the server response. Please try again.", FeedApiFailure.INVALID_RESPONSE, cause = cause
 )
 
-private fun httpError(status: Int) = when (status) {
+private fun httpError(status: Int, path: String) = when (status) {
     401 -> FeedApiException("Your session has expired. Please sign in again.", FeedApiFailure.SESSION_EXPIRED, status)
     403 -> FeedApiException("You do not have permission for this action.", FeedApiFailure.ACCESS_DENIED, status)
-    404 -> FeedApiException("This post or comment is no longer available.", FeedApiFailure.REQUEST_REJECTED, status)
+    404 -> FeedApiException(if (path in setOf("/api/posts/home", "/api/posts/feed", "/api/text-posts/feed"))
+        "Could not load the home feed. Please try again." else "This post or comment is no longer available.", FeedApiFailure.REQUEST_REJECTED, status)
     429 -> FeedApiException("Too many requests. Please wait a moment.", FeedApiFailure.RATE_LIMITED, status)
     in 500..599 -> FeedApiException("The server is busy. Please try again.", FeedApiFailure.SERVER, status)
     else -> FeedApiException("Could not complete the request. Please try again.", FeedApiFailure.REQUEST_REJECTED, status)

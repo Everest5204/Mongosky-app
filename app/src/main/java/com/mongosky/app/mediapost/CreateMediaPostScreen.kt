@@ -1,5 +1,8 @@
 package com.mongosky.app.mediapost
 
+import com.mongosky.app.caption.rememberCaptionTransformation
+import com.mongosky.app.caption.rememberHashtagEditor
+import com.mongosky.app.caption.HashtagSuggestions
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -310,10 +313,13 @@ private fun ComposerAuthor(name: String, profileImageUrl: String?) {
 
 @Composable
 private fun ComposerCaption(caption: String, enabled: Boolean, onChange: (String) -> Unit) {
+    val editor = rememberHashtagEditor(caption)
+    Column(Modifier.fillMaxWidth()) {
     BasicTextField(
-        value = caption,
-        onValueChange = onChange,
+        value = editor.value,
+        onValueChange = { next -> editor.value = next; if (next.text != caption) onChange(next.text) },
         enabled = enabled,
+        visualTransformation = rememberCaptionTransformation(),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
         textStyle = TextStyle(color = AppColors.content(ComposerText), fontSize = 16.sp, lineHeight = 24.sp),
@@ -333,6 +339,9 @@ private fun ComposerCaption(caption: String, enabled: Boolean, onChange: (String
             }
         }
     )
+    HashtagSuggestions(editor.value, enabled, onChange = { next -> editor.value = next; onChange(next.text) },
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+    }
 }
 
 @Composable

@@ -20,7 +20,7 @@ internal fun HomeFeedPostItem(post: HomePost, now: Instant, viewModel: HomeFeedV
     when (post) {
         is HomePost.Text -> TextPostCard(post.post, now, fallback, post.commentsCount, enabled, actions,
             header = { HomePostHeader(post, now, viewModel.controls, viewModel.images, enabled) },
-            footer = { HomePostFooter(post, viewModel, enabled, actions) })
+            footer = { HomePostFooter(post, viewModel, enabled, actions) }, warmSavedStatus = false)
         is HomePost.Media -> {
             val width = homeFeedImageWidth(if (post.post.media.size > 1) 2 else 1)
             val preview = remember(width) { { media: FeedMedia -> homeFeedPreviewUrl(media.url, width) } }
@@ -29,7 +29,8 @@ internal fun HomeFeedPostItem(post: HomePost, now: Instant, viewModel: HomeFeedV
                 header = { HomePostHeader(post, now, viewModel.controls, viewModel.images, enabled) },
                 footer = { HomePostFooter(post, viewModel, enabled, actions) },
                 previewUrl = preview,
-                singlePhoto = { photo, open -> HomeFeedPhoto(photo, viewModel.images, enabled, open) })
+                singlePhoto = { photo, open -> HomeFeedPhoto(photo, viewModel.images, enabled, open) },
+                warmSavedStatus = false)
         }
     }
 }

@@ -12,6 +12,7 @@ internal fun homeFeedAspectRatio(width: Int, height: Int): Float =
     if (width <= 0 || height <= 0) 1f else (width.toFloat() / height).coerceIn(0.8f, 1.91f)
 
 internal fun homeFeedPreviewWidth(pixels: Int): Int = when {
+    pixels <= 192 -> 192
     pixels <= 480 -> 480
     pixels <= 720 -> 720
     else -> 1080

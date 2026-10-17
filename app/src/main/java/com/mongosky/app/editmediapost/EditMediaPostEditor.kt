@@ -1,5 +1,8 @@
 package com.mongosky.app.editmediapost
 
+import com.mongosky.app.caption.rememberCaptionTransformation
+import com.mongosky.app.caption.rememberHashtagEditor
+import com.mongosky.app.caption.HashtagSuggestions
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -45,6 +48,7 @@ private data class EditMediaPreview(val key: String, val removeKey: String, val 
 @Composable
 internal fun EditMediaPostEditor(state: EditMediaPostState, onText: (String) -> Unit,
                                  onRemove: (String) -> Unit, onAdd: () -> Unit) {
+    val captionEditor = rememberHashtagEditor(state.text)
     val items = remember(state.keptMedia, state.selectedMedia) {
         state.keptMedia.map { media -> val key = EditPostPolicy.mediaKey(media)
             EditMediaPreview("existing:$key", key, media.url, media.type == FeedMediaType.VIDEO) } +
@@ -60,7 +64,8 @@ internal fun EditMediaPostEditor(state: EditMediaPostState, onText: (String) -> 
     val active = items.getOrNull(index)
     Column(Modifier.fillMaxWidth()) {
         Box(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp)) {
-            BasicTextField(state.text, onText, enabled = state.editable,
+            BasicTextField(captionEditor.value, { next -> captionEditor.value = next; if (next.text != state.text) onText(next.text) }, enabled = state.editable,
+                visualTransformation = rememberCaptionTransformation(),
                 textStyle = TextStyle(color = AppColors.content(EditPostColors.text), fontSize = 18.sp, lineHeight = 28.sp),
                 cursorBrush = SolidColor(EditPostColors.mediaGreen), minLines = 3, maxLines = 7,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
@@ -72,6 +77,8 @@ internal fun EditMediaPostEditor(state: EditMediaPostState, onText: (String) -> 
             if (state.length >= 2_000) Text("${state.length}/${state.limit}", color = AppColors.content(EditPostColors.muted), fontSize = 12.sp,
                 fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.BottomEnd))
         }
+        HashtagSuggestions(captionEditor.value, state.editable, onChange = { next -> captionEditor.value = next; onText(next.text) },
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp))
         if (active != null) {
             val height = (LocalConfiguration.current.screenHeightDp.dp * 0.55f).coerceIn(240.dp, 440.dp)
             Box(Modifier.fillMaxWidth().padding(horizontal = 18.dp).height(height).clip(RoundedCornerShape(4.dp))

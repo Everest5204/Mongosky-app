@@ -115,7 +115,8 @@ internal fun HomePostHeader(post: HomePost, now: Instant, controls: HomeFeedCont
     })
     Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp, top = 9.dp, bottom = 9.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        ProfileAvatar(post.author.profileImageUrl, Modifier.size(44.dp).profileLink(post.author.id, post.author))
+        val avatar = remember(post.author.profileImageUrl) { post.author.profileImageUrl?.let { homeFeedPreviewUrl(it, 192) } }
+        ProfileAvatar(avatar, Modifier.size(44.dp).profileLink(post.author.id, post.author))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(title, inlineContent = inline, color = AppColors.content(FeedColors.text), fontSize = 15.sp,
                 lineHeight = 20.sp, fontWeight = FontWeight.Bold,

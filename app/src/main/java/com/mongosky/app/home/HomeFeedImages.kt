@@ -62,7 +62,12 @@ internal fun HomeFeedPhoto(photo: FeedMedia, images: HomeFeedImageState, enabled
     val context = LocalContext.current.applicationContext
     val width = homeFeedImageWidth()
     val generation = images.generation
-    val aspect by remember(images, generation, photo.url) { images.aspect(photo.url) }
+    // Reserve geometry before decode. Legacy media without dimensions keeps its
+    // first measured geometry for this mount; completing an image cannot jump a fling.
+    val aspect = remember(images, generation, photo.url, photo.width, photo.height) {
+        if (photo.width > 0 && photo.height > 0) homeFeedAspectRatio(photo.width, photo.height)
+        else images.aspect(photo.url).value
+    }
     val preview = remember(photo.url, width) { homeFeedPreviewUrl(photo.url, width) }
     var fallback by remember(photo.url, preview) { mutableStateOf(false) }
     val url = if (fallback) photo.url else preview

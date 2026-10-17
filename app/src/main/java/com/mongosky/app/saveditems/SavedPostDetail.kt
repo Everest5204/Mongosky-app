@@ -2,6 +2,7 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.saveditems
 
+import com.mongosky.app.shared.PublicLinks
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -64,7 +65,7 @@ internal fun SavedPostDetail(
         onShare = {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, "https://mongosky.com/post/${post.id}")
+                putExtra(Intent.EXTRA_TEXT, PublicLinks.post(post.id))
             }
             try {
                 context.startActivity(Intent.createChooser(intent, appText("Share post")))
@@ -72,7 +73,7 @@ internal fun SavedPostDetail(
                 scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) }
             }
         },
-        onCopyLink = { clipboard.setText(AnnotatedString("https://mongosky.com/post/${post.id}")) },
+        onCopyLink = { clipboard.setText(AnnotatedString(PublicLinks.post(post.id))) },
         onReactionPeople = { feed.openReactionPeople(post) },
         onRetryReaction = { feed.ensureReaction(post) },
     )

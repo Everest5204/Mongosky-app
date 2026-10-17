@@ -2,6 +2,7 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.profile
 
+import com.mongosky.app.shared.PublicLinks
 import com.mongosky.app.language.appText
 
 import com.mongosky.app.darkmode.AppColors
@@ -106,7 +107,7 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
     fun sharePost(post: HomePost) {
         val caption = when (post) { is HomePost.Text -> post.post.displayText; is HomePost.Media -> post.post.caption }
         val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT,
-            listOf(caption.take(650), "https://mongosky.com/post/${post.id}").filter { it.isNotBlank() }.joinToString("\n\n")) }
+            listOf(caption.take(650), PublicLinks.post(post.id)).filter { it.isNotBlank() }.joinToString("\n\n")) }
         try { context.startActivity(Intent.createChooser(intent, appText("Share post"))) }
         catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) } }
     }
@@ -160,7 +161,7 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
                                 UserProfileFeedPostItem(post, state, now, actionsModel, feed,
                                     !state.sessionExpired && !actionsModel.uiState.sessionExpired,
                                     onPhotos = { media, index -> photoViewer = PhotoViewerState(media, index) }, onVideo = { videoViewer = it },
-                                    onCopy = { copyLink("https://mongosky.com/post/${it.id}") }, onShare = ::sharePost,
+                                    onCopy = { copyLink(PublicLinks.post(it.id)) }, onShare = ::sharePost,
                                     reactionRefreshVersion = reactionVersion, onFollow = { viewModel.followFromPost(viewerId, userId) })
                             }
                         } else items(rows, key = { "gallery:${it.first().key}" }, contentType = { "gallery_row" }) { row ->
@@ -191,13 +192,13 @@ fun UserProfileScreen(viewModel: UserProfileViewModel, actionsModel: HomeFeedVie
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(12.dp))
     }
     UserProfileFeedOverlays(feed, enabled = available && !actionsModel.uiState.sessionExpired,
-        onCopy = { copyLink("https://mongosky.com/post/${it.id}") })
+        onCopy = { copyLink(PublicLinks.post(it.id)) })
     OwnProfileConnectionsSheet(viewModel.connections, ::openProfile)
     if (optionsOpen && available) ModalBottomSheet(onDismissRequest = { optionsOpen = false }, containerColor = AppColors.surface(Color.White),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
             Text(appText("Profile options"), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = AppColors.content(OwnProfileColors.text))
-            TextButton({ optionsOpen = false; copyLink("https://mongosky.com/profile/$userId") }, modifier = Modifier.fillMaxWidth()) {
+            TextButton({ optionsOpen = false; copyLink(PublicLinks.profile(userId)) }, modifier = Modifier.fillMaxWidth()) {
                 Text(appText("Copy profile link"), color = AppColors.content(OwnProfileColors.text))
             }
         }

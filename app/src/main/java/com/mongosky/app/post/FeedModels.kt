@@ -50,7 +50,9 @@ data class FeedMedia(
     val url: String,
     val type: FeedMediaType,
     val id: String? = null,
-    val order: Int = 0
+    val order: Int = 0,
+    val width: Int = 0,
+    val height: Int = 0
 )
 
 data class FeedTextBackground(

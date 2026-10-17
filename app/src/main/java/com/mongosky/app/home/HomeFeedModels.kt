@@ -78,7 +78,7 @@ internal interface HomeFeedActions {
 
 internal object HomeFeedPolicy {
     const val BADGE_TTL_MILLIS = 60_000L
-    const val POLL_MILLIS = 20_000L
+    const val POLL_MILLIS = 60_000L
     const val SETTLE_MILLIS = 300L
     const val FOLLOW_CONFIRM_MILLIS = 700L
     private val idPattern = Regex("[a-fA-F0-9]{24}")

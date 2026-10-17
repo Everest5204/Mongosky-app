@@ -1,5 +1,8 @@
 package com.mongosky.app.textpost
 
+import com.mongosky.app.caption.rememberCaptionTransformation
+import com.mongosky.app.caption.HashtagSuggestions
+import androidx.compose.foundation.layout.Column
 import com.mongosky.app.language.appText
 
 import androidx.compose.foundation.layout.Box
@@ -49,12 +52,14 @@ fun TextPostEditor(
     val style = TextStyle(color = color, fontSize = fontSize, lineHeight = fontSize * 1.25f,
         fontWeight = FontWeight.ExtraBold, textAlign = if (length > 260) TextAlign.Start else TextAlign.Center)
     val shape = RoundedCornerShape(20.dp)
-    Box(modifier.fillMaxWidth().height(height).shadow(8.dp, shape).clip(shape), Alignment.Center) {
+    Column(modifier.fillMaxWidth()) {
+    Box(Modifier.fillMaxWidth().height(height).shadow(8.dp, shape).clip(shape), Alignment.Center) {
         TextPostBackground(preset.background.kind, preset.background.value, Modifier.matchParentSize())
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
             enabled = enabled,
+            visualTransformation = rememberCaptionTransformation(),
             textStyle = style,
             cursorBrush = SolidColor(color),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
@@ -67,5 +72,7 @@ fun TextPostEditor(
                 }
             }
         )
+    }
+    HashtagSuggestions(value, enabled, onChange = onValueChange, modifier = Modifier.padding(top = 8.dp))
     }
 }

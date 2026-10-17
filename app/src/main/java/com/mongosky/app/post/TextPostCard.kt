@@ -1,5 +1,8 @@
 package com.mongosky.app.post
 
+import com.mongosky.app.caption.ObserveHashtagPost
+
+import com.mongosky.app.caption.rememberCaptionText
 import com.mongosky.app.darkmode.AppColors
 
 import com.mongosky.app.saveditems.WarmSavedPostStatus
@@ -39,8 +42,10 @@ import kotlin.math.sin
 @Composable
 fun TextPostCard(post: TextPost, now: Instant, reaction: PostReactionState, commentsCount: Long,
     enabled: Boolean, actions: PostCardActions, modifier: Modifier = Modifier,
-    header: (@Composable () -> Unit)? = null, footer: (@Composable () -> Unit)? = null) {
-    WarmSavedPostStatus(post.id)
+    header: (@Composable () -> Unit)? = null, footer: (@Composable () -> Unit)? = null,
+    warmSavedStatus: Boolean = true) {
+    ObserveHashtagPost(HomePost.Text(post))
+    if (warmSavedStatus) WarmSavedPostStatus(post.id)
     Column(modifier.fillMaxWidth().background(AppColors.surface(Color.White))) {
         if (header != null) header() else PostHeader(post.author, post.createdAt, now, actions, postId = post.id)
         val centered = post.textStyle == FeedTextStyle.BOLD_CENTER || post.textStyle == FeedTextStyle.NORMAL_CENTER
@@ -53,7 +58,7 @@ fun TextPostCard(post: TextPost, now: Instant, reaction: PostReactionState, comm
         Box(Modifier.fillMaxWidth().heightIn(min = 300.dp), contentAlignment =
             if (centered) Alignment.Center else Alignment.CenterStart) {
             TextPostBackground(post.textBackground.kind, post.textBackground.value, Modifier.matchParentSize())
-            Text(post.displayText, color = textColor, fontSize = fontSize.sp, lineHeight = (fontSize * 1.4).sp,
+            Text(rememberCaptionText(post.displayText), color = textColor, fontSize = fontSize.sp, lineHeight = (fontSize * 1.4).sp,
                 fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
                 textAlign = if (centered) TextAlign.Center else TextAlign.Start,
                 modifier = Modifier.fillMaxWidth().padding(24.dp))

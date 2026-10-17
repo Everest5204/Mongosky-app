@@ -3,6 +3,8 @@
 
 package com.mongosky.app.home
 
+import com.mongosky.app.shared.PublicLinks
+
 import com.mongosky.app.language.appText
 
 import com.mongosky.app.darkmode.AppColors
@@ -11,7 +13,13 @@ import android.content.ActivityNotFoundException
 import com.mongosky.app.downloadpost.rememberGalleryDownloadActions
 import android.content.Intent
 import android.os.Build
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +44,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,8 +55,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -78,9 +89,12 @@ import com.mongosky.app.reels.ReelsPreviewViewModel
 import com.mongosky.app.shared.FeedNotice
 import com.mongosky.app.shared.FeedSpinner
 import java.time.Instant
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun HomeFeedScreen(
@@ -93,7 +107,8 @@ fun HomeFeedScreen(
     reelsPreviewViewModel: ReelsPreviewViewModel,
     onOpenReel: (Reel) -> Unit,
     onOpenReels: () -> Unit,
-    scrollToTopRequest: Int = 0
+    scrollToTopRequest: Int = 0,
+    backToTopEnabled: Boolean = true
 ) {
     val state = viewModel.uiState
     val upload by mediaPostViewModel.uploadState.collectAsState()
@@ -101,6 +116,7 @@ fun HomeFeedScreen(
             upload !is MediaPostUploadState.Succeeded
     val listState = rememberLazyListState()
     val context = LocalContext.current
+    val density = LocalDensity.current
     val clipboard = LocalClipboardManager.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -108,6 +124,46 @@ fun HomeFeedScreen(
     var now by remember { mutableStateOf(Instant.now()) }
     var photoViewer by remember { mutableStateOf<PhotoViewerState?>(null) }
     var handledTopRequest by rememberSaveable { mutableStateOf(0) }
+    var returningToTop by remember { mutableStateOf(false) }
+    val backScrollOpacity = remember { Animatable(1f) }
+    val scrolledFromTop by remember(listState) {
+        derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0 }
+    }
+    // Keep modal Back actions ahead of the feed and leave root Back unchanged at the top.
+    BackHandler(enabled = backToTopEnabled && (scrolledFromTop || returningToTop) &&
+        photoViewer == null && viewModel.commentsState == null && viewModel.peopleState == null &&
+        controls.menu == null && controls.editor == null && controls.deletion == null &&
+        controls.reports.state == null && controls.pins.dialog == null) {
+        if (!returningToTop) {
+            returningToTop = true
+            scope.launch {
+                try {
+                    listState.stopScroll()
+                    val arrivalOffset = with(density) { 48.dp.roundToPx() }
+                    if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset <= arrivalOffset) {
+                        listState.animateScrollBy(-listState.firstVisibleItemScrollOffset.toFloat(),
+                            tween(160, easing = FastOutSlowInEasing))
+                    } else {
+                        // Show only a tiny reverse movement; hide the long-distance reposition.
+                        coroutineScope {
+                            launch { backScrollOpacity.animateTo(0f, tween(60)) }
+                            listState.animateScrollBy(-with(density) { 16.dp.toPx() }, tween(60))
+                        }
+                        listState.scrollToItem(0, arrivalOffset)
+                        coroutineScope {
+                            launch { backScrollOpacity.animateTo(1f, tween(120)) }
+                            listState.animateScrollBy(-arrivalOffset.toFloat(),
+                                tween(120, easing = FastOutSlowInEasing))
+                        }
+                    }
+                } finally {
+                    // A touch gesture or leaving Home must never leave the feed faded.
+                    withContext(NonCancellable) { backScrollOpacity.snapTo(1f) }
+                    returningToTop = false
+                }
+            }
+        }
+    }
     val galleryDownloads = rememberGalleryDownloadActions()
     LaunchedEffect(controls) { controls.notices.collect { snackbar.showSnackbar(appText(it)) } }
     HomeFeedEffects(viewModel, listState)
@@ -129,7 +185,7 @@ fun HomeFeedScreen(
         while (true) { delay(60_000); now = Instant.now() }
     }
 
-    val loadMoreKeys = remember(state.posts) { state.posts.takeLast(3).map { it.key }.toSet() }
+    val loadMoreKeys = remember(state.posts) { state.posts.takeLast(5).map { it.key }.toSet() }
     LaunchedEffect(listState, loadMoreKeys, state.loading, state.hasMore, state.errors, state.sessionExpired) {
         if (loadMoreKeys.isNotEmpty() && !state.loading && state.hasMore && state.errors.isEmpty() && !state.sessionExpired) {
             snapshotFlow { listState.layoutInfo.visibleItemsInfo.any { it.key in loadMoreKeys } }
@@ -137,7 +193,7 @@ fun HomeFeedScreen(
         }
     }
 
-    fun postLink(post: HomePost) = "https://mongosky.com/post/${post.id}"
+    fun postLink(post: HomePost) = PublicLinks.post(post.id)
 
     val sharePost: (HomePost) -> Unit = remember(context, scope, snackbar) { { post ->
         val text = listOf(post.content.take(650).trim(), postLink(post)).filter { it.isNotBlank() }.joinToString("\n\n")
@@ -160,7 +216,8 @@ fun HomeFeedScreen(
     Box(Modifier.fillMaxSize().background(AppColors.surface(Color.White)), contentAlignment = Alignment.TopCenter) {
         PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = viewModel::refresh,
             modifier = Modifier.fillMaxSize().widthIn(max = 680.dp)) {
-            LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
+            LazyColumn(state = listState, modifier = Modifier.fillMaxSize().graphicsLayer { alpha = backScrollOpacity.value },
+                contentPadding = PaddingValues(bottom = 12.dp)) {
                 if (hasUpload) item(key = "media_upload", contentType = "upload") {
                     MediaPostUploadCard(
                         state = upload,

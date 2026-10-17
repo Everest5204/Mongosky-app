@@ -56,9 +56,9 @@ internal fun HomeFeedEffects(viewModel: HomeFeedViewModel, list: LazyListState) 
     }
     LaunchedEffect(viewModel, resumed, viewModel.uiState.sessionReady, viewModel.uiState.sessionExpired) {
         if (resumed && viewModel.uiState.sessionReady && !viewModel.uiState.sessionExpired) {
-            viewModel.checkForUpdates()
             while (isActive) {
-                delay(HomeFeedPolicy.POLL_MILLIS)
+                // Safety net for missed streams, with jitter across devices.
+                delay(HomeFeedPolicy.POLL_MILLIS + kotlin.random.Random.nextLong(0, 15_000))
                 viewModel.checkForUpdates()
             }
         }

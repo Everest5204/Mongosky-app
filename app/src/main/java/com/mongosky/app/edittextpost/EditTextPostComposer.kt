@@ -1,5 +1,8 @@
 package com.mongosky.app.edittextpost
 
+import com.mongosky.app.caption.rememberCaptionTransformation
+import com.mongosky.app.caption.rememberHashtagEditor
+import com.mongosky.app.caption.HashtagSuggestions
 import com.mongosky.app.language.appText
 
 import com.mongosky.app.darkmode.AppColors
@@ -38,9 +41,11 @@ import com.mongosky.app.textpost.TextPostPreset
 
 @Composable
 internal fun EditTextPostComposer(state: EditTextPostState, onText: (String) -> Unit) {
+    val captionEditor = rememberHashtagEditor(state.text)
     val centered = state.textStyle == FeedTextStyle.BOLD_CENTER || state.textStyle == FeedTextStyle.NORMAL_CENTER
     val bold = state.textStyle == FeedTextStyle.BOLD_CENTER || state.textStyle == FeedTextStyle.BOLD_LEFT
     val color = AppColors.plainPostText(cssColor(state.textColor, EditPostColors.text),state.background.kind == FeedTextBackgroundKind.PLAIN)
+    Column(Modifier.fillMaxWidth()) {
     BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         val size = when { state.length > 260 -> (maxWidth.value * 0.046f).coerceIn(18f, 25f)
             state.length > 150 -> (maxWidth.value * 0.065f).coerceIn(24f, 34f)
@@ -54,7 +59,8 @@ internal fun EditTextPostComposer(state: EditTextPostState, onText: (String) -> 
             .then(if (state.background.kind == FeedTextBackgroundKind.PLAIN) Modifier.border(1.dp, AppColors.outline(EditPostColors.line), shape) else Modifier),
             contentAlignment = Alignment.Center) {
             TextPostBackground(state.background.kind, state.background.value, Modifier.matchParentSize())
-            BasicTextField(state.text, onText, enabled = state.editable,
+            BasicTextField(captionEditor.value, { next -> captionEditor.value = next; if (next.text != state.text) onText(next.text) }, enabled = state.editable,
+                visualTransformation = rememberCaptionTransformation(),
                 textStyle = style, cursorBrush = SolidColor(color),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 24.dp)
@@ -66,6 +72,9 @@ internal fun EditTextPostComposer(state: EditTextPostState, onText: (String) -> 
                     }
                 })
         }
+    }
+    HashtagSuggestions(captionEditor.value, state.editable, onChange = { next -> captionEditor.value = next; onText(next.text) },
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
     }
 }
 

@@ -161,7 +161,7 @@ class FeedApi(
 
     internal suspend fun parsePage(
         body: String,
-        source: FeedSource,
+        source: FeedSource?,
         requestedCursor: String?
     ): FeedPage {
         val root = try {
@@ -191,7 +191,9 @@ class FeedApi(
         for (index in 0 until rows.length()) {
             currentCoroutineContext().ensureActive()
             val row = rows.optJSONObject(index) ?: throw invalidResponse()
-            val post = parsePost(row, source) ?: continue
+            val rowSource = source ?: if (row.optString("type") == "text") FeedSource.TEXT else FeedSource.MEDIA
+            val post = parsePost(row, rowSource) ?: continue
+            if (source == null && (post.type == FeedPostType.VIDEO || post.media.any { it.type == FeedMediaType.VIDEO })) continue
             if (seenIds.add(post.id)) posts.add(post)
         }
 
@@ -252,7 +254,9 @@ class FeedApi(
                         url = url,
                         type = mediaType(item.string("type")),
                         id = item.string("id").trim().takeIf { it.isNotEmpty() },
-                        order = item.optInt("order", index).coerceAtLeast(0)
+                        order = item.optInt("order", index).coerceAtLeast(0),
+                        width = item.optInt("width", 0).coerceIn(0, 100_000),
+                        height = item.optInt("height", 0).coerceIn(0, 100_000)
                     )
                 )
             }

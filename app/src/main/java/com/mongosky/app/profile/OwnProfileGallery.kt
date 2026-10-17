@@ -1,5 +1,6 @@
 package com.mongosky.app.profile
 
+import com.mongosky.app.caption.rememberCaptionText
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -47,7 +48,7 @@ internal fun ProfileGalleryTile(asset: ProfileGalleryAsset, onOpen: () -> Unit, 
                 Icon(OwnProfileIcons.play, appDescription("Play video"), tint = AppColors.content(Color.White), modifier = Modifier.size(30.dp))
             }
             asset.caption.takeIf { it.isNotBlank() }?.let {
-                Text(appText(it), color = AppColors.content(Color.White), fontSize = 12.sp, maxLines = 2,
+                Text(rememberCaptionText(it), color = AppColors.content(Color.White), fontSize = 12.sp, maxLines = 2,
                     modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().background(AppColors.surface(Color.Black.copy(alpha = 0.45f))).padding(8.dp))
             }
         }

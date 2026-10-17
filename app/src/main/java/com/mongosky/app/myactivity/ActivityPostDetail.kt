@@ -2,6 +2,7 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.myactivity
 
+import com.mongosky.app.shared.PublicLinks
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -44,10 +45,10 @@ import kotlinx.coroutines.launch
     BackHandler(feed.commentsState == null && feed.peopleState == null && viewer == null) { if (enabled) onBack() }
     val actions = PostCardActions(onReact = { feed.react(post,it) },onComments = { feed.openComments(post) },
         onShare = {
-            val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT,"https://mongosky.com/post/${post.id}") }
+            val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT,PublicLinks.post(post.id)) }
             try { context.startActivity(Intent.createChooser(intent,appText("Share post"))) }
             catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) } }
-        },onCopyLink = { clipboard.setText(AnnotatedString("https://mongosky.com/post/${post.id}")) },
+        },onCopyLink = { clipboard.setText(AnnotatedString(PublicLinks.post(post.id))) },
         onReactionPeople = { feed.openReactionPeople(post) },onRetryReaction = { feed.ensureReaction(post) })
     val reaction = feed.reactions[post.key] ?: PostReactionState(ReactionSummary(total = post.likesCount))
     val count = feed.commentCounts[post.key] ?: post.commentsCount

@@ -3,15 +3,14 @@ package com.mongosky.app.home
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.mongosky.app.auth.TokenStore
 import com.mongosky.app.comments.CommentsController
 import com.mongosky.app.comments.PostComment
-import com.mongosky.app.mediapost.MediaFeedPage
 import com.mongosky.app.mediapost.MediaPost
-import com.mongosky.app.mediapost.MediaPostApi
 import com.mongosky.app.post.FeedApiException
 import com.mongosky.app.post.FeedApiFailure
 import com.mongosky.app.post.FeedSource
@@ -22,18 +21,19 @@ import com.mongosky.app.post.PostActions
 import com.mongosky.app.post.PostActionsApi
 import com.mongosky.app.reactions.PostReaction
 import com.mongosky.app.reactions.ReactionsController
-import com.mongosky.app.textpost.TextFeedPage
 import com.mongosky.app.textpost.TextPost
-import com.mongosky.app.textpost.TextPostApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.async
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.isActive
+import kotlin.random.Random
 
 data class HomeFeedState(
     val posts: List<HomePost> = emptyList(),
@@ -49,14 +49,16 @@ data class HomeFeedState(
 )
 
 /**
- * Keeps both feed cursors and all network work outside composition. Data belongs
+ * Keeps one feed cursor and all network work outside composition. Data belongs
  * to the saved token, never to a display name. A leaving session cancels its work
  * and removes its cached posts, drafts and reactions.
  */
 class HomeFeedViewModel internal constructor(
     private val readToken: suspend () -> String?,
-    private val loadMedia: suspend (String, String?) -> MediaFeedPage = { token, cursor -> HomeFeedLoader.shared.media(token, cursor) },
-    private val loadText: suspend (String, String?) -> TextFeedPage = { token, cursor -> HomeFeedLoader.shared.text(token, cursor) },
+    private val loadHome: suspend (String, String?, List<String>) -> HomeTimelinePage = { token, cursor, visible -> HomeTimelineApi.shared.load(token, cursor, visible) },
+    private val cache: HomeFeedCache = NoHomeFeedCache,
+    private val updates: (String) -> Flow<Unit> = HomeFeedRealtime::events,
+    private val clockMillis: () -> Long = { System.nanoTime() / 1_000_000 },
     private val actions: PostActions = PostActionsApi(),
     homeActions: HomeFeedActions = HomeFeedApi()
 ) : ViewModel() {
@@ -71,18 +73,24 @@ class HomeFeedViewModel internal constructor(
     private var sessionJob: Job? = null
     private var workJob = SupervisorJob(viewModelScope.coroutineContext[Job])
     private val scope get() = CoroutineScope(viewModelScope.coroutineContext + workJob)
-    private var pager = FeedPager()
+    private var pager = HomeTimeline()
     private var feedVersion = 0
     private var sessionVersion = 0
     private var tokenReadVersion = 0
     private var replacingFeed = false
-    private val feedJobs = mutableMapOf<FeedSource, Job>()
-    private val emptyPages = mutableMapOf<FeedSource, Int>()
+    private var feedJob: Job? = null
+    private var cacheJob: Job? = null
+    private var cacheRevision = 0
+    private var realtimeJob: Job? = null
+    private var reconcileJob: Job? = null
+    private var dirty = false
+    private var lastHeadRead = 0L
+    private var emptyPages = 0
     private var foreground = false
     private var scrolling = false
     private var headJob: Job? = null
     private var headVersion = 0
-    private data class HeadUpdate(val posts: List<HomePost>, val relationRevision: Long,
+    private data class HeadUpdate(val posts: List<HomePost>, val missingIds: Set<String>, val relationRevision: Long,
         val acceptCounts: (List<FeedPost>) -> Unit)
     private var pendingHead: HeadUpdate? = null
     private val removedPosts = mutableSetOf<String>()
@@ -105,17 +113,28 @@ class HomeFeedViewModel internal constructor(
                 ensureActive()
                 if (request != tokenReadVersion) return@launch
                 if (saved == null) {
+                    discardCache()
                     resetSession()
                     uiState = HomeFeedState(sessionExpired = true, sessionError = "Please sign in again.")
                 } else if (saved != token) {
+                    if (token != null) discardCache()
                     resetSession()
                     token = saved
                     uiState = uiState.copy(sessionReady = true)
                     refresh()
+                    val version = feedVersion
+                    scope.launch {
+                        val cached = try { cache.read(saved) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                        if (version == feedVersion && token == saved && !pager.initialized && uiState.posts.isEmpty() && cached != null) {
+                            controls.ingest(cached.posts, controls.relationVersion)
+                            uiState = uiState.copy(posts = cached.posts)
+                        }
+                    }
+                    startRealtime()
                 } else {
-                    uiState = uiState.copy(sessionError = null, loading = feedJobs.isNotEmpty(),
+                    uiState = uiState.copy(sessionError = null, loading = feedJob?.isActive == true,
                         sessionReady = !uiState.sessionExpired)
-                    if (uiState.posts.isEmpty() && feedJobs.isEmpty() && uiState.errors.isEmpty()) refresh()
+                    if (uiState.posts.isEmpty() && feedJob?.isActive != true && uiState.errors.isEmpty()) refresh()
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -128,8 +147,12 @@ class HomeFeedViewModel internal constructor(
     fun endSession() {
         tokenReadVersion++
         sessionJob?.cancel()
+        discardCache()
         resetSession()
     }
+
+    /** Activity teardown keeps the snapshot; an intentional logout erases it. */
+    fun detach() { tokenReadVersion++; sessionJob?.cancel(); setForeground(false); resetSession() }
 
     private fun resetSession() {
         sessionVersion++
@@ -137,15 +160,16 @@ class HomeFeedViewModel internal constructor(
         workJob.cancel()
         workJob = SupervisorJob(viewModelScope.coroutineContext[Job])
         token = null
-        feedJobs.clear()
-        emptyPages.clear()
+        feedJob = null
+        realtimeJob = null; reconcileJob = null; dirty = false; lastHeadRead = 0L
+        emptyPages = 0
         comments.endSession()
         reactionController.endSession()
         controls.endSession()
         images.clear(); scrolling = false
         headVersion++; headJob?.cancel(); pendingHead = null
         removedPosts.clear(); editedPosts.clear(); visibleKeys = emptySet()
-        pager = FeedPager()
+        pager = HomeTimeline()
         replacingFeed = false
         uiState = HomeFeedState()
     }
@@ -155,10 +179,11 @@ class HomeFeedViewModel internal constructor(
         if (uiState.sessionExpired || uiState.refreshing) return
         feedVersion++
         headVersion++; headJob?.cancel(); pendingHead = null
-        feedJobs.values.forEach { it.cancel() }
-        feedJobs.clear()
-        emptyPages.clear()
-        pager = FeedPager(pager.unseenPublishedPosts, pager.unseenPublishedTextPosts)
+        feedJob?.cancel()
+        feedJob = null
+        emptyPages = 0
+        val published = pager.unseenPublished
+        pager = HomeTimeline().also { next -> published.asReversed().forEach(next::publish) }
         replacingFeed = true
         comments.onFeedRefresh()
         reactionController.onFeedRefresh()
@@ -172,10 +197,12 @@ class HomeFeedViewModel internal constructor(
     /** Consume only a confirmed upload from the activity's shared media ViewModel. */
     fun insertPublishedPost(post: MediaPost): Boolean {
         if (token == null || !uiState.sessionReady || uiState.sessionExpired) return false
-        if (!pager.insertPublishedPost(post)) return false
+        if (!post.isSelf || post.id.isBlank() || post.type != com.mongosky.app.mediapost.MediaPostType.IMAGE ||
+            post.media.isEmpty() || post.media.any { it.type != com.mongosky.app.post.FeedMediaType.IMAGE }) return false
+        pager.publish(HomePost.Media(post)); discardCache()
 
-        val posts = visibleSnapshot(pager.drain())
-        // During refresh, keep the visible old feed until both sources are ready.
+        val posts = visibleSnapshot(pager.snapshot())
+        // During refresh, keep the visible old feed until the fresh page is ready.
         val visible = if (replacingFeed && !pager.initialized) {
             (posts + uiState.posts).distinctBy { it.key }
         } else {
@@ -187,7 +214,7 @@ class HomeFeedViewModel internal constructor(
 
     fun retryFeed() {
         if (token == null) { startSession(); return }
-        emptyPages.clear()
+        emptyPages = 0
         uiState = uiState.copy(errors = emptyMap(), sessionError = null)
         loadMore()
     }
@@ -195,8 +222,9 @@ class HomeFeedViewModel internal constructor(
     /** Insert the confirmed text response directly; no full-feed reload is needed. */
     fun insertPublishedTextPost(post: TextPost): Boolean {
         if (token == null || !uiState.sessionReady || uiState.sessionExpired) return false
-        if (!pager.insertPublishedTextPost(post)) return false
-        val posts = visibleSnapshot(pager.drain())
+        if (!post.isSelf || post.id.isBlank() || post.displayText.isBlank()) return false
+        pager.publish(HomePost.Text(post)); discardCache()
+        val posts = visibleSnapshot(pager.snapshot())
         val visible = if (replacingFeed && !pager.initialized) {
             (posts + uiState.posts).distinctBy { it.key }
         } else posts
@@ -206,115 +234,178 @@ class HomeFeedViewModel internal constructor(
 
     fun loadMore() {
         val auth = token ?: return
-        if (uiState.sessionExpired) return
-        pager.neededSources().forEach { source ->
-            if (feedJobs.containsKey(source) || uiState.errors.containsKey(source)) return@forEach
-            val version = feedVersion
-            val cursor = pager.cursor(source)
-            val relations = controls.relationVersion
-            val job = scope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val count = when (source) {
-                        FeedSource.MEDIA -> loadMedia(auth, cursor).also { pagerIfCurrent(version) {
-                            pager.accept(it); controls.ingest(it.posts.map(HomePost::Media), relations)
-                        } }.posts.size
-                        FeedSource.TEXT -> loadText(auth, cursor).also { pagerIfCurrent(version) {
-                            pager.accept(it); controls.ingest(it.posts.map(HomePost::Text), relations)
-                        } }.posts.size
-                    }
-                    if (version != feedVersion) return@launch
-                    emptyPages[source] = if (count == 0) (emptyPages[source] ?: 0) + 1 else 0
-                    if ((emptyPages[source] ?: 0) > 3 && pager.hasMore) {
-                        throw FeedApiException("No new posts were returned. Pull down to refresh.", FeedApiFailure.INVALID_RESPONSE)
-                    }
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (error: Exception) {
-                    if (version == feedVersion) {
-                        handleSessionFailure(error)
-                        uiState = uiState.copy(errors = uiState.errors + (source to message(error)))
-                    }
-                } finally {
-                    if (version == feedVersion) {
-                        feedJobs.remove(source)
-                        val posts = visibleSnapshot(pager.drain())
-                        val visible = if (pager.initialized) {
-                            if (replacingFeed) comments.onFeedReady()
-                            replacingFeed = false
-                            posts
-                        } else uiState.posts
-                        uiState = uiState.copy(
-                            posts = visible,
-                            loading = feedJobs.isNotEmpty(),
-                            refreshing = replacingFeed && feedJobs.isNotEmpty() && uiState.posts.isNotEmpty(),
-                            hasMore = pager.hasMore
-                        )
-                        if (uiState.posts.isEmpty() && pager.initialized && pager.hasMore &&
-                            uiState.errors.isEmpty() && feedJobs.isEmpty() && !uiState.sessionExpired) loadMore()
-                    }
+        if (uiState.sessionExpired || feedJob?.isActive == true || !pager.hasMore || uiState.errors.isNotEmpty()) return
+        val version = feedVersion
+        val revision = cacheRevision
+        val cursor = pager.cursor
+        val relations = controls.relationVersion
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            try {
+                val page = loadHome(auth, cursor, emptyList())
+                ensureActive()
+                if (version != feedVersion) return@launch
+                pager.accept(page)
+                controls.ingest(page.posts, relations)
+                emptyPages = if (page.posts.isEmpty()) emptyPages + 1 else 0
+                if (emptyPages > 3 && pager.hasMore) throw FeedApiException("No new posts were returned. Pull down to refresh.", FeedApiFailure.INVALID_RESPONSE)
+                if (replacingFeed) comments.onFeedReady()
+                replacingFeed = false
+                lastHeadRead = clockMillis()
+                uiState = uiState.copy(posts = visibleSnapshot(pager.snapshot()), hasMore = pager.hasMore)
+                if (cursor == null && revision == cacheRevision) page.snapshot?.let { saveCache(auth, it) }
+            } catch (error: CancellationException) { throw error }
+            catch (error: Exception) {
+                if (version == feedVersion) {
+                    handleSessionFailure(error)
+                    uiState = uiState.copy(errors = mapOf(FeedSource.MEDIA to message(error)))
+                }
+            } finally {
+                if (version == feedVersion) {
+                    feedJob = null
+                    uiState = uiState.copy(loading = false, refreshing = false, hasMore = pager.hasMore)
+                    if (uiState.posts.isEmpty() && pager.initialized && pager.hasMore && uiState.errors.isEmpty() && !uiState.sessionExpired) loadMore()
+                    else if (dirty) scheduleReconcile()
                 }
             }
-            feedJobs[source] = job
-            uiState = uiState.copy(loading = true)
-            job.start()
+        }
+        feedJob = job
+        uiState = uiState.copy(loading = true)
+        job.start()
+    }
+
+    private fun saveCache(auth: String, body: String) {
+        cacheJob?.cancel()
+        cacheJob = scope.launch {
+            try { cache.write(auth, body) }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { /* A cache write never fails a successful network read. */ }
         }
     }
 
-    private inline fun pagerIfCurrent(version: Int, block: () -> Unit) { if (version == feedVersion) block() }
+    private fun discardCache() {
+        cacheRevision++
+        val auth = token ?: return
+        val prior = cacheJob
+        prior?.cancel()
+        viewModelScope.launch {
+            prior?.join()
+            try { cache.clear(auth) } catch (e: CancellationException) { throw e } catch (_: Exception) { }
+        }
+    }
 
     internal fun setForeground(active: Boolean) {
         foreground = active
         controls.setForeground(active)
-        if (!active) { headVersion++; headJob?.cancel(); pendingHead = null }
+        if (!active) {
+            headVersion++; headJob?.cancel(); pendingHead = null
+            realtimeJob?.cancel(); realtimeJob = null
+            reconcileJob?.cancel(); reconcileJob = null
+        } else {
+            startRealtime()
+            dirty = true; scheduleReconcile()
+        }
+    }
+
+    private fun startRealtime() {
+        val auth = token ?: return
+        if (!foreground || uiState.sessionExpired || realtimeJob?.isActive == true) return
+        val session = sessionVersion
+        realtimeJob = scope.launch {
+            var backoff = 1_000L
+            while (isActive && foreground && session == sessionVersion && !uiState.sessionExpired) {
+                var missingEndpoint = false
+                try {
+                    updates(auth).collect {
+                        backoff = 1_000L
+                        dirty = true; scheduleReconcile()
+                    }
+                } catch (e: CancellationException) { throw e }
+                catch (e: Exception) {
+                    if (session == sessionVersion) handleSessionFailure(e)
+                    // The normal foreground poll covers an older deployment.
+                    missingEndpoint = e is FeedApiException && e.isMissingHomeEndpoint()
+                }
+                delay((if (missingEndpoint) 5 * 60_000L else backoff) + Random.nextLong(500, 2_000))
+                backoff = (backoff * 2).coerceAtMost(30_000)
+            }
+        }
+    }
+
+    private fun scheduleReconcile() {
+        if (!foreground || scrolling || !dirty || uiState.sessionExpired || reconcileJob?.isActive == true) return
+        reconcileJob = scope.launch {
+            val elapsed = clockMillis() - lastHeadRead
+            delay((10_000L - elapsed).coerceAtLeast(700L) + Random.nextLong(0, 700))
+            reconcileJob = null
+            if (foreground && !scrolling && dirty) {
+                if (!pager.initialized && feedJob?.isActive != true) {
+                    dirty = false
+                    retryFeed()
+                } else checkForUpdates()
+            }
+        }
     }
 
     internal fun setScrolling(active: Boolean) {
         scrolling = active
         images.setScrolling(active)
-        if (!active && foreground) pendingHead?.let { update ->
-            pendingHead = null; applyHead(update)
+        if (!active && foreground) {
+            pendingHead?.let { update -> pendingHead = null; applyHead(update) }
+            scheduleReconcile()
         }
     }
 
     internal fun visiblePosts(keys: Set<String>) {
+        val changed = keys != visibleKeys
         visibleKeys = keys
         if (!foreground || uiState.sessionExpired) return
         val posts = uiState.posts.filter { it.key in keys }
         controls.visible(posts)
         posts.forEach(reactionController::ensureReaction)
+        if (changed) { dirty = true; scheduleReconcile() }
     }
 
     /** Check heads without resetting cursors, loaded history or the current scroll anchor. */
     internal fun checkForUpdates() {
         val auth = token ?: return
         if (!foreground || scrolling || uiState.sessionExpired || uiState.loading || uiState.refreshing ||
-            !pager.initialized || uiState.errors.isNotEmpty() || uiState.posts.isEmpty() || headJob?.isActive == true) return
+            !pager.initialized || uiState.errors.isNotEmpty() || headJob?.isActive == true) return
         val session = sessionVersion
         val feed = feedVersion
         val request = ++headVersion
         val relations = controls.relationVersion
         val acceptCounts = comments.beginPostCountRead()
+        dirty = false
+        // Failed reads are rate-limited too; a busy stream cannot create a retry storm.
+        lastHeadRead = clockMillis()
         headJob = scope.launch {
             try {
-                val posts = supervisorScope {
-                    val media = async { loadMedia(auth, null) }
-                    val text = async { loadText(auth, null) }
-                    media.await().posts.map(HomePost::Media) + text.await().posts.map(HomePost::Text)
-                }
+                val revision = cacheRevision
+                val ids = uiState.posts.asSequence().filter { it.key in visibleKeys }.map { it.id }.take(8).toList()
+                val page = loadHome(auth, null, ids)
                 ensureActive()
                 if (session != sessionVersion || feed != feedVersion || request != headVersion || !foreground) return@launch
-                val update = HeadUpdate(posts, relations, acceptCounts)
+                lastHeadRead = clockMillis()
+                val posts = (page.posts + page.visiblePosts).distinctBy { it.key }
+                val update = HeadUpdate(posts, page.missingIds, relations, acceptCounts)
+                if (revision == cacheRevision) page.snapshot?.let { saveCache(auth, it) }
                 if (scrolling) pendingHead = update else applyHead(update)
             } catch (error: CancellationException) { throw error }
             catch (error: Exception) {
                 if (session == sessionVersion && feed == feedVersion && request == headVersion) handleSessionFailure(error)
                 // A background check failure keeps the cached feed usable.
+            } finally {
+                if (session == sessionVersion && feed == feedVersion && request == headVersion) {
+                    headJob = null
+                    if (dirty) scheduleReconcile()
+                }
             }
         }
     }
 
     private fun applyHead(update: HeadUpdate) {
         val posts = update.posts
+        uiState.posts.filter { it.id in update.missingIds }.forEach(::applyDeletedPost)
         controls.ingest(posts, update.relationRevision)
         posts.filterNot { it.key in removedPosts }.forEach(pager::update)
         val changed = posts.associateBy { it.key }
@@ -340,11 +431,13 @@ class HomeFeedViewModel internal constructor(
 
     private fun applyEditedPost(post: HomePost) {
         editedPosts[post.key] = post
+        discardCache()
         pager.update(post)
         uiState = uiState.copy(posts = uiState.posts.map { if (it.key == post.key) post else it })
     }
 
     private fun applyDeletedPost(post: HomePost) {
+        discardCache()
         removedPosts.add(post.key); editedPosts.remove(post.key); pager.remove(post.key)
         if (commentsState?.postId == post.id) closeComments()
         if (peopleState?.postId == post.id) closeReactionPeople()
@@ -377,20 +470,22 @@ class HomeFeedViewModel internal constructor(
 
     private fun handleSessionFailure(error: Exception) {
         if (error is FeedApiException && error.failure == FeedApiFailure.SESSION_EXPIRED) {
-            uiState = uiState.copy(sessionExpired = true, sessionReady = false,
+            discardCache()
+            resetSession()
+            uiState = HomeFeedState(sessionExpired = true, sessionReady = false,
                 sessionError = "Your session has expired. Please sign in again.")
         }
     }
 
     private fun message(error: Exception): String = if (error is FeedApiException) error.message ?: "Please try again."
         else "Could not complete the request. Please try again."
-    private fun Int?.orZero() = this ?: 0
 
-    class Factory(private val tokenStore: TokenStore) : ViewModelProvider.Factory {
+    class Factory(private val tokenStore: TokenStore, private val context: Context? = null) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(HomeFeedViewModel::class.java))
-            return HomeFeedViewModel(readToken = tokenStore::read) as T
+            return HomeFeedViewModel(readToken = tokenStore::read,
+                cache = context?.let { HomeFeedDiskCache(it) } ?: NoHomeFeedCache) as T
         }
     }
 }

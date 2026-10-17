@@ -2,6 +2,7 @@
 @file:Suppress("DEPRECATION")
 package com.mongosky.app.profile
 
+import com.mongosky.app.shared.PublicLinks
 import com.mongosky.app.language.appText
 
 import com.mongosky.app.darkmode.AppColors
@@ -116,19 +117,19 @@ fun OwnProfileScreen(
 
     fun copyProfile() {
         if (state.ownerId.isBlank()) return
-        clipboard.setText(AnnotatedString("https://mongosky.com/profile/${state.ownerId}"))
+        clipboard.setText(AnnotatedString(PublicLinks.profile(state.ownerId)))
         optionsOpen = false
         if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar(appText("Profile link copied")) }
     }
     fun copyPost(post: HomePost) {
-        clipboard.setText(AnnotatedString("https://mongosky.com/post/${post.id}"))
+        clipboard.setText(AnnotatedString(PublicLinks.post(post.id)))
         if (Build.VERSION.SDK_INT < 33) scope.launch { snackbar.showSnackbar(appText("Link copied")) }
     }
     fun sharePost(post: HomePost) {
         val caption = when (post) { is HomePost.Text -> post.post.displayText; is HomePost.Media -> post.post.caption }
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, listOf(caption.take(650), "https://mongosky.com/post/${post.id}").filter { it.isNotBlank() }.joinToString("\n\n"))
+            putExtra(Intent.EXTRA_TEXT, listOf(caption.take(650), PublicLinks.post(post.id)).filter { it.isNotBlank() }.joinToString("\n\n"))
         }
         try { context.startActivity(Intent.createChooser(intent, appText("Share post"))) }
         catch (_: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar(appText("No sharing app is available.")) } }

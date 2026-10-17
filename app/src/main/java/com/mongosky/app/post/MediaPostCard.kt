@@ -1,5 +1,7 @@
 package com.mongosky.app.post
 
+import com.mongosky.app.caption.ObserveHashtagPost
+
 import com.mongosky.app.language.appDescription
 
 import com.mongosky.app.darkmode.AppColors
@@ -46,8 +48,10 @@ fun MediaPostCard(post: MediaPost, now: Instant, reaction: PostReactionState, co
     enabled: Boolean, actions: PostCardActions, onOpenPhotos: (List<FeedMedia>, Int) -> Unit, modifier: Modifier = Modifier,
     header: (@Composable () -> Unit)? = null, footer: (@Composable () -> Unit)? = null,
     previewUrl: (FeedMedia) -> String = { it.url },
-    singlePhoto: (@Composable (FeedMedia, () -> Unit) -> Unit)? = null) {
-    WarmSavedPostStatus(post.id)
+    singlePhoto: (@Composable (FeedMedia, () -> Unit) -> Unit)? = null,
+    warmSavedStatus: Boolean = true) {
+    ObserveHashtagPost(HomePost.Media(post))
+    if (warmSavedStatus) WarmSavedPostStatus(post.id)
     val photos = remember(post.media) { post.media.filter { it.type != FeedMediaType.VIDEO }.sortedBy { it.order } }
     val action = when (post.type) {
         MediaPostType.PROFILE_PHOTO_UPDATE -> "updated profile picture"

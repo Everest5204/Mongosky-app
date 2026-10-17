@@ -2,6 +2,8 @@
 
 package com.mongosky.app.post
 
+import com.mongosky.app.caption.rememberCaptionText
+
 import com.mongosky.app.language.appText
 import com.mongosky.app.language.appDescription
 
@@ -168,7 +170,7 @@ internal fun PostCaption(caption: String) {
     var expanded by rememberSaveable(caption) { mutableStateOf(false) }
     var overflow by remember(caption) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 10.dp)) {
-        Text(caption, color = AppColors.content(FeedColors.text), fontSize = 15.sp, lineHeight = 22.sp,
+        Text(rememberCaptionText(caption), color = AppColors.content(FeedColors.text), fontSize = 15.sp, lineHeight = 22.sp,
             maxLines = if (expanded) Int.MAX_VALUE else 5, overflow = TextOverflow.Ellipsis,
             onTextLayout = { if (!expanded) overflow = it.hasVisualOverflow })
         if (expanded || overflow) {
